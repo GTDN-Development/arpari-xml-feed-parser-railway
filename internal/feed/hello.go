@@ -28,9 +28,9 @@ func (Hello) Filename() string {
 	return "hello.xml"
 }
 
-func (Hello) Generate(_ context.Context, w io.Writer) error {
+func (Hello) Generate(_ context.Context, w io.Writer) (Result, error) {
 	if _, err := io.WriteString(w, xml.Header); err != nil {
-		return err
+		return Result{}, err
 	}
 
 	encoder := xml.NewEncoder(w)
@@ -46,12 +46,16 @@ func (Hello) Generate(_ context.Context, w io.Writer) error {
 	}
 
 	if err := encoder.Encode(shop); err != nil {
-		return err
+		return Result{}, err
 	}
 
 	if _, err := io.WriteString(w, "\n"); err != nil {
-		return err
+		return Result{}, err
 	}
 
-	return encoder.Flush()
+	if err := encoder.Flush(); err != nil {
+		return Result{}, err
+	}
+
+	return Result{ItemsProcessed: 1}, nil
 }

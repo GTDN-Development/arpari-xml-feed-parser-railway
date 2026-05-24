@@ -15,11 +15,12 @@ Implementováno:
 - endpoint `GET /healthz` s odpovědí `ok`,
 - lokální dummy feed pipeline přes `cmd/rebuild`,
 - endpoint `GET /feeds/hello.xml` pro vygenerovaný dummy XML feed,
+- endpoint `GET /status` se stavem posledních rebuild běhů,
 - základní test handleru,
 - `Dockerfile` pro Railway deployment,
 - `railway.json` s Dockerfile builderem.
 
-Transformace dodavatelských XML, status běhů a produkční persistence přes Railway Volume budou doplněné v dalších krocích.
+Transformace dodavatelských XML, plánované spouštění a produkční persistence přes Railway Volume budou doplněné v dalších krocích.
 
 ## Požadavky pro lokální vývoj
 
@@ -50,6 +51,7 @@ Server poslouchá na portu z environment variable `PORT`. Pokud není nastavena,
 ```bash
 curl http://localhost:8080/
 curl http://localhost:8080/healthz
+curl http://localhost:8080/status
 curl http://localhost:8080/feeds/hello.xml
 ```
 
@@ -72,6 +74,23 @@ Endpoint `/feeds/hello.xml` vrací jednoduchý XML feed s jednou dummy položkou
     <STOCK>7</STOCK>
   </SHOPITEM>
 </SHOP>
+```
+
+Endpoint `/status` vrací stav posledních lokálních rebuild běhů:
+
+```json
+{
+  "feeds": {
+    "hello": {
+      "filename": "hello.xml",
+      "lastRunAt": "2026-05-24T12:34:56Z",
+      "status": "success",
+      "itemsProcessed": 1,
+      "itemsSkipped": 0,
+      "error": ""
+    }
+  }
+}
 ```
 
 ## Testy

@@ -9,7 +9,12 @@ import (
 type Generator interface {
 	Name() string
 	Filename() string
-	Generate(ctx context.Context, w io.Writer) error
+	Generate(ctx context.Context, w io.Writer) (Result, error)
+}
+
+type Result struct {
+	ItemsProcessed int
+	ItemsSkipped   int
 }
 
 func Find(name string) (Generator, error) {

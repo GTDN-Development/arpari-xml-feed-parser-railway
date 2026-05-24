@@ -10,8 +10,12 @@ import (
 func TestHelloGenerateReturnsWellFormedXML(t *testing.T) {
 	var output bytes.Buffer
 
-	if err := (Hello{}).Generate(context.Background(), &output); err != nil {
+	result, err := (Hello{}).Generate(context.Background(), &output)
+	if err != nil {
 		t.Fatalf("generate hello feed: %v", err)
+	}
+	if result.ItemsProcessed != 1 {
+		t.Fatalf("expected 1 processed item, got %d", result.ItemsProcessed)
 	}
 
 	var parsed helloShop

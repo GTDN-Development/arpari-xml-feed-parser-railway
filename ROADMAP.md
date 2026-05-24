@@ -16,13 +16,14 @@ Aktuálně hotovo:
 - CLI rebuild příkaz `go run ./cmd/rebuild --supplier hello`.
 - Bezpečné lokální publikování feedu do `data/feeds/hello.xml`.
 - Endpoint `GET /feeds/hello.xml` pro lokálně vygenerovaný feed.
+- Status soubor `data/status.json`.
+- Endpoint `GET /status` pro stav posledních rebuild běhů.
 
 Aktuálně mimo rozsah:
 
 - reálné stahování dodavatelských XML,
 - transformace do Shoptet XML,
 - perzistence posledních validních feedů,
-- status běhů,
 - cron nebo scheduled jobs,
 - mapování produktů a kategorií.
 - automatické generování feedu při Railway startu.
@@ -80,7 +81,7 @@ Poznámka:
 
 ## M2: Status a provozní metadata
 
-Status: další doporučený krok.
+Status: hotovo lokálně.
 
 Cíl:
 
@@ -106,7 +107,14 @@ Akceptační kritéria:
 - chyba rebuild běhu je vidět ve statusu i v logu,
 - poslední validní XML zůstane zachované při chybě.
 
+Poznámka:
+
+- M2 používá lokální `data/status.json`.
+- Produkční persistentní umístění přes `DATA_DIR=/data` a Railway Volume přijde v M3.
+
 ## M3: Railway Volume a production storage
+
+Status: další doporučený krok.
 
 Cíl:
 
@@ -345,12 +353,10 @@ Akceptační kritéria:
 
 ## Doporučený nejbližší krok
 
-Začít milníkem M2:
+Začít milníkem M3:
 
 ```bash
-go run ./cmd/rebuild --supplier hello
-go run ./cmd/server
-curl http://localhost:8080/status
+DATA_DIR=/data go run ./cmd/server
 ```
 
-Tím začne být vidět, kdy rebuild proběhl, jestli uspěl a jaké měl základní výsledky. Railway Volume a produkční persistence přijdou až v M3.
+Tím sjednotíme lokální a produkční storage cestu a připravíme Railway Volume pro poslední validní feedy i status.

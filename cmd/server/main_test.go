@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+
+	runstatus "github.com/fanda/arpari-xml-feed-parser-railway/internal/status"
 )
 
 func TestHelloHandler(t *testing.T) {
@@ -20,6 +23,41 @@ func TestHelloHandler(t *testing.T) {
 
 	if body := recorder.Body.String(); body != "Hello world!\n" {
 		t.Fatalf("expected hello response, got %q", body)
+	}
+}
+
+func TestUnknownRouteReturnsNotFound(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/nope", nil)
+	recorder := httptest.NewRecorder()
+
+	newMux().ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("expected status %d, got %d", http.StatusNotFound, recorder.Code)
+	}
+}
+
+func TestStatusHandlerReturnsEmptyStatusWhenMissing(t *testing.T) {
+	t.Chdir(t.TempDir())
+
+	request := httptest.NewRequest(http.MethodGet, "/status", nil)
+	recorder := httptest.NewRecorder()
+
+	newMux().ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
+	}
+	if contentType := recorder.Header().Get("Content-Type"); contentType != "application/json; charset=utf-8" {
+		t.Fatalf("expected JSON content type, got %q", contentType)
+	}
+
+	var file runstatus.File
+	if err := json.Unmarshal(recorder.Body.Bytes(), &file); err != nil {
+		t.Fatalf("decode status response: %v", err)
+	}
+	if len(file.Feeds) != 0 {
+		t.Fatalf("expected no feed statuses, got %d", len(file.Feeds))
 	}
 }
 
