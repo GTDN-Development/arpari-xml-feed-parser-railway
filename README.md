@@ -13,11 +13,13 @@ Implementováno:
 - Go HTTP server bez externích závislostí,
 - endpoint `GET /` s odpovědí `Hello world!`,
 - endpoint `GET /healthz` s odpovědí `ok`,
+- lokální dummy feed pipeline přes `cmd/rebuild`,
+- endpoint `GET /feeds/hello.xml` pro vygenerovaný dummy XML feed,
 - základní test handleru,
 - `Dockerfile` pro Railway deployment,
 - `railway.json` s Dockerfile builderem.
 
-Feed parser framework, transformace dodavatelských XML a persistence posledních validních feedů budou doplněné v dalších krocích.
+Transformace dodavatelských XML, status běhů a produkční persistence přes Railway Volume budou doplněné v dalších krocích.
 
 ## Požadavky pro lokální vývoj
 
@@ -31,6 +33,14 @@ Projekt aktuálně nepoužívá žádné další lokální nástroje typu `air`,
 
 ## Lokální běh
 
+Nejdřív vygeneruj dummy feed:
+
+```bash
+go run ./cmd/rebuild --supplier hello
+```
+
+Potom spusť server:
+
 ```bash
 go run ./cmd/server
 ```
@@ -40,6 +50,7 @@ Server poslouchá na portu z environment variable `PORT`. Pokud není nastavena,
 ```bash
 curl http://localhost:8080/
 curl http://localhost:8080/healthz
+curl http://localhost:8080/feeds/hello.xml
 ```
 
 Očekávané odpovědi:
@@ -47,6 +58,20 @@ Očekávané odpovědi:
 ```text
 Hello world!
 ok
+```
+
+Endpoint `/feeds/hello.xml` vrací jednoduchý XML feed s jednou dummy položkou:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<SHOP>
+  <SHOPITEM>
+    <CODE>HELLO-001</CODE>
+    <NAME>Hello world product</NAME>
+    <PRICE_VAT>123.45</PRICE_VAT>
+    <STOCK>7</STOCK>
+  </SHOPITEM>
+</SHOP>
 ```
 
 ## Testy
