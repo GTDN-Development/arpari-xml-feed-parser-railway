@@ -12,6 +12,10 @@ Aktuálně hotovo:
 - Railway deployment přes `Dockerfile`.
 - Veřejné endpointy `/` a `/healthz`.
 - Základní test server handleru.
+- Lokální feed framework pro dummy supplier `hello`.
+- CLI rebuild příkaz `go run ./cmd/rebuild --supplier hello`.
+- Bezpečné lokální publikování feedu do `data/feeds/hello.xml`.
+- Endpoint `GET /feeds/hello.xml` pro lokálně vygenerovaný feed.
 
 Aktuálně mimo rozsah:
 
@@ -21,6 +25,7 @@ Aktuálně mimo rozsah:
 - status běhů,
 - cron nebo scheduled jobs,
 - mapování produktů a kategorií.
+- automatické generování feedu při Railway startu.
 
 ## M0: Deploy scaffold
 
@@ -40,6 +45,8 @@ Akceptační kritéria:
 - Railway deploy funguje přes Dockerfile.
 
 ## M1: Lokální feed framework
+
+Status: hotovo lokálně.
 
 Cíl:
 
@@ -66,7 +73,14 @@ Akceptační kritéria:
 - rozbitý temp feed nepřepíše poslední validní feed,
 - existují testy pro storage/publish logiku.
 
+Poznámka:
+
+- M1 je ověřené lokálně v prohlížeči na `http://localhost:8080/feeds/hello.xml`.
+- Na Railway se zatím feed při startu negeneruje automaticky, takže vzdálený endpoint `/feeds/hello.xml` může vracet `404`. To je pro M1 akceptované.
+
 ## M2: Status a provozní metadata
+
+Status: další doporučený krok.
 
 Cíl:
 
@@ -331,12 +345,12 @@ Akceptační kritéria:
 
 ## Doporučený nejbližší krok
 
-Začít milníkem M1:
+Začít milníkem M2:
 
 ```bash
 go run ./cmd/rebuild --supplier hello
 go run ./cmd/server
-curl http://localhost:8080/feeds/hello.xml
+curl http://localhost:8080/status
 ```
 
-Tím vznikne první skutečný feed pipeline bez rizika, že rovnou řešíme složitosti reálných dodavatelů.
+Tím začne být vidět, kdy rebuild proběhl, jestli uspěl a jaké měl základní výsledky. Railway Volume a produkční persistence přijdou až v M3.
