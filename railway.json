@@ -5,7 +5,7 @@
     "buildCommand": null
   },
   "deploy": {
-    "startCommand": null,
+    "startCommand": "/bin/sh -c '/app/rebuild --supplier hello && exec /app/server'",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
