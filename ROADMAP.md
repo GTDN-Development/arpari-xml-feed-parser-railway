@@ -18,13 +18,13 @@ Aktuálně hotovo:
 - Endpoint `GET /feeds/hello.xml` pro lokálně vygenerovaný feed.
 - Status soubor `data/status.json`.
 - Endpoint `GET /status` pro stav posledních rebuild běhů.
-- Shoptet XML writer pro základní produktový a variantní výstup.
+- Shoptet XML writer pro základní produktový a variantní výstup včetně variantních parametrů a skladů.
 - Základní Shoptet validační pravidla pro prázdný feed, počet položek a limit variant.
+- STIMA katalogový MVP generator `stima-products`.
+- Endpoint `GET /feeds/stima-products.xml` po ručním rebuild běhu.
 
 Aktuálně mimo rozsah:
 
-- reálné stahování dodavatelských XML,
-- transformace do Shoptet XML,
 - perzistence posledních validních feedů,
 - cron nebo scheduled jobs,
 - mapování produktů a kategorií.
@@ -171,44 +171,51 @@ Akceptační kritéria:
 - nevalidní XML se nepublikuje,
 - validační chyby jsou čitelné ve statusu.
 
-## M5: První reálný feed: STIMA stock
+## M5: První reálný feed: STIMA products MVP
+
+Status: hotovo lokálně.
 
 Cíl:
 
-- napojit první nízkorizikový reálný dodavatelský feed,
+- napojit STIMA katalogový feed jako bezpečné technické MVP,
 - ověřit celý tok download -> parse -> transform -> publish.
 
-Proč STIMA stock:
+Proč STIMA products jako první:
 
-- je menší než katalog,
-- řeší skladovou aktualizaci,
-- má nižší riziko zásahu do katalogových dat.
+- klient potřebuje znát reálný dopad variant na Shoptet limit,
+- katalog obsahuje produkty i varianty včetně skladové struktury,
+- výstup zatím záměrně neřeší kategorie, obrázky, popisy ani rozdělení podsedáků `Skladem / Na zakázku`.
 
 Rozsah:
 
-- stahovat `https://www.stima.cz/userfiles/xml/ITTC_SHT_stock.xml`,
+- stahovat `https://www.stima.cz/userfiles/xml/ITTC_SHT_products.xml`,
 - parsovat streamingově přes Go XML decoder,
-- generovat Shoptet stock feed,
-- vystavit `GET /feeds/stima-stock.xml`,
+- generovat Shoptet produktový feed se základními poli,
+- mapovat variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`,
+- odvodit parent `CODE` z první varianty, pokud STIMA parent kód nepošle,
+- automaticky oříznout produkty nad 512 variant na prvních 512 variant,
+- vystavit `GET /feeds/stima-products.xml`,
 - přidat timeouty a rozumné HTTP chyby.
 
 Akceptační kritéria:
 
-- `go run ./cmd/rebuild --supplier stima-stock` stáhne a publikuje feed,
-- výstup je dostupný přes `/feeds/stima-stock.xml`,
+- `go run ./cmd/rebuild --supplier stima-products` stáhne a publikuje feed,
+- výstup je dostupný přes `/feeds/stima-products.xml`,
 - při nedostupném zdroji zůstane poslední validní feed,
 - status ukazuje počty položek a výsledek běhu.
 
-## M6: STIMA stock + price
+## M6: STIMA stock a stock + price
 
 Cíl:
 
-- přidat pravidelnou aktualizaci skladů a cen.
+- přidat samostatné aktualizační feedy pro sklad a sklad + ceny.
 
 Rozsah:
 
+- stahovat `https://www.stima.cz/userfiles/xml/ITTC_SHT_stock.xml`,
 - stahovat `https://www.stima.cz/userfiles/xml/ITTC_SHT_stock_price.xml`,
 - transformovat pouze pole, která mají být bezpečně aktualizována,
+- vystavit `GET /feeds/stima-stock.xml`,
 - vystavit `GET /feeds/stima-stock-price.xml`,
 - doplnit test fixtures pro typické položky.
 
@@ -239,7 +246,7 @@ Akceptační kritéria:
 - chybějící povinné mapování je vidět ve statusu,
 - existující produkt se nepřepíše citlivými katalogovými poli bez explicitního pravidla.
 
-## M8: STIMA katalog
+## M8: STIMA katalog enrichment
 
 Cíl:
 

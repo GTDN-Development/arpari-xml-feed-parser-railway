@@ -15,13 +15,16 @@ Implementováno:
 - endpoint `GET /healthz` s odpovědí `ok`,
 - lokální dummy feed pipeline přes `cmd/rebuild`,
 - endpoint `GET /feeds/hello.xml` pro vygenerovaný dummy XML feed,
+- STIMA katalogový MVP feed `stima-products` z `ITTC_SHT_products.xml`,
+- endpoint `GET /feeds/stima-products.xml` po ručním rebuild běhu,
+- Shoptet XML writer pro jednoduché produkty, varianty, variantní parametry a sklad po skladech,
 - endpoint `GET /status` se stavem posledních rebuild běhů,
 - konfigurovatelný data adresář přes `DATA_DIR` nebo Railway Volume,
 - základní test handleru,
 - `Dockerfile` pro Railway deployment,
 - `railway.json` s Dockerfile builderem.
 
-Transformace dodavatelských XML a plánované spouštění budou doplněné v dalších krocích.
+Další dodavatelské feedy a plánované spouštění budou doplněné v dalších krocích.
 
 ## Požadavky pro lokální vývoj
 
@@ -53,6 +56,7 @@ Feed výstupy a status se ukládají do adresáře `data`. Pro lokální overrid
 
 ```bash
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier hello
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-products
 DATA_DIR=/tmp/arpari-data go run ./cmd/server
 ```
 
@@ -61,6 +65,7 @@ curl http://localhost:8080/
 curl http://localhost:8080/healthz
 curl http://localhost:8080/status
 curl http://localhost:8080/feeds/hello.xml
+curl http://localhost:8080/feeds/stima-products.xml
 ```
 
 Očekávané odpovědi:
@@ -83,6 +88,8 @@ Endpoint `/feeds/hello.xml` vrací jednoduchý XML feed s jednou dummy položkou
   </SHOPITEM>
 </SHOP>
 ```
+
+Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsahuje základní produktová/variantní pole, sklad a povolené variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`. Produkty s více než 512 variantami se při transformaci ořežou na prvních 512 variant v pořadí ze zdrojového feedu.
 
 Endpoint `/status` vrací stav posledních lokálních rebuild běhů:
 

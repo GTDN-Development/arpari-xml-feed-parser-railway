@@ -44,8 +44,8 @@ func TestWriteSimpleProduct(t *testing.T) {
 	if item.PriceVAT != "123.45" {
 		t.Fatalf("expected item PRICE_VAT, got %q", item.PriceVAT)
 	}
-	if item.Stock != "7" {
-		t.Fatalf("expected item STOCK, got %q", item.Stock)
+	if item.Stock == nil || item.Stock.Value != "7" {
+		t.Fatalf("expected item STOCK, got %#v", item.Stock)
 	}
 	if item.Availability != "Skladem" {
 		t.Fatalf("expected item AVAILABILITY, got %q", item.Availability)
@@ -68,8 +68,12 @@ func TestWriteProductWithVariants(t *testing.T) {
 						Code:         "CHAIR-001-OAK",
 						EAN:          "8590000000002",
 						PriceVAT:     "1000.00",
-						Stock:        "3",
+						Warehouses:   []Warehouse{{Name: "HLAVNÍ SKLAD", Value: "3.000"}},
 						Availability: "Skladem",
+						Parameters: []Parameter{
+							{Name: "KOSTRA", Value: "dub"},
+							{Name: "Sedák", Value: "raven 15 šedá"},
+						},
 					},
 					{
 						Code:         "CHAIR-001-BEECH",
@@ -103,8 +107,14 @@ func TestWriteProductWithVariants(t *testing.T) {
 	if first.Code != "CHAIR-001-OAK" {
 		t.Fatalf("expected first variant code, got %q", first.Code)
 	}
-	if first.Stock != "3" {
-		t.Fatalf("expected first variant stock, got %q", first.Stock)
+	if first.Stock == nil || len(first.Stock.Warehouses) != 1 || first.Stock.Warehouses[0].Name != "HLAVNÍ SKLAD" || first.Stock.Warehouses[0].Value != "3.000" {
+		t.Fatalf("expected first variant structured stock, got %#v", first.Stock)
+	}
+	if first.Parameters == nil || len(first.Parameters.Items) != 2 {
+		t.Fatalf("expected first variant parameters, got %#v", first.Parameters)
+	}
+	if first.Parameters.Items[0].Name != "KOSTRA" || first.Parameters.Items[0].Value != "dub" {
+		t.Fatalf("expected KOSTRA parameter, got %#v", first.Parameters.Items[0])
 	}
 }
 

@@ -26,6 +26,7 @@ type Item struct {
 	Name         string
 	PriceVAT     string
 	Stock        string
+	Warehouses   []Warehouse
 	Availability string
 	EAN          string
 	Variants     []Variant
@@ -35,8 +36,20 @@ type Variant struct {
 	Code         string
 	PriceVAT     string
 	Stock        string
+	Warehouses   []Warehouse
 	Availability string
 	EAN          string
+	Parameters   []Parameter
+}
+
+type Warehouse struct {
+	Name  string
+	Value string
+}
+
+type Parameter struct {
+	Name  string
+	Value string
 }
 
 func Write(w io.Writer, feed Feed) error {
@@ -92,6 +105,11 @@ func ValidateWithLimits(feed Feed, limits Limits) error {
 			if strings.TrimSpace(variant.Code) == "" {
 				return fmt.Errorf("SHOPITEM[%d] %q VARIANT[%d] CODE is required", itemIndex, item.Code, variantIndex)
 			}
+			for parameterIndex, parameter := range variant.Parameters {
+				if strings.TrimSpace(parameter.Name) == "" {
+					return fmt.Errorf("SHOPITEM[%d] %q VARIANT[%d] PARAMETER[%d] NAME is required", itemIndex, item.Code, variantIndex, parameterIndex)
+				}
+			}
 		}
 	}
 
@@ -115,7 +133,7 @@ func toShop(feed Feed) shopXML {
 			Code:         item.Code,
 			Name:         item.Name,
 			PriceVAT:     item.PriceVAT,
-			Stock:        item.Stock,
+			Stock:        toStockXML(item.Stock, item.Warehouses),
 			Availability: item.Availability,
 			EAN:          item.EAN,
 		}
@@ -125,9 +143,10 @@ func toShop(feed Feed) shopXML {
 				variants = append(variants, shopVariantXML{
 					Code:         variant.Code,
 					PriceVAT:     variant.PriceVAT,
-					Stock:        variant.Stock,
+					Stock:        toStockXML(variant.Stock, variant.Warehouses),
 					Availability: variant.Availability,
 					EAN:          variant.EAN,
+					Parameters:   toParametersXML(variant.Parameters),
 				})
 			}
 			shopItem.Variants = &shopVariantsXML{Items: variants}
@@ -135,6 +154,58 @@ func toShop(feed Feed) shopXML {
 		items = append(items, shopItem)
 	}
 	return shopXML{Items: items}
+}
+
+func toStockXML(stock string, warehouses []Warehouse) *shopStockXML {
+	stock = strings.TrimSpace(stock)
+	if len(warehouses) == 0 && stock == "" {
+		return nil
+	}
+
+	result := &shopStockXML{
+		Value: stock,
+	}
+	if len(warehouses) > 0 {
+		result.Warehouses = make([]shopWarehouseXML, 0, len(warehouses))
+		for _, warehouse := range warehouses {
+			name := strings.TrimSpace(warehouse.Name)
+			value := strings.TrimSpace(warehouse.Value)
+			if name == "" && value == "" {
+				continue
+			}
+			result.Warehouses = append(result.Warehouses, shopWarehouseXML{
+				Name:  name,
+				Value: value,
+			})
+		}
+	}
+	if len(result.Warehouses) == 0 && result.Value == "" {
+		return nil
+	}
+	return result
+}
+
+func toParametersXML(parameters []Parameter) *shopParametersXML {
+	if len(parameters) == 0 {
+		return nil
+	}
+
+	items := make([]shopParameterXML, 0, len(parameters))
+	for _, parameter := range parameters {
+		name := strings.TrimSpace(parameter.Name)
+		value := strings.TrimSpace(parameter.Value)
+		if name == "" && value == "" {
+			continue
+		}
+		items = append(items, shopParameterXML{
+			Name:  name,
+			Value: value,
+		})
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	return &shopParametersXML{Items: items}
 }
 
 type shopXML struct {
@@ -146,7 +217,7 @@ type shopItemXML struct {
 	Code         string           `xml:"CODE,omitempty"`
 	Name         string           `xml:"NAME,omitempty"`
 	PriceVAT     string           `xml:"PRICE_VAT,omitempty"`
-	Stock        string           `xml:"STOCK,omitempty"`
+	Stock        *shopStockXML    `xml:"STOCK,omitempty"`
 	Availability string           `xml:"AVAILABILITY,omitempty"`
 	EAN          string           `xml:"EAN,omitempty"`
 	Variants     *shopVariantsXML `xml:"VARIANTS,omitempty"`
@@ -157,9 +228,62 @@ type shopVariantsXML struct {
 }
 
 type shopVariantXML struct {
-	Code         string `xml:"CODE,omitempty"`
-	EAN          string `xml:"EAN,omitempty"`
-	PriceVAT     string `xml:"PRICE_VAT,omitempty"`
-	Stock        string `xml:"STOCK,omitempty"`
-	Availability string `xml:"AVAILABILITY,omitempty"`
+	Code         string             `xml:"CODE,omitempty"`
+	EAN          string             `xml:"EAN,omitempty"`
+	PriceVAT     string             `xml:"PRICE_VAT,omitempty"`
+	Stock        *shopStockXML      `xml:"STOCK,omitempty"`
+	Availability string             `xml:"AVAILABILITY,omitempty"`
+	Parameters   *shopParametersXML `xml:"PARAMETERS,omitempty"`
+}
+
+type shopStockXML struct {
+	Value      string
+	Warehouses []shopWarehouseXML
+}
+
+func (stock shopStockXML) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	if err := encoder.EncodeToken(start); err != nil {
+		return err
+	}
+	if len(stock.Warehouses) > 0 {
+		if err := encoder.EncodeElement(shopWarehousesXML{Items: stock.Warehouses}, xml.StartElement{Name: xml.Name{Local: "WAREHOUSES"}}); err != nil {
+			return err
+		}
+	} else if stock.Value != "" {
+		if err := encoder.EncodeToken(xml.CharData([]byte(stock.Value))); err != nil {
+			return err
+		}
+	}
+	return encoder.EncodeToken(start.End())
+}
+
+func (stock *shopStockXML) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	var raw struct {
+		Value      string             `xml:",chardata"`
+		Warehouses []shopWarehouseXML `xml:"WAREHOUSES>WAREHOUSE"`
+	}
+	if err := decoder.DecodeElement(&raw, &start); err != nil {
+		return err
+	}
+	stock.Value = strings.TrimSpace(raw.Value)
+	stock.Warehouses = raw.Warehouses
+	return nil
+}
+
+type shopWarehousesXML struct {
+	Items []shopWarehouseXML `xml:"WAREHOUSE"`
+}
+
+type shopWarehouseXML struct {
+	Name  string `xml:"NAME,omitempty"`
+	Value string `xml:"VALUE,omitempty"`
+}
+
+type shopParametersXML struct {
+	Items []shopParameterXML `xml:"PARAMETER"`
+}
+
+type shopParameterXML struct {
+	Name  string `xml:"NAME,omitempty"`
+	Value string `xml:"VALUE,omitempty"`
 }

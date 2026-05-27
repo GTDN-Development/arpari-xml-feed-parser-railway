@@ -30,5 +30,6 @@ func Find(name string) (Generator, error) {
 func All() []Generator {
 	return []Generator{
 		Hello{},
+		StimaProducts{},
 	}
 }
