@@ -293,7 +293,8 @@ Pořadí:
 Specifika:
 
 - Autronic dostupnost musí používat `GET`, ne `HEAD`,
-- Autronic katalog má přes 20 000 položek a bude vyžadovat filtrování nebo dělení,
+- Autronic se importuje pouze pro kategorii nábytek; ostatní kategorie se musí přeskočit,
+- Autronic katalog má přes 20 000 položek a bude vyžadovat povinné filtrování na nábytek, případně další dělení,
 - SEGO je Zboží.cz styl feedu,
 - HON má vlastní XML strukturu.
 

@@ -116,6 +116,8 @@ https://autronic.cz/feeds/availability-feed.xml
 
 Toto je dostupnostní feed, ne kompletní produktový katalog.
 
+Z Autronicu se budou brát pouze produkty z kategorie nábytek. Produkty z ostatních kategorií nejsou součástí zadání a parser je musí přeskočit.
+
 Obsahuje hlavně:
 
 - `ProductCode`,
@@ -133,6 +135,8 @@ https://autronic.cz/feeds/product-feed.xml
 ```
 
 Ten měl přes 32 000 položek. Pokud se bude používat, je nutné filtrovat nebo rozdělit výstup, protože Shoptet má limit přibližně 20 000 položek na jeden feed.
+
+Povinný filtr pro Autronic katalog: importovat pouze kategorii nábytek. Všechny ostatní kategorie musí být vyřazeny ještě před generováním Shoptet XML.
 
 ### SEGO
 
@@ -306,7 +310,7 @@ STIMA produkt Židle KR18 má ve feedu přibližně 540 variant.
 
 To může překročit limit Shoptetu 512 variant na produkt a bude potřeba to řešit.
 
-Autronic katalogový feed měl přes 32 000 položek, takže pokud se použije, bude nutné filtrovat nebo rozdělit.
+Autronic katalogový feed měl přes 32 000 položek. Pokud se použije, bude nutné ho filtrovat na kategorii nábytek; případné další dělení výstupu se řeší až pokud i filtrovaný výstup narazí na limit Shoptetu.
 
 ## Importní strategie
 

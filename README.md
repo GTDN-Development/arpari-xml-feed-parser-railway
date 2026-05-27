@@ -150,6 +150,8 @@ První fáze:
 - SEGO: `https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_123456.xml`,
 - HON: `https://www.webshop.officepro-brno.cz/import/HONClientFeed/HONClientFeed.xml`.
 
+U Autronicu platí pevné zadání: brát pouze kategorii nábytek. Všechny ostatní kategorie musí parser přeskočit.
+
 Druhá fáze:
 
 - Sakypaky: `https://www.sakypaky.cz/export/b2b_partners_cs.xml`,
