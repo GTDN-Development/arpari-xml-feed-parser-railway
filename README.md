@@ -188,3 +188,4 @@ Poznámka k Autronic dostupnostnímu feedu: `HEAD` request vrací 404, ale běž
 - [Automatické importy produktů](https://podpora.shoptet.cz/automaticke-importy-produktu/)
 - [Šablony variant](https://podpora.shoptet.cz/sablony-variant/)
 - [Příplatkové parametry](https://podpora.shoptet.cz/priplatkove-parametry/)
+- [Shoptet XML validátor](https://www.shoptet.cz/xml-validace/) pro ruční externí kontrolu feed URL.

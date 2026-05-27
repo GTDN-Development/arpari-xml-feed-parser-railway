@@ -7,6 +7,17 @@ import (
 	"testing"
 )
 
+type helloShop struct {
+	Item helloShopItem `xml:"SHOPITEM"`
+}
+
+type helloShopItem struct {
+	Code     string `xml:"CODE"`
+	Name     string `xml:"NAME"`
+	PriceVAT string `xml:"PRICE_VAT"`
+	Stock    string `xml:"STOCK"`
+}
+
 func TestHelloGenerateReturnsWellFormedXML(t *testing.T) {
 	var output bytes.Buffer
 
@@ -25,5 +36,14 @@ func TestHelloGenerateReturnsWellFormedXML(t *testing.T) {
 
 	if parsed.Item.Code != "HELLO-001" {
 		t.Fatalf("expected hello item code, got %q", parsed.Item.Code)
+	}
+	if parsed.Item.Name != "Hello world product" {
+		t.Fatalf("expected hello item name, got %q", parsed.Item.Name)
+	}
+	if parsed.Item.PriceVAT != "123.45" {
+		t.Fatalf("expected hello item price, got %q", parsed.Item.PriceVAT)
+	}
+	if parsed.Item.Stock != "7" {
+		t.Fatalf("expected hello item stock, got %q", parsed.Item.Stock)
 	}
 }

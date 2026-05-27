@@ -18,6 +18,8 @@ Aktuálně hotovo:
 - Endpoint `GET /feeds/hello.xml` pro lokálně vygenerovaný feed.
 - Status soubor `data/status.json`.
 - Endpoint `GET /status` pro stav posledních rebuild běhů.
+- Shoptet XML writer pro základní produktový a variantní výstup.
+- Základní Shoptet validační pravidla pro prázdný feed, počet položek a limit variant.
 
 Aktuálně mimo rozsah:
 
@@ -137,6 +139,8 @@ Akceptační kritéria:
 - chybějící storage adresáře se vytvoří automaticky.
 
 ## M4: Shoptet XML writer a základní validace
+
+Status: hotovo lokálně.
 
 Cíl:
 
@@ -356,10 +360,10 @@ Akceptační kritéria:
 
 ## Doporučený nejbližší krok
 
-Po lokálním dokončení M3 pokračovat milníkem M4:
+Po lokálním dokončení M4 pokračovat milníkem M5:
 
 ```bash
 go test ./...
 ```
 
-Tím připravíme společnou Shoptet XML vrstvu pro první reálné dodavatelské feedy.
+Tím ověříme společnou Shoptet XML vrstvu před napojením prvního reálného STIMA feedu.
