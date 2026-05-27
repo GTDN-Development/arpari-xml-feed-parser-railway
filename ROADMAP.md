@@ -246,6 +246,7 @@ Rozsah:
 
 - stahovat `https://www.stima.cz/userfiles/xml/ITTC_SHT_products.xml`,
 - transformovat katalog do Shoptet XML podle pravidel,
+- přidat ke každému produktu obrázek do dlouhého popisu,
 - řešit varianty a EAN,
 - detekovat produkty nad limitem variant,
 - vystavit `GET /feeds/stima-products.xml`.
@@ -253,6 +254,7 @@ Rozsah:
 Akceptační kritéria:
 
 - produkt nad limitem 512 variant není bez kontroly publikován jako rozbitý feed,
+- každý produkt má v dlouhém popisu vložený vhodný obrázek,
 - status ukáže přeskočené nebo problematické produkty,
 - výstup respektuje mapování a nepřepisuje chráněná katalogová pole.
 
