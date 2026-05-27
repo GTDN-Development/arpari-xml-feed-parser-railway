@@ -6,14 +6,14 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/fanda/arpari-xml-feed-parser-railway/internal/config"
 	"github.com/fanda/arpari-xml-feed-parser-railway/internal/feed"
 	runstatus "github.com/fanda/arpari-xml-feed-parser-railway/internal/status"
 	"github.com/fanda/arpari-xml-feed-parser-railway/internal/storage"
 )
-
-const dataDir = "data"
 
 func main() {
 	supplier := flag.String("supplier", "", "supplier feed to rebuild")
@@ -30,6 +30,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	dataDir := config.DataDir()
 	publisher := storage.NewPublisher(dataDir)
 	statusStore := runstatus.NewStore(dataDir)
 
@@ -51,5 +52,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	slog.Info("feed rebuilt", "supplier", generator.Name(), "path", "data/feeds/"+generator.Filename())
+	slog.Info("feed rebuilt", "supplier", generator.Name(), "path", filepath.Join(dataDir, "feeds", generator.Filename()))
 }

@@ -16,11 +16,12 @@ Implementováno:
 - lokální dummy feed pipeline přes `cmd/rebuild`,
 - endpoint `GET /feeds/hello.xml` pro vygenerovaný dummy XML feed,
 - endpoint `GET /status` se stavem posledních rebuild běhů,
+- konfigurovatelný data adresář přes `DATA_DIR` nebo Railway Volume,
 - základní test handleru,
 - `Dockerfile` pro Railway deployment,
 - `railway.json` s Dockerfile builderem.
 
-Transformace dodavatelských XML, plánované spouštění a produkční persistence přes Railway Volume budou doplněné v dalších krocích.
+Transformace dodavatelských XML a plánované spouštění budou doplněné v dalších krocích.
 
 ## Požadavky pro lokální vývoj
 
@@ -47,6 +48,13 @@ go run ./cmd/server
 ```
 
 Server poslouchá na portu z environment variable `PORT`. Pokud není nastavena, použije `8080`.
+
+Feed výstupy a status se ukládají do adresáře `data`. Pro lokální override lze použít `DATA_DIR`:
+
+```bash
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier hello
+DATA_DIR=/tmp/arpari-data go run ./cmd/server
+```
 
 ```bash
 curl http://localhost:8080/
@@ -108,6 +116,7 @@ Railway použije:
 - root-level `railway.json`,
 - `Dockerfile`,
 - environment variable `PORT`, kterou Railway nastavuje automaticky.
+- Railway Volume mount path z environment variable `RAILWAY_VOLUME_MOUNT_PATH`, pokud je ke službě připojený Volume.
 
 Aplikace v kontejneru poslouchá na:
 
@@ -115,11 +124,25 @@ Aplikace v kontejneru poslouchá na:
 0.0.0.0:${PORT}
 ```
 
+Pro persistentní feedy na Railway:
+
+1. Připoj ke službě Railway Volume.
+2. Nastav mount path Volume na `/data`.
+3. Nenastavuj ručně `DATA_DIR`; aplikace použije `RAILWAY_VOLUME_MOUNT_PATH`.
+4. Po deployi ověř `/status`; `/feeds/hello.xml` ověř po prvním rebuild běhu, který feed do Volume uloží.
+
+Priority data adresáře jsou:
+
+```text
+DATA_DIR -> RAILWAY_VOLUME_MOUNT_PATH -> data
+```
+
 Po deployi ověř:
 
 ```text
 https://<railway-domain>/
 https://<railway-domain>/healthz
+https://<railway-domain>/status
 ```
 
 ## Budoucí cílový tok

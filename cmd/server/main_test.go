@@ -15,7 +15,7 @@ func TestHelloHandler(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/", nil)
 	recorder := httptest.NewRecorder()
 
-	newMux().ServeHTTP(recorder, request)
+	newMux(t.TempDir()).ServeHTTP(recorder, request)
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
@@ -30,7 +30,7 @@ func TestUnknownRouteReturnsNotFound(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/nope", nil)
 	recorder := httptest.NewRecorder()
 
-	newMux().ServeHTTP(recorder, request)
+	newMux(t.TempDir()).ServeHTTP(recorder, request)
 
 	if recorder.Code != http.StatusNotFound {
 		t.Fatalf("expected status %d, got %d", http.StatusNotFound, recorder.Code)
@@ -38,12 +38,12 @@ func TestUnknownRouteReturnsNotFound(t *testing.T) {
 }
 
 func TestStatusHandlerReturnsEmptyStatusWhenMissing(t *testing.T) {
-	t.Chdir(t.TempDir())
+	dataDir := t.TempDir()
 
 	request := httptest.NewRequest(http.MethodGet, "/status", nil)
 	recorder := httptest.NewRecorder()
 
-	newMux().ServeHTTP(recorder, request)
+	newMux(dataDir).ServeHTTP(recorder, request)
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
@@ -61,10 +61,44 @@ func TestStatusHandlerReturnsEmptyStatusWhenMissing(t *testing.T) {
 	}
 }
 
-func TestFeedHandlerServesExistingFeed(t *testing.T) {
-	t.Chdir(t.TempDir())
+func TestStatusHandlerReadsStatusFromDataDir(t *testing.T) {
+	dataDir := t.TempDir()
+	statusStore := runstatus.NewStore(dataDir)
+	if err := statusStore.Write(runstatus.File{Feeds: map[string]runstatus.FeedStatus{
+		"hello": {
+			Filename:       "hello.xml",
+			LastRunAt:      "2026-05-27T08:00:00Z",
+			Status:         runstatus.Success,
+			ItemsProcessed: 1,
+			ItemsSkipped:   0,
+			Error:          "",
+		},
+	}}); err != nil {
+		t.Fatalf("write status: %v", err)
+	}
 
-	feedDir := filepath.Join("data", "feeds")
+	request := httptest.NewRequest(http.MethodGet, "/status", nil)
+	recorder := httptest.NewRecorder()
+
+	newMux(dataDir).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
+	}
+
+	var file runstatus.File
+	if err := json.Unmarshal(recorder.Body.Bytes(), &file); err != nil {
+		t.Fatalf("decode status response: %v", err)
+	}
+	if file.Feeds["hello"].Filename != "hello.xml" {
+		t.Fatalf("expected hello status from data dir, got %#v", file.Feeds["hello"])
+	}
+}
+
+func TestFeedHandlerServesExistingFeed(t *testing.T) {
+	dataDir := t.TempDir()
+
+	feedDir := filepath.Join(dataDir, "feeds")
 	if err := os.MkdirAll(feedDir, 0o755); err != nil {
 		t.Fatalf("create feed dir: %v", err)
 	}
@@ -75,7 +109,7 @@ func TestFeedHandlerServesExistingFeed(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/feeds/hello.xml", nil)
 	recorder := httptest.NewRecorder()
 
-	newMux().ServeHTTP(recorder, request)
+	newMux(dataDir).ServeHTTP(recorder, request)
 
 	if recorder.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)

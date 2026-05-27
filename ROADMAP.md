@@ -110,11 +110,11 @@ Akceptační kritéria:
 Poznámka:
 
 - M2 používá lokální `data/status.json`.
-- Produkční persistentní umístění přes `DATA_DIR=/data` a Railway Volume přijde v M3.
+- Produkční persistentní umístění přes Railway Volume přijde v M3.
 
 ## M3: Railway Volume a production storage
 
-Status: další doporučený krok.
+Status: hotovo lokálně.
 
 Cíl:
 
@@ -123,16 +123,16 @@ Cíl:
 
 Rozsah:
 
-- používat env `DATA_DIR`, fallback lokálně `./data`,
+- používat `DATA_DIR`, jinak Railway `RAILWAY_VOLUME_MOUNT_PATH`, fallback lokálně `./data`,
 - na Railway mountnout Volume na `/data`,
-- ukládat feedy do `${DATA_DIR}/feeds`,
-- ukládat status do `${DATA_DIR}/status.json`,
+- ukládat feedy do vybraného data adresáře pod `feeds`,
+- ukládat status do vybraného data adresáře jako `status.json`,
 - doplnit README o Railway Volume setup.
 
 Akceptační kritéria:
 
 - lokálně aplikace funguje bez env konfigurace,
-- na Railway aplikace používá `/data`,
+- na Railway aplikace používá cestu z `RAILWAY_VOLUME_MOUNT_PATH`,
 - po redeploy zůstane poslední validní feed dostupný,
 - chybějící storage adresáře se vytvoří automaticky.
 
@@ -354,10 +354,10 @@ Akceptační kritéria:
 
 ## Doporučený nejbližší krok
 
-Začít milníkem M3:
+Po lokálním dokončení M3 pokračovat milníkem M4:
 
 ```bash
-DATA_DIR=/data go run ./cmd/server
+go test ./...
 ```
 
-Tím sjednotíme lokální a produkční storage cestu a připravíme Railway Volume pro poslední validní feedy i status.
+Tím připravíme společnou Shoptet XML vrstvu pro první reálné dodavatelské feedy.
