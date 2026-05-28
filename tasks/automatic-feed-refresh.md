@@ -90,8 +90,16 @@ ceny: 1x denně nebo každé 2-3 dny podle dodavatele
 - `stima-products`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
 - `stima-stock`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
 - `stima-stock-price`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
-- Ostatní dodavatelé jsou zatím draft tasky bez implementace.
+- `autronic-products`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
+- `autronic-products-test`: testovací feed s 20 produkty implementován.
+- `sego`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
+- `sego-test`: testovací feed s 20 produkty implementován.
+- `hon`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
+- `hon-test`: testovací feed s 20 produkty implementován.
+- `autronic-availability`: zatím draft task bez implementace.
 
 ## Poznámka
 
-STIMA katalog `stima-products` se nemá spouštět při startu serveru. Server má jen servírovat poslední publikovaný výstup. Automatické aktualizace má řešit cron.
+Cílový stav: katalogové a aktualizační feedy se nemají spouštět při startu serveru. Server má jen servírovat poslední publikovaný výstup. Automatické aktualizace má řešit cron.
+
+Dočasný stav pro první ruční testy: `railway.json` rebuildí první vlnu při startu služby, aby byly nové feed URL po deployi rovnou k dispozici. Rebuild chyby v tomto dočasném start commandu nesmí zastavit spuštění serveru.

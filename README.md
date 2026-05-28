@@ -19,7 +19,10 @@ Implementováno:
 - STIMA testovací katalog `stima-products-test` s prvními 20 produkty,
 - STIMA skladový MVP feed `stima-stock` z `ITTC_SHT_stock.xml`,
 - STIMA skladový a cenový MVP feed `stima-stock-price` z `ITTC_SHT_stock_price.xml`,
-- endpointy `GET /feeds/stima-products.xml`, `GET /feeds/stima-products-test.xml`, `GET /feeds/stima-stock.xml`, `GET /feeds/stima-stock-price.xml` po ručních rebuild bězích,
+- Autronic katalogový MVP feed `autronic-products` filtrovaný na nábytek (`NA-*`) a test feed `autronic-products-test`,
+- SEGO katalogový MVP feed `sego` a test feed `sego-test`,
+- HON katalogový MVP feed `hon` a test feed `hon-test`,
+- endpointy `GET /feeds/*.xml` po ručních rebuild bězích,
 - Shoptet XML writer pro jednoduché produkty, varianty, variantní parametry a sklad po skladech,
 - endpoint `GET /status` se stavem posledních rebuild běhů,
 - konfigurovatelný data adresář přes `DATA_DIR` nebo Railway Volume,
@@ -63,6 +66,12 @@ DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-products
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-products-test
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-stock
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-stock-price
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier autronic-products
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier autronic-products-test
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier sego
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier sego-test
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier hon
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier hon-test
 DATA_DIR=/tmp/arpari-data go run ./cmd/server
 ```
 
@@ -75,6 +84,12 @@ curl http://localhost:8080/feeds/stima-products.xml
 curl http://localhost:8080/feeds/stima-products-test.xml
 curl http://localhost:8080/feeds/stima-stock.xml
 curl http://localhost:8080/feeds/stima-stock-price.xml
+curl http://localhost:8080/feeds/autronic-products.xml
+curl http://localhost:8080/feeds/autronic-products-test.xml
+curl http://localhost:8080/feeds/sego.xml
+curl http://localhost:8080/feeds/sego-test.xml
+curl http://localhost:8080/feeds/hon.xml
+curl http://localhost:8080/feeds/hon-test.xml
 ```
 
 Očekávané odpovědi:
@@ -103,6 +118,12 @@ Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsah
 Endpoint `/feeds/stima-products-test.xml` vrací stejnou katalogovou transformaci jako `stima-products`, ale jen prvních 20 výstupních produktů. Slouží pro rychlé ruční testy v Shoptetu.
 
 Endpointy `/feeds/stima-stock.xml` a `/feeds/stima-stock-price.xml` vrací aktualizační MVP pro STIMA sklad, respektive sklad + cenu. Neobsahují katalogová pole jako popisy, obrázky nebo kategorie. I tyto feedy respektují Shoptet limit 512 variant na produkt.
+
+Endpoint `/feeds/autronic-products.xml` vrací katalogový MVP Autronicu filtrovaný na nábytkové kategorie s prefixem `NA-`. Obsahuje kód, název, EAN, cenu s DPH, sklad, sklad po skladech, popis, obrázky a základní mapování do cílových Shoptet kategorií. Endpoint `/feeds/autronic-products-test.xml` vrací prvních 20 výstupních produktů pro rychlý ruční import.
+
+Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Zboží.cz styl feedu. Obsahuje kód, název, EAN, cenu s DPH, dostupnost, popis, obrázky a základní mapování do kancelářských židlí. Endpoint `/feeds/sego-test.xml` vrací prvních 20 produktů.
+
+Endpoint `/feeds/hon.xml` vrací katalogový MVP z HON feedu. Obsahuje kód, název, cenu s DPH, sklad, dostupnost, popis, obrázky a základní mapování do kancelářských židlí / bytových doplňků. Endpoint `/feeds/hon-test.xml` vrací prvních 20 produktů.
 
 Endpoint `/status` vrací stav posledních lokálních rebuild běhů:
 

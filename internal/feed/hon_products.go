@@ -1,0 +1,96 @@
+package feed
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"log/slog"
+
+	"github.com/fanda/arpari-xml-feed-parser-railway/internal/hon"
+	"github.com/fanda/arpari-xml-feed-parser-railway/internal/shoptet"
+)
+
+type Hon struct {
+	Downloader hon.Downloader
+	SourceURL  string
+}
+
+type HonTest struct {
+	Downloader  hon.Downloader
+	SourceURL   string
+	MaxProducts int
+}
+
+func (Hon) Name() string {
+	return "hon"
+}
+
+func (Hon) Filename() string {
+	return "hon.xml"
+}
+
+func (generator Hon) Generate(ctx context.Context, w io.Writer) (Result, error) {
+	return generateHonProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, 0)
+}
+
+func (HonTest) Name() string {
+	return "hon-test"
+}
+
+func (HonTest) Filename() string {
+	return "hon-test.xml"
+}
+
+func (generator HonTest) Generate(ctx context.Context, w io.Writer) (Result, error) {
+	maxProducts := generator.MaxProducts
+	if maxProducts <= 0 {
+		maxProducts = 20
+	}
+	return generateHonProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, maxProducts)
+}
+
+func generateHonProducts(ctx context.Context, w io.Writer, supplier string, configuredDownloader hon.Downloader, configuredSourceURL string, maxProducts int) (Result, error) {
+	downloader := configuredDownloader
+	if downloader == nil {
+		downloader = hon.HTTPDownloader{}
+	}
+
+	sourceURL := configuredSourceURL
+	if sourceURL == "" {
+		sourceURL = hon.ProductsURL
+	}
+
+	body, err := downloader.Download(ctx, sourceURL)
+	if err != nil {
+		return Result{}, err
+	}
+	defer body.Close()
+
+	feed, stats, err := hon.ParseProducts(ctx, body, hon.ProductsOptions{MaxProducts: maxProducts})
+	if err != nil {
+		return Result{}, err
+	}
+	if len(feed.Items) == 0 {
+		return Result{ItemsSkipped: stats.ProductsSkipped}, fmt.Errorf("HON output is empty after transformation")
+	}
+
+	slog.Info(
+		"HON products transformed",
+		"supplier", supplier,
+		"productsRead", stats.ProductsRead,
+		"productsEmitted", stats.ProductsEmitted,
+		"productsSkipped", stats.ProductsSkipped,
+	)
+
+	if err := shoptet.Write(w, feed); err != nil {
+		return Result{
+			ItemsProcessed: stats.ProductsEmitted,
+			ItemsSkipped:   stats.ProductsSkipped,
+		}, err
+	}
+
+	return Result{
+		ItemsProcessed: stats.ProductsEmitted,
+		ItemsSkipped:   stats.ProductsSkipped,
+	}, nil
+}

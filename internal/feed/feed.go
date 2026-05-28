@@ -34,5 +34,11 @@ func All() []Generator {
 		StimaProductsTest{},
 		StimaStock{},
 		StimaStockPrice{},
+		AutronicProducts{},
+		AutronicProductsTest{},
+		Sego{},
+		SegoTest{},
+		Hon{},
+		HonTest{},
 	}
 }

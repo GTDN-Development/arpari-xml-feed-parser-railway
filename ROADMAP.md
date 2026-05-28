@@ -22,12 +22,21 @@ Aktuálně hotovo:
 - Základní Shoptet validační pravidla pro prázdný feed, počet položek a limit variant.
 - STIMA katalogový MVP generator `stima-products`.
 - Endpoint `GET /feeds/stima-products.xml` po ručním rebuild běhu.
+- Testovací katalogové endpointy pro první importní ladění:
+  - `stima-products-test`,
+  - `autronic-products-test`,
+  - `sego-test`,
+  - `hon-test`.
+- Katalogové MVP generátory první vlny:
+  - `autronic-products`,
+  - `sego`,
+  - `hon`.
 
 Aktuálně mimo rozsah:
 
 - perzistence posledních validních feedů,
 - cron nebo scheduled jobs,
-- mapování produktů a kategorií.
+- finální mapování produktů a kategorií.
 - automatické generování feedu při Railway startu.
 
 ## M0: Deploy scaffold
