@@ -8,6 +8,7 @@
 - Source URL: `https://www.webshop.officepro-brno.cz/import/HONClientFeed/HONClientFeed.xml`
 - Priority: první fáze
 - Status: draft, čeká na implementaci
+- Last updated: 2026-05-28
 
 ## Cíl
 

@@ -8,6 +8,7 @@
 - Source URL: `https://www.matrace-drevocal.cz/feed/`
 - Priority: druhá fáze
 - Status: draft, odloženo mimo první MVP
+- Last updated: 2026-05-28
 
 ## Cíl
 

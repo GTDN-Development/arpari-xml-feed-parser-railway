@@ -8,6 +8,7 @@
 - Source URL: `https://autronic.cz/feeds/product-feed.xml`
 - Priority: volitelné v první fázi
 - Status: draft, použít jen pokud bude potřeba katalog
+- Last updated: 2026-05-28
 
 ## Cíl
 

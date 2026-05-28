@@ -8,6 +8,7 @@
 - Source URL: `https://www.sakypaky.cz/export/b2b_partners_cs.xml`
 - Priority: druhá fáze
 - Status: draft, odloženo mimo první MVP
+- Last updated: 2026-05-28
 
 ## Cíl
 

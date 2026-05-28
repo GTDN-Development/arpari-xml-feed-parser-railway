@@ -7,7 +7,8 @@
 - Output endpoint: `/feeds/stima-stock.xml`
 - Source URL: `https://www.stima.cz/userfiles/xml/ITTC_SHT_stock.xml`
 - Priority: první fáze
-- Status: draft, čeká na implementaci
+- Status: MVP implementováno, business pravidla k doplnění
+- Last updated: 2026-05-28
 
 ## Cíl
 
@@ -19,6 +20,7 @@ Generovat samostatný Shoptet XML feed pro aktualizaci skladů STIMA produktů a
 - Nemá přepisovat katalogová pole jako názvy, popisy, obrázky, SEO nebo kategorie.
 - Musí používat `GET` download a standardní bezpečný publish flow.
 - Chyba jednoho skladového běhu nesmí rozbít katalogový feed.
+- Produkty nad 512 variant se zatím oříznou na prvních 512 variant v pořadí ze STIMA feedu.
 
 ## MVP rozsah
 
@@ -28,12 +30,28 @@ Generovat samostatný Shoptet XML feed pro aktualizaci skladů STIMA produktů a
   - `STOCK`
   - případně sklad po skladech, pokud ho zdroj obsahuje
 
+## Aktuální ověření
+
+- Stav kódu: implementováno v `internal/stima/updates.go` a `internal/feed/stima_updates.go`.
+- Registry: supplier `stima-stock` je dostupný přes `cmd/rebuild`.
+- Lokální testy: `go test ./...` prochází.
+- Reálný rebuild proti STIMA zdroji ověřen 2026-05-28.
+- Poslední ověřené počty:
+  - products read: 953
+  - products emitted: 953
+  - products skipped: 0
+  - products trimmed over 512 variants: 20
+  - variants emitted: 20581
+  - variants trimmed: 3431
+  - output size: přibližně 11.6 MB
+
 ## Otevřené otázky
 
 - Má Shoptet import skladů očekávat jednoduchý `STOCK`, nebo strukturu `WAREHOUSES`?
 - Budeme sklad u STIMA variant řešit podle variant `CODE`, nebo přes mapování na původní katalog?
 - Jak často sklad aktualizovat po nasazení automatického cronu?
 - Má skladový feed pomoci rozlišit `Skladem / Na zakázku` u STIMA katalogových variant?
+- Je pro skladové aktualizace lepší zachovat variantní strukturu, nebo posílat varianty po jednotlivých kódech?
 
 ## Akceptační kritéria
 

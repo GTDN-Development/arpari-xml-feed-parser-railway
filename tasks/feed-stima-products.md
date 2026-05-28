@@ -8,6 +8,7 @@
 - Source URL: `https://www.stima.cz/userfiles/xml/ITTC_SHT_products.xml`
 - Priority: první fáze
 - Status: MVP implementováno, business pravidla k doplnění
+- Last updated: 2026-05-28
 
 ## Cíl
 
@@ -42,6 +43,21 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - variant `PRICE_VAT`
   - variant `STOCK`
   - variant `PARAMETERS`
+
+## Aktuální ověření
+
+- Stav kódu: implementováno v `internal/stima/products.go` a `internal/feed/stima_products.go`.
+- Registry: supplier `stima-products` je dostupný přes `cmd/rebuild`.
+- Lokální testy: `go test ./...` prochází.
+- Reálný rebuild proti STIMA zdroji ověřen 2026-05-28.
+- Poslední ověřené počty:
+  - products read: 953
+  - products emitted: 953
+  - products skipped: 0
+  - products trimmed over 512 variants: 20
+  - variants emitted: 20581
+  - variants trimmed: 3431
+  - output size: přibližně 13.2 MB
 
 ## Otevřené otázky
 

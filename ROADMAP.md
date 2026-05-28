@@ -206,6 +206,8 @@ Akceptační kritéria:
 
 ## M6: STIMA stock a stock + price
 
+Status: hotovo lokálně.
+
 Cíl:
 
 - přidat samostatné aktualizační feedy pro sklad a sklad + ceny.

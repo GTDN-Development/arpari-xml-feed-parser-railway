@@ -8,6 +8,7 @@
 - Source URL: `https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_123456.xml`
 - Priority: první fáze
 - Status: draft, čeká na implementaci
+- Last updated: 2026-05-28
 
 ## Cíl
 

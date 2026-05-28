@@ -1,5 +1,10 @@
 # Automatická aktualizace feedů přes cron
 
+## Metadata
+
+- Status: draft, čeká na implementaci
+- Last updated: 2026-05-28
+
 ## Cíl
 
 Dodavatelské feedy nechceme servírovat jako živou proxy. Náš veřejný endpoint má vracet poslední úspěšně vygenerovaný Shoptet XML soubor z Railway Volume.
@@ -33,6 +38,8 @@ Aktuální návrh:
 
 ```text
 stima-products: každé 3 dny v noci
+stima-stock: každé 3 dny v noci pro první MVP, později častěji podle dohody
+stima-stock-price: každé 3 dny v noci pro první MVP, později podle cenové strategie
 ```
 
 Railway cron výraz:
@@ -77,6 +84,13 @@ ceny: 1x denně nebo každé 2-3 dny podle dodavatele
 5. Zajistit, že jeden feed fail neukončí celý `rebuild/all`.
 6. Na Railway vytvořit cron službu, která každé 3 dny zavolá `POST /internal/rebuild/all`.
 7. Ověřit `/status` a veřejné `/feeds/*.xml`.
+
+## Aktuální stav feedů
+
+- `stima-products`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
+- `stima-stock`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
+- `stima-stock-price`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
+- Ostatní dodavatelé jsou zatím draft tasky bez implementace.
 
 ## Poznámka
 
