@@ -163,6 +163,43 @@ func TestWriteProductWithVariants(t *testing.T) {
 	}
 }
 
+func TestWriteProductWithVariantsAllowsAnonymousParent(t *testing.T) {
+	var output bytes.Buffer
+
+	err := Write(&output, Feed{
+		Items: []Item{
+			{
+				Name: "Chair",
+				Variants: []Variant{
+					{
+						Code:         "CHAIR-001-OAK",
+						Price:        "1000.00",
+						Currency:     "CZK",
+						Availability: "Skladem",
+						ImageRef:     "https://example.test/oak.jpg",
+						Parameters:   []Parameter{{Name: "Barva", Value: "dub"}},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("write product with variants: %v", err)
+	}
+
+	var parsed shopXML
+	if err := xml.Unmarshal(output.Bytes(), &parsed); err != nil {
+		t.Fatalf("output is not well-formed XML: %v", err)
+	}
+	if parsed.Items[0].ExternalID != "" || parsed.Items[0].Code != "" {
+		t.Fatalf("expected anonymous variant parent, got %#v", parsed.Items[0])
+	}
+	variant := parsed.Items[0].Variants.Items[0]
+	if variant.Price != "1000.00" || variant.Currency != "CZK" || variant.ImageRef != "https://example.test/oak.jpg" {
+		t.Fatalf("unexpected variant fields: %#v", variant)
+	}
+}
+
 func TestWriteEscapesXMLText(t *testing.T) {
 	var output bytes.Buffer
 

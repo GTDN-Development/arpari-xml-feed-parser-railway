@@ -27,6 +27,8 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
 - SEGO flat varianty typu `Produkt | Barva` se slučují do Shoptet variant podle produktového URL slug a parametru `Barva`.
 - SEGO `Catalog/VariantImages/.../previewImg...` URL se do výstupu neposílají; zvenku vrací 404 a Shoptet je při importu nestáhne. Pro `IMAGES` a variantní `IMAGE_REF` se používají funkční `Catalog/.../source/...` URL.
+- Variantní produkty používají importní tvar ověřený proti starému Katuans feedu: parent nemá `CODE` ani `EXTERNAL_ID`, varianty nesou vlastní `CODE`, `PRICE`, `CURRENCY`, `AVAILABILITY`, `IMAGE_REF` a `PARAMETERS`.
+- SEGO obrázky jsou omezené na prvních 20 funkčních URL na produkt, aby import neposílal desítky duplicitních nebo doplňkových fotek na jeden variantní parent.
 
 ## MVP rozsah
 
@@ -35,7 +37,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Bezpečná základní pole:
   - `NAME`
   - `EAN`, pokud je ve zdroji
-  - `PRICE_VAT`, pokud je ve zdroji
+  - `PRICE` a `CURRENCY`, pokud je ve zdroji cena
   - dostupnost z `DELIVERY_DATE`
   - `DESCRIPTION`
   - `IMAGES`

@@ -26,7 +26,9 @@ type Item struct {
 	Name             string
 	ShortDescription string
 	Description      string
+	Price            string
 	PriceVAT         string
+	Currency         string
 	Stock            string
 	Warehouses       []Warehouse
 	Availability     string
@@ -39,7 +41,9 @@ type Item struct {
 
 type Variant struct {
 	Code         string
+	Price        string
 	PriceVAT     string
+	Currency     string
 	Stock        string
 	Warehouses   []Warehouse
 	Availability string
@@ -110,7 +114,7 @@ func ValidateWithLimits(feed Feed, limits Limits) error {
 	}
 
 	for itemIndex, item := range feed.Items {
-		if strings.TrimSpace(item.Code) == "" {
+		if len(item.Variants) == 0 && strings.TrimSpace(item.Code) == "" {
 			return fmt.Errorf("SHOPITEM[%d] CODE is required", itemIndex)
 		}
 		if len(item.Variants) > limits.MaxVariantsPerItem {
@@ -170,7 +174,9 @@ func toShop(feed Feed) shopXML {
 			for _, variant := range item.Variants {
 				variants = append(variants, shopVariantXML{
 					Code:         variant.Code,
+					Price:        variant.Price,
 					PriceVAT:     variant.PriceVAT,
+					Currency:     variant.Currency,
 					Stock:        toStockXML(variant.Stock, variant.Warehouses),
 					Availability: variant.Availability,
 					EAN:          variant.EAN,
@@ -181,7 +187,9 @@ func toShop(feed Feed) shopXML {
 			shopItem.Variants = &shopVariantsXML{Items: variants}
 		} else {
 			shopItem.Code = item.Code
+			shopItem.Price = item.Price
 			shopItem.PriceVAT = item.PriceVAT
+			shopItem.Currency = item.Currency
 			shopItem.Stock = toStockXML(item.Stock, item.Warehouses)
 			shopItem.Availability = item.Availability
 			shopItem.EAN = item.EAN
@@ -307,7 +315,9 @@ type shopItemXML struct {
 	Name             string             `xml:"NAME,omitempty"`
 	ShortDescription string             `xml:"SHORT_DESCRIPTION,omitempty"`
 	Description      string             `xml:"DESCRIPTION,omitempty"`
+	Price            string             `xml:"PRICE,omitempty"`
 	PriceVAT         string             `xml:"PRICE_VAT,omitempty"`
+	Currency         string             `xml:"CURRENCY,omitempty"`
 	Stock            *shopStockXML      `xml:"STOCK,omitempty"`
 	Availability     string             `xml:"AVAILABILITY,omitempty"`
 	EAN              string             `xml:"EAN,omitempty"`
@@ -341,7 +351,9 @@ type shopVariantsXML struct {
 type shopVariantXML struct {
 	Code         string             `xml:"CODE,omitempty"`
 	EAN          string             `xml:"EAN,omitempty"`
+	Price        string             `xml:"PRICE,omitempty"`
 	PriceVAT     string             `xml:"PRICE_VAT,omitempty"`
+	Currency     string             `xml:"CURRENCY,omitempty"`
 	Stock        *shopStockXML      `xml:"STOCK,omitempty"`
 	Availability string             `xml:"AVAILABILITY,omitempty"`
 	ImageRef     string             `xml:"IMAGE_REF,omitempty"`

@@ -18,6 +18,8 @@ import (
 
 const ProductsURL = "https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_123456.xml"
 
+const maxImagesPerProduct = 20
+
 type Downloader interface {
 	Download(ctx context.Context, url string) (io.ReadCloser, error)
 }
@@ -124,12 +126,18 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 		return shoptet.Item{}, false
 	}
 
+	price := strings.TrimSpace(source.PriceVAT)
 	category := targetCategory(source)
+	currency := ""
+	if price != "" {
+		currency = "CZK"
+	}
 	return shoptet.Item{
 		Code:            code,
 		Name:            name,
 		Description:     normalizeDescription(source.Description),
-		PriceVAT:        strings.TrimSpace(source.PriceVAT),
+		Price:           price,
+		Currency:        currency,
 		Availability:    transformDeliveryDate(source.DeliveryDate),
 		EAN:             strings.TrimSpace(source.EAN),
 		Categories:      []shoptet.Category{category},
@@ -218,6 +226,9 @@ func transformImages(source sourceItem) []shoptet.Image {
 		}
 		seen[url] = struct{}{}
 		images = append(images, shoptet.Image{URL: url})
+		if len(images) >= maxImagesPerProduct {
+			break
+		}
 	}
 	return images
 }
@@ -280,7 +291,8 @@ func (group *variantGroup) Add(item shoptet.Item, info variantInfo) {
 	group.variants = append(group.variants, shoptet.Variant{
 		Code:         item.Code,
 		EAN:          item.EAN,
-		PriceVAT:     item.PriceVAT,
+		Price:        item.Price,
+		Currency:     item.Currency,
 		Availability: item.Availability,
 		ImageRef:     variantImageRef(item.Images),
 		Parameters:   parameters,
@@ -300,10 +312,11 @@ func (group *variantGroup) Item() shoptet.Item {
 	}
 
 	return shoptet.Item{
-		Code:            group.parentCode,
+		Code:            "",
 		Name:            group.baseName,
 		Description:     group.firstItem.Description,
-		PriceVAT:        group.firstItem.PriceVAT,
+		Price:           group.firstItem.Price,
+		Currency:        group.firstItem.Currency,
 		Availability:    group.firstItem.Availability,
 		Categories:      group.firstItem.Categories,
 		DefaultCategory: group.firstItem.DefaultCategory,
