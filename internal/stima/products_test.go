@@ -14,6 +14,8 @@ func TestParseProductsSimpleProduct(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>
     <NAME>Stůl SIMPLE</NAME>
+    <SHORT_DESCRIPTION>Krátký popis</SHORT_DESCRIPTION>
+    <DESCRIPTION>Dlouhý popis</DESCRIPTION>
     <CODE>ART-SIMPLE</CODE>
     <EAN>8590000000001</EAN>
     <PRICE_VAT>1234.00</PRICE_VAT>
@@ -53,6 +55,9 @@ func TestParseProductsSimpleProduct(t *testing.T) {
 	if item.Code != "ART-SIMPLE" || item.Name != "Stůl SIMPLE" || item.EAN != "8590000000001" || item.PriceVAT != "1234.00" {
 		t.Fatalf("unexpected simple item: %#v", item)
 	}
+	if item.ShortDescription != "Krátký popis" || item.Description != "Dlouhý popis" {
+		t.Fatalf("unexpected descriptions: %#v", item)
+	}
 	if len(item.Warehouses) != 1 || item.Warehouses[0] != (shoptet.Warehouse{Name: "HLAVNÍ SKLAD", Value: "5.000"}) {
 		t.Fatalf("unexpected warehouses: %#v", item.Warehouses)
 	}
@@ -74,6 +79,8 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	input := `<SHOP>
   <SHOPITEM>
     <NAME>Židle NANCY KR58</NAME>
+    <SHORT_DESCRIPTION>Krátký popis židle</SHORT_DESCRIPTION>
+    <DESCRIPTION>Dlouhý popis židle</DESCRIPTION>
     <CATEGORIES>
       <CATEGORY>Katalog &gt; Restaurační židle</CATEGORY>
       <CATEGORY>Katalog &gt; Restaurační židle &gt; Stále skladem</CATEGORY>
@@ -109,6 +116,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	item := feed.Items[0]
 	if item.Code != "ART13627" {
 		t.Fatalf("expected derived parent code ART13627, got %q", item.Code)
+	}
+	if item.ShortDescription != "Krátký popis židle" || item.Description != "Dlouhý popis židle" {
+		t.Fatalf("unexpected descriptions: %#v", item)
 	}
 	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1128", Path: "ŽIDLE > RESTAURAČNÍ ŽIDLE"}) {
 		t.Fatalf("unexpected default category: %#v", item.DefaultCategory)

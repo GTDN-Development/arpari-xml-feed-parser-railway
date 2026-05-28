@@ -13,12 +13,14 @@ func TestWriteSimpleProduct(t *testing.T) {
 	err := Write(&output, Feed{
 		Items: []Item{
 			{
-				Code:         "HELLO-001",
-				Name:         "Hello world product",
-				PriceVAT:     "123.45",
-				Stock:        "7",
-				Availability: "Skladem",
-				EAN:          "8590000000001",
+				Code:             "HELLO-001",
+				Name:             "Hello world product",
+				ShortDescription: "Short product text",
+				Description:      "Long product text",
+				PriceVAT:         "123.45",
+				Stock:            "7",
+				Availability:     "Skladem",
+				EAN:              "8590000000001",
 				Categories: []Category{
 					{ID: "902", Path: "ŽIDLE"},
 					{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"},
@@ -48,6 +50,12 @@ func TestWriteSimpleProduct(t *testing.T) {
 	}
 	if item.Name != "Hello world product" {
 		t.Fatalf("expected item name, got %q", item.Name)
+	}
+	if item.ShortDescription != "Short product text" {
+		t.Fatalf("expected item short description, got %q", item.ShortDescription)
+	}
+	if item.Description != "Long product text" {
+		t.Fatalf("expected item description, got %q", item.Description)
 	}
 	if item.PriceVAT != "123.45" {
 		t.Fatalf("expected item PRICE_VAT, got %q", item.PriceVAT)

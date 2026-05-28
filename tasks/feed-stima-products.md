@@ -19,7 +19,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 ## Aktuální pravidla
 
 - Parser nečte webový konfigurátor STIMA.
-- Výstup je technické MVP bez popisů a SEO; cílové Shoptet kategorie a obrázky už se mapují.
+- Výstup je technické MVP bez SEO; cílové Shoptet kategorie, obrázky a popisy už se mapují.
 - Testovací endpoint `stima-products-test` používá stejná pravidla, ale končí po prvních 20 výstupních produktech.
 - Variantní parametry:
   - `KOSTRA`
@@ -39,12 +39,16 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 - Jednoduché produkty:
   - `CODE`
   - `NAME`
+  - `SHORT_DESCRIPTION`
+  - `DESCRIPTION`
   - `EAN`
   - `PRICE_VAT`
   - `STOCK`
 - Variantní produkty:
   - parent `EXTERNAL_ID`
   - parent `NAME`
+  - parent `SHORT_DESCRIPTION`
+  - parent `DESCRIPTION`
   - parent `CATEGORIES`
   - parent `IMAGES`
   - variant `CODE`
@@ -67,9 +71,11 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - products trimmed over 512 variants: 20
   - variants emitted: 20581
   - variants trimmed: 3431
+  - short descriptions emitted: 208
+  - descriptions emitted: 207
   - image blocks: 517
   - images emitted: 1182
-  - output size: přibližně 13.5 MB
+  - output size: přibližně 13.6 MB
 - Testovací feed `stima-products-test` ověřen 2026-05-28:
   - products emitted: 20
   - variants emitted: 675
@@ -82,7 +88,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 - Má katalogový import zakládat nové produkty, nebo jen připravit data pro mapování?
 - Které katalogové atributy smí STIMA později přepisovat u existujících produktů?
 - Jak mapovat STIMA kategorie na cílové Shoptet kategorie?
-- Jak doplnit popisy bez rizika přepsání původního katalogu?
+- Která katalogová pole kromě popisů, kategorií a obrázků se mají později mapovat?
 
 ## Akceptační kritéria
 

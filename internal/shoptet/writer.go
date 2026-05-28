@@ -22,17 +22,19 @@ type Feed struct {
 }
 
 type Item struct {
-	Code            string
-	Name            string
-	PriceVAT        string
-	Stock           string
-	Warehouses      []Warehouse
-	Availability    string
-	EAN             string
-	Categories      []Category
-	DefaultCategory *Category
-	Images          []Image
-	Variants        []Variant
+	Code             string
+	Name             string
+	ShortDescription string
+	Description      string
+	PriceVAT         string
+	Stock            string
+	Warehouses       []Warehouse
+	Availability     string
+	EAN              string
+	Categories       []Category
+	DefaultCategory  *Category
+	Images           []Image
+	Variants         []Variant
 }
 
 type Variant struct {
@@ -155,13 +157,15 @@ func toShop(feed Feed) shopXML {
 	items := make([]shopItemXML, 0, len(feed.Items))
 	for _, item := range feed.Items {
 		shopItem := shopItemXML{
-			Name:         item.Name,
-			PriceVAT:     item.PriceVAT,
-			Stock:        toStockXML(item.Stock, item.Warehouses),
-			Availability: item.Availability,
-			EAN:          item.EAN,
-			Categories:   toCategoriesXML(item.Categories, item.DefaultCategory),
-			Images:       toImagesXML(item.Images),
+			Name:             item.Name,
+			ShortDescription: item.ShortDescription,
+			Description:      item.Description,
+			PriceVAT:         item.PriceVAT,
+			Stock:            toStockXML(item.Stock, item.Warehouses),
+			Availability:     item.Availability,
+			EAN:              item.EAN,
+			Categories:       toCategoriesXML(item.Categories, item.DefaultCategory),
+			Images:           toImagesXML(item.Images),
 		}
 		if len(item.Variants) > 0 {
 			shopItem.ExternalID = item.Code
@@ -296,16 +300,18 @@ type shopXML struct {
 }
 
 type shopItemXML struct {
-	ExternalID   string             `xml:"EXTERNAL_ID,omitempty"`
-	Code         string             `xml:"CODE,omitempty"`
-	Name         string             `xml:"NAME,omitempty"`
-	PriceVAT     string             `xml:"PRICE_VAT,omitempty"`
-	Stock        *shopStockXML      `xml:"STOCK,omitempty"`
-	Availability string             `xml:"AVAILABILITY,omitempty"`
-	EAN          string             `xml:"EAN,omitempty"`
-	Categories   *shopCategoriesXML `xml:"CATEGORIES,omitempty"`
-	Images       *shopImagesXML     `xml:"IMAGES,omitempty"`
-	Variants     *shopVariantsXML   `xml:"VARIANTS,omitempty"`
+	ExternalID       string             `xml:"EXTERNAL_ID,omitempty"`
+	Code             string             `xml:"CODE,omitempty"`
+	Name             string             `xml:"NAME,omitempty"`
+	ShortDescription string             `xml:"SHORT_DESCRIPTION,omitempty"`
+	Description      string             `xml:"DESCRIPTION,omitempty"`
+	PriceVAT         string             `xml:"PRICE_VAT,omitempty"`
+	Stock            *shopStockXML      `xml:"STOCK,omitempty"`
+	Availability     string             `xml:"AVAILABILITY,omitempty"`
+	EAN              string             `xml:"EAN,omitempty"`
+	Categories       *shopCategoriesXML `xml:"CATEGORIES,omitempty"`
+	Images           *shopImagesXML     `xml:"IMAGES,omitempty"`
+	Variants         *shopVariantsXML   `xml:"VARIANTS,omitempty"`
 }
 
 type shopCategoriesXML struct {

@@ -150,15 +150,17 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			return shoptet.Item{}, stats, false
 		}
 		return shoptet.Item{
-			Code:            code,
-			Name:            name,
-			EAN:             strings.TrimSpace(source.EAN),
-			PriceVAT:        strings.TrimSpace(source.PriceVAT),
-			Stock:           stock,
-			Warehouses:      warehouses,
-			Categories:      categories,
-			DefaultCategory: defaultCategory,
-			Images:          transformImages(source.Images),
+			Code:             code,
+			Name:             name,
+			ShortDescription: strings.TrimSpace(source.ShortDescription),
+			Description:      strings.TrimSpace(source.Description),
+			EAN:              strings.TrimSpace(source.EAN),
+			PriceVAT:         strings.TrimSpace(source.PriceVAT),
+			Stock:            stock,
+			Warehouses:       warehouses,
+			Categories:       categories,
+			DefaultCategory:  defaultCategory,
+			Images:           transformImages(source.Images),
 		}, stats, true
 	}
 
@@ -214,14 +216,16 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 	}
 	stats.VariantsEmitted = len(variants)
 	return shoptet.Item{
-		Code:            parentCode(source.Code, firstValidVariantCode),
-		Name:            name,
-		EAN:             strings.TrimSpace(source.EAN),
-		PriceVAT:        strings.TrimSpace(source.PriceVAT),
-		Categories:      categories,
-		DefaultCategory: defaultCategory,
-		Images:          transformImages(source.Images),
-		Variants:        variants,
+		Code:             parentCode(source.Code, firstValidVariantCode),
+		Name:             name,
+		ShortDescription: strings.TrimSpace(source.ShortDescription),
+		Description:      strings.TrimSpace(source.Description),
+		EAN:              strings.TrimSpace(source.EAN),
+		PriceVAT:         strings.TrimSpace(source.PriceVAT),
+		Categories:       categories,
+		DefaultCategory:  defaultCategory,
+		Images:           transformImages(source.Images),
+		Variants:         variants,
 	}, stats, true
 }
 
@@ -309,14 +313,16 @@ func isAllowedVariantParameter(name string) bool {
 }
 
 type sourceShopItem struct {
-	Name       string           `xml:"NAME"`
-	Code       string           `xml:"CODE"`
-	EAN        string           `xml:"EAN"`
-	PriceVAT   string           `xml:"PRICE_VAT"`
-	Stock      sourceStock      `xml:"STOCK"`
-	Categories sourceCategories `xml:"CATEGORIES"`
-	Images     []string         `xml:"IMAGES>IMAGE"`
-	Variants   []sourceVariant  `xml:"VARIANTS>VARIANT"`
+	Name             string           `xml:"NAME"`
+	ShortDescription string           `xml:"SHORT_DESCRIPTION"`
+	Description      string           `xml:"DESCRIPTION"`
+	Code             string           `xml:"CODE"`
+	EAN              string           `xml:"EAN"`
+	PriceVAT         string           `xml:"PRICE_VAT"`
+	Stock            sourceStock      `xml:"STOCK"`
+	Categories       sourceCategories `xml:"CATEGORIES"`
+	Images           []string         `xml:"IMAGES>IMAGE"`
+	Variants         []sourceVariant  `xml:"VARIANTS>VARIANT"`
 }
 
 type sourceVariant struct {
