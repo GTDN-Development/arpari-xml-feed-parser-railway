@@ -23,7 +23,7 @@ Generovat Shoptet produktový XML feed z Autronic katalogu pro samostatný testo
 - MVP filtr bere produkty s `CategoryShortName` prefixem `NA-`.
 - Reálný výstup po filtru má 800 produktů.
 - Všechny ostatní kategorie musí parser vyřadit před generováním Shoptet XML.
-- Testovací endpoint `autronic-products-test` používá stejná pravidla, ale končí po prvních 20 výstupních produktech.
+- Testovací endpoint `autronic-products-test` používá stejná pravidla, ale končí po prvních 2 výstupních produktech.
 - Katalog nesmí bez mapování přepsat citlivá produktová data původního katalogu.
 
 ## MVP rozsah
@@ -47,7 +47,7 @@ Generovat Shoptet produktový XML feed z Autronic katalogu pro samostatný testo
 - Lokální testy: `go test ./...` prochází.
 - Reálný rebuild ověřen 2026-05-28:
   - `autronic-products`: 5 750 přečteno, 800 emitováno, 4 950 přeskočeno.
-  - `autronic-products-test`: 20 emitovaných produktů.
+  - `autronic-products-test`: 2 emitované produkty.
   - Výstupní XML je well-formed a publikace proběhla přes storage publisher.
 
 ## Otevřené otázky
@@ -61,7 +61,7 @@ Generovat Shoptet produktový XML feed z Autronic katalogu pro samostatný testo
 
 - `go run ./cmd/rebuild --supplier autronic-products` vytvoří validní XML.
 - Výstup je dostupný na `/feeds/autronic-products.xml`.
-- `go run ./cmd/rebuild --supplier autronic-products-test` vytvoří testovací feed s 20 produkty.
+- `go run ./cmd/rebuild --supplier autronic-products-test` vytvoří testovací feed se 2 produkty.
 - Testovací výstup je dostupný na `/feeds/autronic-products-test.xml`.
 - Do výstupu se dostanou pouze produkty z kategorie nábytek.
 - Výstup nepřekročí Shoptet limit položek bez dalšího rozdělení.

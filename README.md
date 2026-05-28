@@ -16,7 +16,7 @@ Implementováno:
 - lokální dummy feed pipeline přes `cmd/rebuild`,
 - endpoint `GET /feeds/hello.xml` pro vygenerovaný dummy XML feed,
 - STIMA katalogový MVP feed `stima-products` z `ITTC_SHT_products.xml`,
-- STIMA testovací katalog `stima-products-test` s prvními 20 produkty,
+- STIMA testovací katalog `stima-products-test` s prvními 2 produkty,
 - STIMA skladový MVP feed `stima-stock` z `ITTC_SHT_stock.xml`,
 - STIMA skladový a cenový MVP feed `stima-stock-price` z `ITTC_SHT_stock_price.xml`,
 - Autronic katalogový MVP feed `autronic-products` filtrovaný na nábytek (`NA-*`) a test feed `autronic-products-test`,
@@ -115,15 +115,15 @@ Endpoint `/feeds/hello.xml` vrací jednoduchý XML feed s jednou dummy položkou
 
 Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsahuje základní produktová/variantní pole, krátký i dlouhý popis, sklad, cílové Shoptet kategorie, obrázky a povolené variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`. Produkty s více než 512 variantami se při transformaci ořežou na prvních 512 variant v pořadí ze zdrojového feedu. Položky bez bezpečně určené cílové kategorie se přeskočí.
 
-Endpoint `/feeds/stima-products-test.xml` vrací stejnou katalogovou transformaci jako `stima-products`, ale jen prvních 20 výstupních produktů. Slouží pro rychlé ruční testy v Shoptetu.
+Endpoint `/feeds/stima-products-test.xml` vrací stejnou katalogovou transformaci jako `stima-products`, ale jen první 2 výstupní produkty. Slouží pro rychlé ruční testy v Shoptetu.
 
 Endpointy `/feeds/stima-stock.xml` a `/feeds/stima-stock-price.xml` vrací aktualizační MVP pro STIMA sklad, respektive sklad + cenu. Neobsahují katalogová pole jako popisy, obrázky nebo kategorie. I tyto feedy respektují Shoptet limit 512 variant na produkt.
 
-Endpoint `/feeds/autronic-products.xml` vrací katalogový MVP Autronicu filtrovaný na nábytkové kategorie s prefixem `NA-`. Obsahuje kód, název, EAN, cenu s DPH, sklad, sklad po skladech, popis, obrázky a základní mapování do cílových Shoptet kategorií. Endpoint `/feeds/autronic-products-test.xml` vrací prvních 20 výstupních produktů pro rychlý ruční import.
+Endpoint `/feeds/autronic-products.xml` vrací katalogový MVP Autronicu filtrovaný na nábytkové kategorie s prefixem `NA-`. Obsahuje kód, název, EAN, cenu s DPH, sklad, sklad po skladech, popis, obrázky a základní mapování do cílových Shoptet kategorií. Endpoint `/feeds/autronic-products-test.xml` vrací první 2 výstupní produkty pro rychlý ruční import.
 
-Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Zboží.cz styl feedu. Obsahuje kód, název, EAN, cenu s DPH, dostupnost, popis, obrázky a základní mapování do kancelářských židlí. Endpoint `/feeds/sego-test.xml` vrací prvních 20 produktů.
+Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Zboží.cz styl feedu. Obsahuje kód, název, EAN, cenu s DPH, dostupnost, popis, obrázky a základní mapování do kancelářských židlí. Endpoint `/feeds/sego-test.xml` vrací první 2 produkty.
 
-Endpoint `/feeds/hon.xml` vrací katalogový MVP z HON feedu. Obsahuje kód, název, cenu s DPH, sklad, dostupnost, popis, obrázky a základní mapování do kancelářských židlí / bytových doplňků. Endpoint `/feeds/hon-test.xml` vrací prvních 20 produktů.
+Endpoint `/feeds/hon.xml` vrací katalogový MVP z HON feedu. Obsahuje kód, název, cenu s DPH, sklad, dostupnost, popis, obrázky a základní mapování do kancelářských židlí / bytových doplňků. Endpoint `/feeds/hon-test.xml` vrací první 2 produkty.
 
 Endpoint `/status` vrací stav posledních lokálních rebuild běhů:
 

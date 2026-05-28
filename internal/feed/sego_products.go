@@ -44,7 +44,7 @@ func (SegoTest) Filename() string {
 func (generator SegoTest) Generate(ctx context.Context, w io.Writer) (Result, error) {
 	maxProducts := generator.MaxProducts
 	if maxProducts <= 0 {
-		maxProducts = 20
+		maxProducts = 2
 	}
 	return generateSegoProductsWithOptions(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, sego.ProductsOptions{
 		MaxProducts:        maxProducts,

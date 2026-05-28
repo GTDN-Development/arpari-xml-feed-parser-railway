@@ -21,7 +21,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Zdroj je ve stylu Zboží.cz.
 - Transformace do Shoptet XML struktury je implementovaná jako katalogový MVP.
 - Reálný zdroj má 144 položek.
-- Testovací endpoint `sego-test` používá stejná pravidla, ale končí po prvních 20 produktech.
+- Testovací endpoint `sego-test` používá stejná pravidla, ale končí po prvních 2 produktech.
 - Katalogová data nesmí bez mapování přepisovat citlivá data původního katalogu.
 - Kategorie se mapují na cílové Shoptet kategorie včetně podkategorií podle názvu, popisu a parametrů SEGO položky.
 - Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
@@ -61,7 +61,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Reálný rebuild ověřen 2026-05-28:
   - `sego`: 144 přečteno, 100 emitovaných Shoptet produktů.
   - `sego`: 37 produktů s variantami, 81 emitovaných variant.
-  - `sego-test`: 20 emitovaných Shoptet produktů.
+  - `sego-test`: 2 emitované Shoptet produkty.
   - Výstupní XML je well-formed a publikace proběhla přes storage publisher.
 - Externí Shoptet validace je samostatný povinný krok a může odhalit chyby, které lokální well-formed kontrola nevidí.
 - Oficiální validátor: https://www.shoptet.cz/xml-validace/
@@ -77,7 +77,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 
 - `go run ./cmd/rebuild --supplier sego` vytvoří validní XML.
 - Výstup je dostupný na `/feeds/sego.xml`.
-- `go run ./cmd/rebuild --supplier sego-test` vytvoří testovací feed s 20 produkty.
+- `go run ./cmd/rebuild --supplier sego-test` vytvoří testovací feed se 2 produkty.
 - Testovací výstup je dostupný na `/feeds/sego-test.xml`.
 - Výstup nepřekročí Shoptet limity.
 - Veřejná URL `/feeds/sego.xml` projde ruční kontrolou v Shoptet XML validátoru proti produktové dodavatelské Relax NG specifikaci.

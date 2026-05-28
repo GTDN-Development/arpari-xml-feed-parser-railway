@@ -44,7 +44,7 @@ func (AutronicProductsTest) Filename() string {
 func (generator AutronicProductsTest) Generate(ctx context.Context, w io.Writer) (Result, error) {
 	maxProducts := generator.MaxProducts
 	if maxProducts <= 0 {
-		maxProducts = 20
+		maxProducts = 2
 	}
 	return generateAutronicProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, maxProducts)
 }

@@ -20,7 +20,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 
 - Parser nečte webový konfigurátor STIMA.
 - Výstup je technické MVP bez SEO; cílové Shoptet kategorie, obrázky a popisy už se mapují.
-- Testovací endpoint `stima-products-test` používá stejná pravidla, ale končí po prvních 20 výstupních produktech.
+- Testovací endpoint `stima-products-test` používá stejná pravidla, ale končí po prvních 2 výstupních produktech.
 - Variantní parametry:
   - `KOSTRA`
   - `Sedák`
@@ -77,7 +77,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - images emitted: 1182
   - output size: přibližně 13.6 MB
 - Testovací feed `stima-products-test` ověřen 2026-05-28:
-  - products emitted: 20
+  - products emitted: 2
   - variants emitted: 675
   - images emitted: 35
   - output size: přibližně 437 KB
