@@ -148,6 +148,16 @@ Endpoint `/status` vrací stav posledních lokálních rebuild běhů:
 go test ./...
 ```
 
+## Externí Shoptet validace
+
+Lokální testy a well-formed XML kontrola nestačí pro import do Shoptetu. Po každé změně
+generátoru a před každým importem do e-shopu ověř veřejnou URL feedu v oficiálním
+[Shoptet XML validátoru](https://www.shoptet.cz/xml-validace/).
+
+Pro produktové dodavatelské feedy validuj proti Shoptet Relax NG specifikaci pro
+produkty / supplier feed. Pokud validátor hlásí chybu, feed se nepovažuje za hotový ani
+v případě, že `go test ./...` a lokální rebuild prošly.
+
 ## Railway deployment
 
 Repo je připravené na deploy přes Railway z Git repozitáře.

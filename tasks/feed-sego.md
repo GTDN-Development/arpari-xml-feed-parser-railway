@@ -54,9 +54,12 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Registry: supplier `sego` a `sego-test` jsou dostupné přes `cmd/rebuild`.
 - Lokální testy: `go test ./...` prochází.
 - Reálný rebuild ověřen 2026-05-28:
-  - `sego`: 144 přečteno, 144 emitováno.
-  - `sego-test`: 20 emitovaných produktů.
+  - `sego`: 144 přečteno, 100 emitovaných Shoptet produktů.
+  - `sego`: 37 produktů s variantami, 81 emitovaných variant.
+  - `sego-test`: 20 emitovaných Shoptet produktů.
   - Výstupní XML je well-formed a publikace proběhla přes storage publisher.
+- Externí Shoptet validace je samostatný povinný krok a může odhalit chyby, které lokální well-formed kontrola nevidí.
+- Oficiální validátor: https://www.shoptet.cz/xml-validace/
 
 ## Otevřené otázky
 
@@ -72,6 +75,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - `go run ./cmd/rebuild --supplier sego-test` vytvoří testovací feed s 20 produkty.
 - Testovací výstup je dostupný na `/feeds/sego-test.xml`.
 - Výstup nepřekročí Shoptet limity.
+- Veřejná URL `/feeds/sego.xml` projde ruční kontrolou v Shoptet XML validátoru proti produktové dodavatelské Relax NG specifikaci.
 - Chyba downloadu nebo transformace nepřepíše poslední validní XML.
 - `/status` ukazuje výsledek posledního běhu.
 
@@ -84,4 +88,4 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Unit test mapování SEGO podkategorií.
 - Unit test slučování flat barevných variant.
 - Rebuild test přes fixture-backed downloader.
-- Ruční kontrola přes Shoptet XML validátor.
+- Po každé změně SEGO transformace spustit ruční kontrolu veřejné URL přes Shoptet XML validátor: https://www.shoptet.cz/xml-validace/
