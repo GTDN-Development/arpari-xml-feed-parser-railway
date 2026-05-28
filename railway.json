@@ -5,7 +5,7 @@
     "buildCommand": null
   },
   "deploy": {
-    "startCommand": "/bin/sh -c '/app/rebuild --supplier hello && exec /app/server'",
+    "startCommand": "/bin/sh -c '/app/rebuild --supplier hello && /app/rebuild --supplier stima-products && /app/rebuild --supplier stima-stock && /app/rebuild --supplier stima-stock-price && exec /app/server'",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
