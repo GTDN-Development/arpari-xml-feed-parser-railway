@@ -55,8 +55,9 @@ func TestStimaProductsGenerateUsesFixtureBackedDownloader(t *testing.T) {
 
 	var parsed struct {
 		Items []struct {
-			Code     string `xml:"CODE"`
-			Variants []struct {
+			ExternalID string `xml:"EXTERNAL_ID"`
+			Code       string `xml:"CODE"`
+			Variants   []struct {
 				Code       string `xml:"CODE"`
 				Parameters []struct {
 					Name  string `xml:"NAME"`
@@ -68,7 +69,7 @@ func TestStimaProductsGenerateUsesFixtureBackedDownloader(t *testing.T) {
 	if err := xml.Unmarshal(output.Bytes(), &parsed); err != nil {
 		t.Fatalf("generated output is not XML: %v", err)
 	}
-	if len(parsed.Items) != 1 || parsed.Items[0].Code != "ART13627" {
+	if len(parsed.Items) != 1 || parsed.Items[0].ExternalID != "ART13627" || parsed.Items[0].Code != "" {
 		t.Fatalf("unexpected generated items: %#v", parsed.Items)
 	}
 	if len(parsed.Items[0].Variants) != 1 || parsed.Items[0].Variants[0].Code != "ART13627-k001" {

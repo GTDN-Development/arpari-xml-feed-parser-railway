@@ -42,7 +42,7 @@ func TestStimaStockGenerateUsesFixtureBackedDownloader(t *testing.T) {
 	}
 
 	parsed := parseGeneratedUpdate(t, output.Bytes())
-	if len(parsed.Items) != 1 || parsed.Items[0].Code != "ART13627" {
+	if len(parsed.Items) != 1 || parsed.Items[0].ExternalID != "ART13627" || parsed.Items[0].Code != "" {
 		t.Fatalf("unexpected generated items: %#v", parsed.Items)
 	}
 	variant := parsed.Items[0].Variants[0]
@@ -105,10 +105,11 @@ type generatedUpdateShop struct {
 }
 
 type generatedUpdateItem struct {
-	Code     string                   `xml:"CODE"`
-	PriceVAT string                   `xml:"PRICE_VAT"`
-	Stock    generatedUpdateStock     `xml:"STOCK"`
-	Variants []generatedUpdateVariant `xml:"VARIANTS>VARIANT"`
+	ExternalID string                   `xml:"EXTERNAL_ID"`
+	Code       string                   `xml:"CODE"`
+	PriceVAT   string                   `xml:"PRICE_VAT"`
+	Stock      generatedUpdateStock     `xml:"STOCK"`
+	Variants   []generatedUpdateVariant `xml:"VARIANTS>VARIANT"`
 }
 
 type generatedUpdateVariant struct {

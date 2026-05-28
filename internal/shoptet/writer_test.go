@@ -113,6 +113,12 @@ func TestWriteProductWithVariants(t *testing.T) {
 	if parsed.Items[0].Variants == nil {
 		t.Fatal("expected VARIANTS element")
 	}
+	if parsed.Items[0].ExternalID != "CHAIR-001" {
+		t.Fatalf("expected parent EXTERNAL_ID, got %q", parsed.Items[0].ExternalID)
+	}
+	if parsed.Items[0].Code != "" {
+		t.Fatalf("expected no parent CODE for variant product, got %q", parsed.Items[0].Code)
+	}
 	if len(parsed.Items[0].Variants.Items) != 2 {
 		t.Fatalf("expected 2 VARIANT elements, got %d", len(parsed.Items[0].Variants.Items))
 	}

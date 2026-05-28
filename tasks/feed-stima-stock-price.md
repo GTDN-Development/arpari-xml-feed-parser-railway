@@ -21,11 +21,13 @@ Generovat samostatný Shoptet XML feed pro aktualizaci skladů a cen STIMA produ
 - Musí být oddělený od katalogového feedu `stima-products`.
 - Chyba tohoto feedu nesmí ovlivnit `stima-products` ani `stima-stock`.
 - Produkty nad 512 variant se zatím oříznou na prvních 512 variant v pořadí ze STIMA feedu.
+- U variantních produktů se parent kód zapisuje jako Shoptet `EXTERNAL_ID`, ne jako top-level `CODE`; jednotlivé varianty dál nesou vlastní `CODE`.
 
 ## MVP rozsah
 
 - Identifikace produktu nebo varianty:
   - `CODE`
+  - parent `EXTERNAL_ID` u variantních produktů
 - Cena:
   - `PRICE_VAT`
 - Sklad:
@@ -38,6 +40,7 @@ Generovat samostatný Shoptet XML feed pro aktualizaci skladů a cen STIMA produ
 - Registry: supplier `stima-stock-price` je dostupný přes `cmd/rebuild`.
 - Lokální testy: `go test ./...` prochází.
 - Reálný rebuild proti STIMA zdroji ověřen 2026-05-28.
+- Reálný výstup ověřen proti Shoptet RNG schématu `products-supplier-v10.rng`.
 - Poslední ověřené počty:
   - products read: 953
   - products emitted: 953

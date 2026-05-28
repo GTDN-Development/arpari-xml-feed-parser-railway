@@ -17,7 +17,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 ## Aktuální pravidla
 
 - Parser nečte webový konfigurátor STIMA.
-- Výstup je technické MVP bez kategorií, obrázků, popisů a SEO.
+- Výstup je technické MVP bez obrázků, popisů a SEO; cílové Shoptet kategorie už se mapují.
 - Variantní parametry:
   - `KOSTRA`
   - `Sedák`
@@ -25,6 +25,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - `Rozklad`
 - Produkty nad 512 variant se oříznou na prvních 512 variant v pořadí ze STIMA feedu.
 - Pokud STIMA parent produkt nemá `CODE`, odvodí se z první varianty, například `ART13627-k002-l244` -> `ART13627`.
+- U variantních produktů se odvozený parent kód zapisuje jako Shoptet `EXTERNAL_ID`, ne jako top-level `CODE`; Shoptet schéma jinak odmítne kombinaci parent `CODE` + `VARIANTS`.
 - Kategorie se mapují na existující Shoptet kategorie z exportu `categories (1).csv`.
 - Používají se jen známé cílové kategorie; nejisté STIMA kategorie jako `Katalog 2026`, `Stále skladem`, `Doprodej` nebo `Masiv dub` se zatím ignorují.
 - Položka bez bezpečně určené cílové kategorie se přeskočí.
@@ -39,7 +40,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - `PRICE_VAT`
   - `STOCK`
 - Variantní produkty:
-  - parent `CODE`
+  - parent `EXTERNAL_ID`
   - parent `NAME`
   - parent `CATEGORIES`
   - variant `CODE`
@@ -54,6 +55,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 - Registry: supplier `stima-products` je dostupný přes `cmd/rebuild`.
 - Lokální testy: `go test ./...` prochází.
 - Reálný rebuild proti STIMA zdroji ověřen 2026-05-28.
+- Reálný výstup ověřen proti Shoptet RNG schématu `products-supplier-v10.rng`.
 - Poslední ověřené počty:
   - products read: 953
   - products emitted: 952

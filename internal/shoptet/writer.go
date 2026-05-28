@@ -145,7 +145,6 @@ func toShop(feed Feed) shopXML {
 	items := make([]shopItemXML, 0, len(feed.Items))
 	for _, item := range feed.Items {
 		shopItem := shopItemXML{
-			Code:         item.Code,
 			Name:         item.Name,
 			PriceVAT:     item.PriceVAT,
 			Stock:        toStockXML(item.Stock, item.Warehouses),
@@ -154,6 +153,7 @@ func toShop(feed Feed) shopXML {
 			Categories:   toCategoriesXML(item.Categories, item.DefaultCategory),
 		}
 		if len(item.Variants) > 0 {
+			shopItem.ExternalID = item.Code
 			variants := make([]shopVariantXML, 0, len(item.Variants))
 			for _, variant := range item.Variants {
 				variants = append(variants, shopVariantXML{
@@ -166,6 +166,8 @@ func toShop(feed Feed) shopXML {
 				})
 			}
 			shopItem.Variants = &shopVariantsXML{Items: variants}
+		} else {
+			shopItem.Code = item.Code
 		}
 		items = append(items, shopItem)
 	}
@@ -264,6 +266,7 @@ type shopXML struct {
 }
 
 type shopItemXML struct {
+	ExternalID   string             `xml:"EXTERNAL_ID,omitempty"`
 	Code         string             `xml:"CODE,omitempty"`
 	Name         string             `xml:"NAME,omitempty"`
 	PriceVAT     string             `xml:"PRICE_VAT,omitempty"`
