@@ -23,7 +23,9 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Reálný zdroj má 144 položek.
 - Testovací endpoint `sego-test` používá stejná pravidla, ale končí po prvních 20 produktech.
 - Katalogová data nesmí bez mapování přepisovat citlivá data původního katalogu.
-- Kategorie jsou zatím mapované široce do `KANCELÁŘSKÉ ŽIDLE A KŘESLA`, případně `ŽIDLE > KONFERENČNÍ ŽIDLE` podle názvu produktu.
+- Kategorie se mapují na cílové Shoptet kategorie včetně podkategorií podle názvu, popisu a parametrů SEGO položky.
+- Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
+- SEGO flat varianty typu `Produkt | Barva` se slučují do Shoptet variant podle produktového URL slug a parametru `Barva`.
 
 ## MVP rozsah
 
@@ -36,10 +38,19 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
   - dostupnost z `DELIVERY_DATE`
   - `DESCRIPTION`
   - `IMAGES`
+- Cílové kategorie:
+  - síťované kancelářské židle
+  - čalouněná kancelářská křesla
+  - dětské kancelářské židle
+  - pracovní a průmyslové židle
+  - náhradní díly a podložky
+  - konferenční židle
+  - laboratorní židle
+  - zdravotní židle
 
 ## Implementace
 
-- Stav kódu: implementováno v `internal/sego/products.go` a `internal/feed/sego_products.go`.
+- Stav kódu: implementováno v `internal/sego/products.go`, `internal/sego/categories.go` a `internal/feed/sego_products.go`.
 - Registry: supplier `sego` a `sego-test` jsou dostupné přes `cmd/rebuild`.
 - Lokální testy: `go test ./...` prochází.
 - Reálný rebuild ověřen 2026-05-28:
@@ -70,5 +81,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Unit test chybějícího produktu kódu.
 - Unit test limitu testovacího výstupu.
 - Unit test základního mapování kategorie.
+- Unit test mapování SEGO podkategorií.
+- Unit test slučování flat barevných variant.
 - Rebuild test přes fixture-backed downloader.
 - Ruční kontrola přes Shoptet XML validátor.

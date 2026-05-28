@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -53,15 +54,18 @@ type ProductsOptions struct {
 }
 
 type ProductsStats struct {
-	ProductsRead    int
-	ProductsEmitted int
-	ProductsSkipped int
+	ProductsRead      int
+	ProductsEmitted   int
+	ProductsSkipped   int
+	VariantsEmitted   int
+	ItemsWithVariants int
 }
 
 func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (shoptet.Feed, ProductsStats, error) {
 	decoder := xml.NewDecoder(r)
-	var result shoptet.Feed
 	var stats ProductsStats
+	var entries []productEntry
+	groups := make(map[string]*variantGroup)
 
 	for {
 		if err := ctx.Err(); err != nil {
@@ -71,7 +75,7 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 		token, err := decoder.Token()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				return result, stats, nil
+				break
 			}
 			return shoptet.Feed{}, stats, fmt.Errorf("parse SEGO products XML: %w", err)
 		}
@@ -87,21 +91,31 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 		}
 
 		stats.ProductsRead++
-		item, ok := transformProduct(source)
+		item, ok := transformSimpleProduct(source)
 		if !ok {
 			stats.ProductsSkipped++
 			continue
 		}
 
-		stats.ProductsEmitted++
-		result.Items = append(result.Items, item)
-		if options.MaxProducts > 0 && stats.ProductsEmitted >= options.MaxProducts {
-			return result, stats, nil
+		if info, ok := flatVariantInfo(source); ok {
+			group := groups[info.Key]
+			if group == nil {
+				group = newVariantGroup(info, item)
+				groups[info.Key] = group
+				entries = append(entries, productEntry{Group: group})
+			}
+			group.Add(item, info)
+			continue
 		}
+
+		entries = append(entries, productEntry{Item: item, HasItem: true})
 	}
+
+	result := emitProducts(entries, options, &stats)
+	return result, stats, nil
 }
 
-func transformProduct(source sourceItem) (shoptet.Item, bool) {
+func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 	code := strings.TrimSpace(source.ItemID)
 	name := strings.TrimSpace(source.ProductName)
 	if code == "" || name == "" {
@@ -109,7 +123,7 @@ func transformProduct(source sourceItem) (shoptet.Item, bool) {
 		return shoptet.Item{}, false
 	}
 
-	category := targetCategory(source.ProductName)
+	category := targetCategory(source)
 	return shoptet.Item{
 		Code:            code,
 		Name:            name,
@@ -121,6 +135,31 @@ func transformProduct(source sourceItem) (shoptet.Item, bool) {
 		DefaultCategory: &category,
 		Images:          transformImages(source),
 	}, true
+}
+
+func emitProducts(entries []productEntry, options ProductsOptions, stats *ProductsStats) shoptet.Feed {
+	var result shoptet.Feed
+	for _, entry := range entries {
+		var item shoptet.Item
+		if entry.Group != nil {
+			item = entry.Group.Item()
+			if len(item.Variants) > 0 {
+				stats.ItemsWithVariants++
+				stats.VariantsEmitted += len(item.Variants)
+			}
+		} else if entry.HasItem {
+			item = entry.Item
+		} else {
+			continue
+		}
+
+		stats.ProductsEmitted++
+		result.Items = append(result.Items, item)
+		if options.MaxProducts > 0 && stats.ProductsEmitted >= options.MaxProducts {
+			return result
+		}
+	}
+	return result
 }
 
 func normalizeDescription(value string) string {
@@ -161,21 +200,151 @@ func transformImages(source sourceItem) []shoptet.Image {
 	return images
 }
 
-func targetCategory(productName string) shoptet.Category {
-	name := strings.ToLower(strings.TrimSpace(productName))
-	if strings.Contains(name, "jednací") || strings.Contains(name, "konferenční") {
-		return shoptet.Category{ID: "1146", Path: "ŽIDLE > KONFERENČNÍ ŽIDLE"}
+type productEntry struct {
+	Item    shoptet.Item
+	HasItem bool
+	Group   *variantGroup
+}
+
+type variantInfo struct {
+	Key        string
+	ParentCode string
+	BaseName   string
+	Value      string
+}
+
+type variantGroup struct {
+	parentCode      string
+	baseName        string
+	firstItem       shoptet.Item
+	variants        []shoptet.Variant
+	images          []shoptet.Image
+	seenImageURLs   map[string]struct{}
+	simpleFallbacks []shoptet.Item
+}
+
+func newVariantGroup(info variantInfo, firstItem shoptet.Item) *variantGroup {
+	return &variantGroup{
+		parentCode:    info.ParentCode,
+		baseName:      info.BaseName,
+		firstItem:     firstItem,
+		seenImageURLs: make(map[string]struct{}),
 	}
-	return shoptet.Category{ID: "881", Path: "KANCELÁŘSKÉ ŽIDLE A KŘESLA"}
+}
+
+func (group *variantGroup) Add(item shoptet.Item, info variantInfo) {
+	group.simpleFallbacks = append(group.simpleFallbacks, item)
+	for _, image := range item.Images {
+		url := strings.TrimSpace(image.URL)
+		if url == "" {
+			continue
+		}
+		if _, ok := group.seenImageURLs[url]; ok {
+			continue
+		}
+		group.seenImageURLs[url] = struct{}{}
+		group.images = append(group.images, image)
+	}
+
+	parameters := []shoptet.Parameter{{Name: "Barva", Value: info.Value}}
+	group.variants = append(group.variants, shoptet.Variant{
+		Code:         item.Code,
+		EAN:          item.EAN,
+		PriceVAT:     item.PriceVAT,
+		Availability: item.Availability,
+		Parameters:   parameters,
+	})
+}
+
+func (group *variantGroup) Item() shoptet.Item {
+	if len(group.variants) < 2 {
+		return group.simpleFallbacks[0]
+	}
+
+	return shoptet.Item{
+		Code:            group.parentCode,
+		Name:            group.baseName,
+		Description:     group.firstItem.Description,
+		PriceVAT:        group.firstItem.PriceVAT,
+		Availability:    group.firstItem.Availability,
+		Categories:      group.firstItem.Categories,
+		DefaultCategory: group.firstItem.DefaultCategory,
+		Images:          group.images,
+		Variants:        group.variants,
+	}
+}
+
+func flatVariantInfo(source sourceItem) (variantInfo, bool) {
+	baseName, nameVariant, ok := strings.Cut(strings.TrimSpace(source.ProductName), "|")
+	if !ok {
+		return variantInfo{}, false
+	}
+	baseName = strings.TrimSpace(baseName)
+	nameVariant = normalizeParameterValue(nameVariant)
+	color := source.ParameterValue("Barva")
+	if baseName == "" || color == "" || nameVariant == "" || !strings.EqualFold(color, nameVariant) {
+		return variantInfo{}, false
+	}
+
+	slug := productSlug(source.URL)
+	if slug == "" {
+		return variantInfo{}, false
+	}
+
+	return variantInfo{
+		Key:        slug + "|" + strings.ToLower(baseName),
+		ParentCode: "sego-" + slug,
+		BaseName:   baseName,
+		Value:      color,
+	}, true
+}
+
+func productSlug(rawURL string) string {
+	parsed, err := url.Parse(strings.TrimSpace(rawURL))
+	if err != nil {
+		return ""
+	}
+	path := strings.Trim(parsed.Path, "/")
+	const prefix = "produkty/detail/"
+	if !strings.HasPrefix(path, prefix) {
+		return ""
+	}
+	slug := strings.Trim(strings.TrimPrefix(path, prefix), "/")
+	if strings.Contains(slug, "/") {
+		return ""
+	}
+	return slug
+}
+
+func normalizeParameterValue(value string) string {
+	value = html.UnescapeString(strings.TrimSpace(value))
+	value = strings.ReplaceAll(value, "\u00a0", " ")
+	return strings.Join(strings.Fields(value), " ")
 }
 
 type sourceItem struct {
-	ItemID            string   `xml:"ITEM_ID"`
-	ProductName       string   `xml:"PRODUCTNAME"`
-	Description       string   `xml:"DESCRIPTION"`
-	EAN               string   `xml:"EAN"`
-	ImageURL          string   `xml:"IMGURL"`
-	AlternativeImages []string `xml:"IMGURL_ALTERNATIVE"`
-	PriceVAT          string   `xml:"PRICE_VAT"`
-	DeliveryDate      string   `xml:"DELIVERY_DATE"`
+	ItemID            string            `xml:"ITEM_ID"`
+	ProductName       string            `xml:"PRODUCTNAME"`
+	Description       string            `xml:"DESCRIPTION"`
+	URL               string            `xml:"URL"`
+	EAN               string            `xml:"EAN"`
+	ImageURL          string            `xml:"IMGURL"`
+	AlternativeImages []string          `xml:"IMGURL_ALTERNATIVE"`
+	PriceVAT          string            `xml:"PRICE_VAT"`
+	DeliveryDate      string            `xml:"DELIVERY_DATE"`
+	Parameters        []sourceParameter `xml:"PARAM"`
+}
+
+func (item sourceItem) ParameterValue(name string) string {
+	for _, parameter := range item.Parameters {
+		if strings.TrimSpace(parameter.Name) == name {
+			return normalizeParameterValue(parameter.Value)
+		}
+	}
+	return ""
+}
+
+type sourceParameter struct {
+	Name  string `xml:"PARAM_NAME"`
+	Value string `xml:"VAL"`
 }

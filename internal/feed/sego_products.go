@@ -80,6 +80,8 @@ func generateSegoProducts(ctx context.Context, w io.Writer, supplier string, con
 		"productsRead", stats.ProductsRead,
 		"productsEmitted", stats.ProductsEmitted,
 		"productsSkipped", stats.ProductsSkipped,
+		"itemsWithVariants", stats.ItemsWithVariants,
+		"variantsEmitted", stats.VariantsEmitted,
 	)
 
 	if err := shoptet.Write(w, feed); err != nil {
