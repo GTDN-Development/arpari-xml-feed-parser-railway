@@ -21,7 +21,7 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 - HON má vlastní XML strukturu.
 - Parser musí vycházet z reálné struktury feedu, ne z předpokladu Zboží.cz / Heureka.
 - Reálný zdroj má 517 položek.
-- Testovací endpoint `hon-test` používá stejná pravidla, ale končí po prvních 2 produktech.
+- Testovací endpoint `hon-test` používá stejná pravidla, ale končí po prvních 5 produktech.
 - Katalogová data nesmí bez mapování přepisovat citlivá data původního katalogu.
 - Kategorie jsou zatím mapované široce podle `MAIN_CATEGORY` na kancelářské židle, konferenční židle, židle nebo bytové doplňky.
 
@@ -44,7 +44,7 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 - Lokální testy: `go test ./...` prochází.
 - Reálný rebuild ověřen 2026-05-28:
   - `hon`: 517 přečteno, 517 emitováno.
-  - `hon-test`: 2 emitované produkty.
+  - `hon-test`: 5 emitovaných produktů.
   - Výstupní XML je well-formed a publikace proběhla přes storage publisher.
 
 ## Otevřené otázky
@@ -58,7 +58,7 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 
 - `go run ./cmd/rebuild --supplier hon` vytvoří validní XML.
 - Výstup je dostupný na `/feeds/hon.xml`.
-- `go run ./cmd/rebuild --supplier hon-test` vytvoří testovací feed se 2 produkty.
+- `go run ./cmd/rebuild --supplier hon-test` vytvoří testovací feed s 5 produkty.
 - Testovací výstup je dostupný na `/feeds/hon-test.xml`.
 - Výstup nepřekročí Shoptet limity.
 - Chyba downloadu nebo transformace nepřepíše poslední validní XML.

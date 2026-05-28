@@ -44,7 +44,7 @@ func (HonTest) Filename() string {
 func (generator HonTest) Generate(ctx context.Context, w io.Writer) (Result, error) {
 	maxProducts := generator.MaxProducts
 	if maxProducts <= 0 {
-		maxProducts = 2
+		maxProducts = 5
 	}
 	return generateHonProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, maxProducts)
 }
