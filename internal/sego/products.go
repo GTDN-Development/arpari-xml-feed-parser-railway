@@ -8,8 +8,10 @@ import (
 	"html"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,7 +20,10 @@ import (
 
 const ProductsURL = "https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_123456.xml"
 
-const maxImagesPerProduct = 20
+const (
+	maxImagesPerProduct  = 20
+	variantParameterName = "Odstín"
+)
 
 type Downloader interface {
 	Download(ctx context.Context, url string) (io.ReadCloser, error)
@@ -126,7 +131,7 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 		return shoptet.Item{}, false
 	}
 
-	price := strings.TrimSpace(source.PriceVAT)
+	price := formatWholePrice(source.PriceVAT)
 	category := targetCategory(source)
 	currency := ""
 	if price != "" {
@@ -204,6 +209,18 @@ func transformDeliveryDate(value string) string {
 		return ""
 	}
 	return "Dodání " + value + " dnů"
+}
+
+func formatWholePrice(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+	amount, err := strconv.ParseFloat(strings.ReplaceAll(value, ",", "."), 64)
+	if err != nil {
+		return value
+	}
+	return strconv.FormatInt(int64(math.Round(amount)), 10)
 }
 
 func transformImages(source sourceItem) []shoptet.Image {
@@ -287,7 +304,7 @@ func (group *variantGroup) Add(item shoptet.Item, info variantInfo) {
 		group.images = append(group.images, image)
 	}
 
-	parameters := []shoptet.Parameter{{Name: "Barva", Value: info.Value}}
+	parameters := []shoptet.Parameter{{Name: variantParameterName, Value: info.Value}}
 	group.variants = append(group.variants, shoptet.Variant{
 		Code:         item.Code,
 		EAN:          item.EAN,

@@ -29,6 +29,8 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - SEGO `Catalog/VariantImages/.../previewImg...` URL se do výstupu neposílají; zvenku vrací 404 a Shoptet je při importu nestáhne. Pro `IMAGES` a variantní `IMAGE_REF` se používají funkční `Catalog/.../source/...` URL.
 - Variantní produkty používají importní tvar ověřený proti starému Katuans feedu: parent nemá `CODE` ani `EXTERNAL_ID`, varianty nesou vlastní `CODE`, `PRICE`, `CURRENCY`, `AVAILABILITY`, `IMAGE_REF` a `PARAMETERS`.
 - SEGO obrázky jsou omezené na prvních 20 funkčních URL na produkt, aby import neposílal desítky duplicitních nebo doplňkových fotek na jeden variantní parent.
+- Zdrojový SEGO parametr `Barva` se do Shoptetu exportuje jako variantní parametr `Odstín`. Aby se na detailu zobrazily kulaté vzorníky jako v cílovém e-shopu, musí v administraci/šabloně variant existovat parametr `Odstín` a všechny použité hodnoty musí mít nastavenou barvu nebo obrázek; XML feed nastavuje hodnotu varianty a `IMAGE_REF`, ne vizuál vzorníku hodnoty.
+- SEGO ceny se exportují jako celé Kč v `PRICE`; desetinné ceny ze zdroje se zaokrouhlují.
 
 ## MVP rozsah
 

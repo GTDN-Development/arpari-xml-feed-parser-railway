@@ -19,7 +19,7 @@ func TestParseProductsMapsZboziItems(t *testing.T) {
     <EAN>0745314610292</EAN>
     <IMGURL>https://segocz.cz/main.jpg</IMGURL>
     <IMGURL_ALTERNATIVE>https://segocz.cz/alt.jpg</IMGURL_ALTERNATIVE>
-    <PRICE_VAT>10951.00</PRICE_VAT>
+    <PRICE_VAT>10951.49</PRICE_VAT>
     <DELIVERY_DATE>0</DELIVERY_DATE>
   </SHOPITEM>
   <SHOPITEM>
@@ -39,7 +39,7 @@ func TestParseProductsMapsZboziItems(t *testing.T) {
 	}
 
 	item := feed.Items[0]
-	if item.Code != "0745314610292" || item.Price != "10951.00" || item.Currency != "CZK" || item.Availability != "Skladem" {
+	if item.Code != "0745314610292" || item.Price != "10951" || item.Currency != "CZK" || item.Availability != "Skladem" {
 		t.Fatalf("unexpected item fields: %#v", item)
 	}
 	if item.Description != "Popis židle" {
@@ -121,10 +121,10 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	}
 
 	first := item.Variants[0]
-	if first.Code != "0745314610063" || first.EAN != "0745314610063" || first.Price != "4623.00" || first.Currency != "CZK" || first.Availability != "Skladem" {
+	if first.Code != "0745314610063" || first.EAN != "0745314610063" || first.Price != "4623" || first.Currency != "CZK" || first.Availability != "Skladem" {
 		t.Fatalf("unexpected first variant: %#v", first)
 	}
-	if len(first.Parameters) != 1 || first.Parameters[0] != (shoptet.Parameter{Name: "Barva", Value: "Červená"}) {
+	if len(first.Parameters) != 1 || first.Parameters[0] != (shoptet.Parameter{Name: "Odstín", Value: "Červená"}) {
 		t.Fatalf("unexpected first variant parameters: %#v", first.Parameters)
 	}
 	if first.ImageRef != "https://segocz.cz/red.jpg" {
