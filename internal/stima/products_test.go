@@ -22,6 +22,11 @@ func TestParseProductsSimpleProduct(t *testing.T) {
       <CATEGORY>Katalog &gt; Židle &gt; Dřevěné židle</CATEGORY>
       <CATEGORY>Katalog &gt; Katalog 2026</CATEGORY>
     </CATEGORIES>
+    <IMAGES>
+      <IMAGE>https://www.stima.cz/userfiles/xml/pictures/simple.jpg</IMAGE>
+      <IMAGE>https://www.stima.cz/userfiles/xml/pictures/simple.jpg</IMAGE>
+      <IMAGE>  </IMAGE>
+    </IMAGES>
     <STOCK>
       <WAREHOUSES>
         <WAREHOUSE>
@@ -60,6 +65,9 @@ func TestParseProductsSimpleProduct(t *testing.T) {
 	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"}) {
 		t.Fatalf("unexpected default category: %#v", item.DefaultCategory)
 	}
+	if len(item.Images) != 1 || item.Images[0] != (shoptet.Image{URL: "https://www.stima.cz/userfiles/xml/pictures/simple.jpg"}) {
+		t.Fatalf("unexpected images: %#v", item.Images)
+	}
 }
 
 func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testing.T) {
@@ -71,6 +79,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
       <CATEGORY>Katalog &gt; Restaurační židle &gt; Stále skladem</CATEGORY>
       <CATEGORY>Katalog &gt; Židle</CATEGORY>
     </CATEGORIES>
+    <IMAGES>
+      <IMAGE>https://www.stima.cz/userfiles/xml/pictures/nancy.jpg</IMAGE>
+    </IMAGES>
     <VARIANTS>
       <VARIANT>
         <CODE>ART13627-k002-l244</CODE>
@@ -101,6 +112,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	}
 	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1128", Path: "ŽIDLE > RESTAURAČNÍ ŽIDLE"}) {
 		t.Fatalf("unexpected default category: %#v", item.DefaultCategory)
+	}
+	if len(item.Images) != 1 || item.Images[0].URL != "https://www.stima.cz/userfiles/xml/pictures/nancy.jpg" {
+		t.Fatalf("unexpected images: %#v", item.Images)
 	}
 	if len(item.Variants) != 1 {
 		t.Fatalf("expected 1 variant, got %d", len(item.Variants))

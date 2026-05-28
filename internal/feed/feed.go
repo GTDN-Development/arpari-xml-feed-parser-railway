@@ -31,6 +31,7 @@ func All() []Generator {
 	return []Generator{
 		Hello{},
 		StimaProducts{},
+		StimaProductsTest{},
 		StimaStock{},
 		StimaStockPrice{},
 	}

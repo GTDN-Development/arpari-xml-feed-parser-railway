@@ -184,7 +184,7 @@ Proč STIMA products jako první:
 
 - klient potřebuje znát reálný dopad variant na Shoptet limit,
 - katalog obsahuje produkty i varianty včetně skladové struktury,
-- výstup zatím záměrně neřeší kategorie, obrázky, popisy ani rozdělení podsedáků `Skladem / Na zakázku`.
+- výstup zatím záměrně neřeší popisy ani rozdělení podsedáků `Skladem / Na zakázku`; cílové kategorie a obrázky už se mapují.
 
 Rozsah:
 

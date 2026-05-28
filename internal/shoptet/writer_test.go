@@ -24,6 +24,9 @@ func TestWriteSimpleProduct(t *testing.T) {
 					{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"},
 				},
 				DefaultCategory: &Category{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"},
+				Images: []Image{
+					{URL: "https://www.stima.cz/userfiles/xml/pictures/simple.jpg"},
+				},
 			},
 		},
 	})
@@ -66,6 +69,9 @@ func TestWriteSimpleProduct(t *testing.T) {
 	}
 	if item.Categories.Default == nil || item.Categories.Default.ID != "905" || item.Categories.Default.Path != "ŽIDLE > DŘEVĚNÉ ŽIDLE" {
 		t.Fatalf("expected default category, got %#v", item.Categories.Default)
+	}
+	if item.Images == nil || len(item.Images.Items) != 1 || item.Images.Items[0].URL != "https://www.stima.cz/userfiles/xml/pictures/simple.jpg" {
+		t.Fatalf("expected item images, got %#v", item.Images)
 	}
 }
 

@@ -15,6 +15,12 @@ type StimaProducts struct {
 	SourceURL  string
 }
 
+type StimaProductsTest struct {
+	Downloader  stima.Downloader
+	SourceURL   string
+	MaxProducts int
+}
+
 func (StimaProducts) Name() string {
 	return "stima-products"
 }
@@ -24,12 +30,32 @@ func (StimaProducts) Filename() string {
 }
 
 func (generator StimaProducts) Generate(ctx context.Context, w io.Writer) (Result, error) {
-	downloader := generator.Downloader
+	return generateStimaProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, 0)
+}
+
+func (StimaProductsTest) Name() string {
+	return "stima-products-test"
+}
+
+func (StimaProductsTest) Filename() string {
+	return "stima-products-test.xml"
+}
+
+func (generator StimaProductsTest) Generate(ctx context.Context, w io.Writer) (Result, error) {
+	maxProducts := generator.MaxProducts
+	if maxProducts <= 0 {
+		maxProducts = 20
+	}
+	return generateStimaProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, maxProducts)
+}
+
+func generateStimaProducts(ctx context.Context, w io.Writer, supplier string, configuredDownloader stima.Downloader, configuredSourceURL string, maxProducts int) (Result, error) {
+	downloader := configuredDownloader
 	if downloader == nil {
 		downloader = stima.HTTPDownloader{}
 	}
 
-	sourceURL := generator.SourceURL
+	sourceURL := configuredSourceURL
 	if sourceURL == "" {
 		sourceURL = stima.ProductsURL
 	}
@@ -42,6 +68,7 @@ func (generator StimaProducts) Generate(ctx context.Context, w io.Writer) (Resul
 
 	feed, stats, err := stima.ParseProducts(ctx, body, stima.ProductsOptions{
 		MaxVariantsPerProduct: shoptet.DefaultMaxVariantsPerItem,
+		MaxProducts:           maxProducts,
 	})
 	if err != nil {
 		return Result{}, err
@@ -52,6 +79,7 @@ func (generator StimaProducts) Generate(ctx context.Context, w io.Writer) (Resul
 
 	slog.Info(
 		"STIMA products transformed",
+		"supplier", supplier,
 		"productsRead", stats.ProductsRead,
 		"productsEmitted", stats.ProductsEmitted,
 		"productsSkipped", stats.ProductsSkipped,

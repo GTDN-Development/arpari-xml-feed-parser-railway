@@ -53,6 +53,7 @@ func (downloader HTTPDownloader) Download(ctx context.Context, url string) (io.R
 
 type ProductsOptions struct {
 	MaxVariantsPerProduct int
+	MaxProducts           int
 }
 
 type ProductsStats struct {
@@ -115,6 +116,9 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 		}
 		stats.ProductsEmitted++
 		result.Items = append(result.Items, item)
+		if options.MaxProducts > 0 && stats.ProductsEmitted >= options.MaxProducts {
+			return result, stats, nil
+		}
 	}
 }
 
@@ -154,6 +158,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			Warehouses:      warehouses,
 			Categories:      categories,
 			DefaultCategory: defaultCategory,
+			Images:          transformImages(source.Images),
 		}, stats, true
 	}
 
@@ -215,6 +220,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 		PriceVAT:        strings.TrimSpace(source.PriceVAT),
 		Categories:      categories,
 		DefaultCategory: defaultCategory,
+		Images:          transformImages(source.Images),
 		Variants:        variants,
 	}, stats, true
 }
@@ -272,6 +278,27 @@ func transformParameters(parameters []sourceParameter) []shoptet.Parameter {
 	return result
 }
 
+func transformImages(images []string) []shoptet.Image {
+	if len(images) == 0 {
+		return nil
+	}
+
+	result := make([]shoptet.Image, 0, len(images))
+	seen := make(map[string]struct{}, len(images))
+	for _, image := range images {
+		url := strings.TrimSpace(image)
+		if url == "" {
+			continue
+		}
+		if _, exists := seen[url]; exists {
+			continue
+		}
+		seen[url] = struct{}{}
+		result = append(result, shoptet.Image{URL: url})
+	}
+	return result
+}
+
 func isAllowedVariantParameter(name string) bool {
 	switch name {
 	case "KOSTRA", "Sedák", "Délka stolu", "Rozklad":
@@ -288,6 +315,7 @@ type sourceShopItem struct {
 	PriceVAT   string           `xml:"PRICE_VAT"`
 	Stock      sourceStock      `xml:"STOCK"`
 	Categories sourceCategories `xml:"CATEGORIES"`
+	Images     []string         `xml:"IMAGES>IMAGE"`
 	Variants   []sourceVariant  `xml:"VARIANTS>VARIANT"`
 }
 

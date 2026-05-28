@@ -31,6 +31,7 @@ type Item struct {
 	EAN             string
 	Categories      []Category
 	DefaultCategory *Category
+	Images          []Image
 	Variants        []Variant
 }
 
@@ -57,6 +58,10 @@ type Parameter struct {
 type Category struct {
 	ID   string
 	Path string
+}
+
+type Image struct {
+	URL string
 }
 
 func Write(w io.Writer, feed Feed) error {
@@ -126,6 +131,11 @@ func ValidateWithLimits(feed Feed, limits Limits) error {
 		if item.DefaultCategory != nil && strings.TrimSpace(item.DefaultCategory.Path) == "" {
 			return fmt.Errorf("SHOPITEM[%d] %q DEFAULT_CATEGORY path is required", itemIndex, item.Code)
 		}
+		for imageIndex, image := range item.Images {
+			if strings.TrimSpace(image.URL) == "" {
+				return fmt.Errorf("SHOPITEM[%d] %q IMAGE[%d] URL is required", itemIndex, item.Code, imageIndex)
+			}
+		}
 	}
 
 	return nil
@@ -151,6 +161,7 @@ func toShop(feed Feed) shopXML {
 			Availability: item.Availability,
 			EAN:          item.EAN,
 			Categories:   toCategoriesXML(item.Categories, item.DefaultCategory),
+			Images:       toImagesXML(item.Images),
 		}
 		if len(item.Variants) > 0 {
 			shopItem.ExternalID = item.Code
@@ -206,6 +217,25 @@ func toCategoriesXML(categories []Category, defaultCategory *Category) *shopCate
 		return nil
 	}
 	return &shopCategoriesXML{Items: items, Default: defaultItem}
+}
+
+func toImagesXML(images []Image) *shopImagesXML {
+	if len(images) == 0 {
+		return nil
+	}
+
+	items := make([]shopImageXML, 0, len(images))
+	for _, image := range images {
+		url := strings.TrimSpace(image.URL)
+		if url == "" {
+			continue
+		}
+		items = append(items, shopImageXML{URL: url})
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	return &shopImagesXML{Items: items}
 }
 
 func toStockXML(stock string, warehouses []Warehouse) *shopStockXML {
@@ -274,6 +304,7 @@ type shopItemXML struct {
 	Availability string             `xml:"AVAILABILITY,omitempty"`
 	EAN          string             `xml:"EAN,omitempty"`
 	Categories   *shopCategoriesXML `xml:"CATEGORIES,omitempty"`
+	Images       *shopImagesXML     `xml:"IMAGES,omitempty"`
 	Variants     *shopVariantsXML   `xml:"VARIANTS,omitempty"`
 }
 
@@ -285,6 +316,14 @@ type shopCategoriesXML struct {
 type shopCategoryXML struct {
 	ID   string `xml:"id,attr,omitempty"`
 	Path string `xml:",chardata"`
+}
+
+type shopImagesXML struct {
+	Items []shopImageXML `xml:"IMAGE"`
+}
+
+type shopImageXML struct {
+	URL string `xml:",chardata"`
 }
 
 type shopVariantsXML struct {

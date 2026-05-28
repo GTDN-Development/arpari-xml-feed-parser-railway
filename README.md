@@ -16,9 +16,10 @@ Implementováno:
 - lokální dummy feed pipeline přes `cmd/rebuild`,
 - endpoint `GET /feeds/hello.xml` pro vygenerovaný dummy XML feed,
 - STIMA katalogový MVP feed `stima-products` z `ITTC_SHT_products.xml`,
+- STIMA testovací katalog `stima-products-test` s prvními 20 produkty,
 - STIMA skladový MVP feed `stima-stock` z `ITTC_SHT_stock.xml`,
 - STIMA skladový a cenový MVP feed `stima-stock-price` z `ITTC_SHT_stock_price.xml`,
-- endpointy `GET /feeds/stima-products.xml`, `GET /feeds/stima-stock.xml`, `GET /feeds/stima-stock-price.xml` po ručních rebuild bězích,
+- endpointy `GET /feeds/stima-products.xml`, `GET /feeds/stima-products-test.xml`, `GET /feeds/stima-stock.xml`, `GET /feeds/stima-stock-price.xml` po ručních rebuild bězích,
 - Shoptet XML writer pro jednoduché produkty, varianty, variantní parametry a sklad po skladech,
 - endpoint `GET /status` se stavem posledních rebuild běhů,
 - konfigurovatelný data adresář přes `DATA_DIR` nebo Railway Volume,
@@ -59,6 +60,7 @@ Feed výstupy a status se ukládají do adresáře `data`. Pro lokální overrid
 ```bash
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier hello
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-products
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-products-test
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-stock
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier stima-stock-price
 DATA_DIR=/tmp/arpari-data go run ./cmd/server
@@ -70,6 +72,7 @@ curl http://localhost:8080/healthz
 curl http://localhost:8080/status
 curl http://localhost:8080/feeds/hello.xml
 curl http://localhost:8080/feeds/stima-products.xml
+curl http://localhost:8080/feeds/stima-products-test.xml
 curl http://localhost:8080/feeds/stima-stock.xml
 curl http://localhost:8080/feeds/stima-stock-price.xml
 ```
@@ -95,7 +98,9 @@ Endpoint `/feeds/hello.xml` vrací jednoduchý XML feed s jednou dummy položkou
 </SHOP>
 ```
 
-Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsahuje základní produktová/variantní pole, sklad, cílové Shoptet kategorie a povolené variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`. Produkty s více než 512 variantami se při transformaci ořežou na prvních 512 variant v pořadí ze zdrojového feedu. Položky bez bezpečně určené cílové kategorie se přeskočí.
+Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsahuje základní produktová/variantní pole, sklad, cílové Shoptet kategorie, obrázky a povolené variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`. Produkty s více než 512 variantami se při transformaci ořežou na prvních 512 variant v pořadí ze zdrojového feedu. Položky bez bezpečně určené cílové kategorie se přeskočí.
+
+Endpoint `/feeds/stima-products-test.xml` vrací stejnou katalogovou transformaci jako `stima-products`, ale jen prvních 20 výstupních produktů. Slouží pro rychlé ruční testy v Shoptetu.
 
 Endpointy `/feeds/stima-stock.xml` a `/feeds/stima-stock-price.xml` vrací aktualizační MVP pro STIMA sklad, respektive sklad + cenu. Neobsahují katalogová pole jako popisy, obrázky nebo kategorie. I tyto feedy respektují Shoptet limit 512 variant na produkt.
 

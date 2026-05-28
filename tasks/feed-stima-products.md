@@ -5,6 +5,8 @@
 - Supplier: STIMA
 - Generator name: `stima-products`
 - Output endpoint: `/feeds/stima-products.xml`
+- Test generator name: `stima-products-test`
+- Test output endpoint: `/feeds/stima-products-test.xml`
 - Source URL: `https://www.stima.cz/userfiles/xml/ITTC_SHT_products.xml`
 - Priority: první fáze
 - Status: MVP implementováno, business pravidla k doplnění
@@ -17,7 +19,8 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 ## Aktuální pravidla
 
 - Parser nečte webový konfigurátor STIMA.
-- Výstup je technické MVP bez obrázků, popisů a SEO; cílové Shoptet kategorie už se mapují.
+- Výstup je technické MVP bez popisů a SEO; cílové Shoptet kategorie a obrázky už se mapují.
+- Testovací endpoint `stima-products-test` používá stejná pravidla, ale končí po prvních 20 výstupních produktech.
 - Variantní parametry:
   - `KOSTRA`
   - `Sedák`
@@ -43,6 +46,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - parent `EXTERNAL_ID`
   - parent `NAME`
   - parent `CATEGORIES`
+  - parent `IMAGES`
   - variant `CODE`
   - variant `EAN`
   - variant `PRICE_VAT`
@@ -52,7 +56,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 ## Aktuální ověření
 
 - Stav kódu: implementováno v `internal/stima/products.go`, `internal/stima/categories.go` a `internal/feed/stima_products.go`.
-- Registry: supplier `stima-products` je dostupný přes `cmd/rebuild`.
+- Registry: supplier `stima-products` a `stima-products-test` jsou dostupné přes `cmd/rebuild`.
 - Lokální testy: `go test ./...` prochází.
 - Reálný rebuild proti STIMA zdroji ověřen 2026-05-28.
 - Reálný výstup ověřen proti Shoptet RNG schématu `products-supplier-v10.rng`.
@@ -63,7 +67,14 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - products trimmed over 512 variants: 20
   - variants emitted: 20581
   - variants trimmed: 3431
-  - output size: přibližně 13.4 MB
+  - image blocks: 517
+  - images emitted: 1182
+  - output size: přibližně 13.5 MB
+- Testovací feed `stima-products-test` ověřen 2026-05-28:
+  - products emitted: 20
+  - variants emitted: 675
+  - images emitted: 35
+  - output size: přibližně 437 KB
 
 ## Otevřené otázky
 
@@ -71,7 +82,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 - Má katalogový import zakládat nové produkty, nebo jen připravit data pro mapování?
 - Které katalogové atributy smí STIMA později přepisovat u existujících produktů?
 - Jak mapovat STIMA kategorie na cílové Shoptet kategorie?
-- Jak doplnit obrázky a popisy bez rizika přepsání původního katalogu?
+- Jak doplnit popisy bez rizika přepsání původního katalogu?
 
 ## Akceptační kritéria
 
