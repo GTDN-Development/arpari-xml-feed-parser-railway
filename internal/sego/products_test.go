@@ -62,7 +62,8 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
     <DESCRIPTION><![CDATA[Pevná dětská židle]]></DESCRIPTION>
     <URL>https://segocz.cz/produkty/detail/junior?color=cervena</URL>
     <EAN>0745314610063</EAN>
-    <IMGURL>https://segocz.cz/red.jpg</IMGURL>
+    <IMGURL>https://segocz.cz/src/Frontend/Files/Catalog/VariantImages/7/previewImg-7-0_cs.jpg</IMGURL>
+    <IMGURL_ALTERNATIVE>https://segocz.cz/red.jpg</IMGURL_ALTERNATIVE>
     <PRICE_VAT>4623.00</PRICE_VAT>
     <DELIVERY_DATE>0</DELIVERY_DATE>
     <PARAM><PARAM_NAME><![CDATA[Barva]]></PARAM_NAME><VAL><![CDATA[Červená]]></VAL></PARAM>
@@ -72,7 +73,8 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
     <PRODUCTNAME>Junior | Zelená</PRODUCTNAME>
     <URL>https://segocz.cz/produkty/detail/junior?color=zelena</URL>
     <EAN>0745314610056</EAN>
-    <IMGURL>https://segocz.cz/green.jpg</IMGURL>
+    <IMGURL>https://segocz.cz/src/Frontend/Files/Catalog/VariantImages/7/previewImg-7-1_cs.jpg</IMGURL>
+    <IMGURL_ALTERNATIVE>https://segocz.cz/green.jpg</IMGURL_ALTERNATIVE>
     <PRICE_VAT>4623.00</PRICE_VAT>
     <DELIVERY_DATE>0</DELIVERY_DATE>
     <PARAM><PARAM_NAME><![CDATA[Barva]]></PARAM_NAME><VAL><![CDATA[Zelená]]></VAL></PARAM>
@@ -82,7 +84,8 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
     <PRODUCTNAME>Junior | Modrá</PRODUCTNAME>
     <URL>https://segocz.cz/produkty/detail/junior?color=modra</URL>
     <EAN>0745314610070</EAN>
-    <IMGURL>https://segocz.cz/blue.jpg</IMGURL>
+    <IMGURL>https://segocz.cz/src/Frontend/Files/Catalog/VariantImages/7/previewImg-7-2_cs.jpg</IMGURL>
+    <IMGURL_ALTERNATIVE>https://segocz.cz/blue.jpg</IMGURL_ALTERNATIVE>
     <PRICE_VAT>4623.00</PRICE_VAT>
     <DELIVERY_DATE>0</DELIVERY_DATE>
     <PARAM><PARAM_NAME><![CDATA[Barva]]></PARAM_NAME><VAL><![CDATA[Modrá]]></VAL></PARAM>

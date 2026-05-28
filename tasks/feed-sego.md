@@ -26,6 +26,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Kategorie se mapují na cílové Shoptet kategorie včetně podkategorií podle názvu, popisu a parametrů SEGO položky.
 - Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
 - SEGO flat varianty typu `Produkt | Barva` se slučují do Shoptet variant podle produktového URL slug a parametru `Barva`.
+- SEGO `Catalog/VariantImages/.../previewImg...` URL se do výstupu neposílají; zvenku vrací 404 a Shoptet je při importu nestáhne. Pro `IMAGES` a variantní `IMAGE_REF` se používají funkční `Catalog/.../source/...` URL.
 
 ## MVP rozsah
 
@@ -87,5 +88,6 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Unit test základního mapování kategorie.
 - Unit test mapování SEGO podkategorií.
 - Unit test slučování flat barevných variant.
+- Unit test filtrování nefunkčních SEGO variant preview obrázků.
 - Rebuild test přes fixture-backed downloader.
 - Po každé změně SEGO transformace spustit ruční kontrolu veřejné URL přes Shoptet XML validátor: https://www.shoptet.cz/xml-validace/

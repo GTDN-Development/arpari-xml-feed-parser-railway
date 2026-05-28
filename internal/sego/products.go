@@ -210,6 +210,9 @@ func transformImages(source sourceItem) []shoptet.Image {
 		if url == "" {
 			continue
 		}
+		if isBrokenVariantPreviewURL(url) {
+			continue
+		}
 		if _, ok := seen[url]; ok {
 			continue
 		}
@@ -217,6 +220,14 @@ func transformImages(source sourceItem) []shoptet.Image {
 		images = append(images, shoptet.Image{URL: url})
 	}
 	return images
+}
+
+func isBrokenVariantPreviewURL(rawURL string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(rawURL))
+	if err != nil {
+		return false
+	}
+	return strings.Contains(parsed.Path, "/Catalog/VariantImages/")
 }
 
 type productEntry struct {
