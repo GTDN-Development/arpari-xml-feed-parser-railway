@@ -22,7 +22,7 @@ const ProductsURL = "https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_12
 
 const (
 	maxImagesPerProduct  = 20
-	variantParameterName = "Odstín"
+	variantParameterName = "Barva"
 )
 
 type Downloader interface {

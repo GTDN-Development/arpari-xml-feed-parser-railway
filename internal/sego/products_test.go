@@ -124,7 +124,7 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	if first.Code != "0745314610063" || first.EAN != "0745314610063" || first.Price != "4623" || first.Currency != "CZK" || first.Availability != "Skladem" {
 		t.Fatalf("unexpected first variant: %#v", first)
 	}
-	if len(first.Parameters) != 1 || first.Parameters[0] != (shoptet.Parameter{Name: "Odstín", Value: "Červená"}) {
+	if len(first.Parameters) != 1 || first.Parameters[0] != (shoptet.Parameter{Name: "Barva", Value: "Červená"}) {
 		t.Fatalf("unexpected first variant parameters: %#v", first.Parameters)
 	}
 	if first.ImageRef != "https://segocz.cz/red.jpg" {
