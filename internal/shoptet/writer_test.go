@@ -136,6 +136,9 @@ func TestWriteProductWithVariants(t *testing.T) {
 	if parsed.Items[0].Code != "" {
 		t.Fatalf("expected no parent CODE for variant product, got %q", parsed.Items[0].Code)
 	}
+	if parsed.Items[0].EAN != "" || parsed.Items[0].PriceVAT != "" || parsed.Items[0].Stock != nil || parsed.Items[0].Availability != "" {
+		t.Fatalf("expected no parent detail fields for variant product, got %#v", parsed.Items[0])
+	}
 	if len(parsed.Items[0].Variants.Items) != 2 {
 		t.Fatalf("expected 2 VARIANT elements, got %d", len(parsed.Items[0].Variants.Items))
 	}

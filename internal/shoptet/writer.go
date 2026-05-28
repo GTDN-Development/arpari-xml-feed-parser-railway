@@ -160,10 +160,6 @@ func toShop(feed Feed) shopXML {
 			Name:             item.Name,
 			ShortDescription: item.ShortDescription,
 			Description:      item.Description,
-			PriceVAT:         item.PriceVAT,
-			Stock:            toStockXML(item.Stock, item.Warehouses),
-			Availability:     item.Availability,
-			EAN:              item.EAN,
 			Categories:       toCategoriesXML(item.Categories, item.DefaultCategory),
 			Images:           toImagesXML(item.Images),
 		}
@@ -183,6 +179,10 @@ func toShop(feed Feed) shopXML {
 			shopItem.Variants = &shopVariantsXML{Items: variants}
 		} else {
 			shopItem.Code = item.Code
+			shopItem.PriceVAT = item.PriceVAT
+			shopItem.Stock = toStockXML(item.Stock, item.Warehouses)
+			shopItem.Availability = item.Availability
+			shopItem.EAN = item.EAN
 		}
 		items = append(items, shopItem)
 	}
