@@ -25,11 +25,11 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Katalogová data nesmí bez mapování přepisovat citlivá data původního katalogu.
 - Kategorie se mapují na cílové Shoptet kategorie včetně podkategorií podle názvu, popisu a parametrů SEGO položky.
 - Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
-- SEGO flat varianty typu `Produkt | Barva` se slučují do Shoptet variant podle produktového URL slug a parametru `Barva`.
+- SEGO flat varianty typu `Produkt | Hodnota` se slučují do Shoptet variant podle produktového URL slug a odpovídajícího zdrojového parametru.
 - SEGO `Catalog/VariantImages/.../previewImg...` URL se do výstupu neposílají; zvenku vrací 404 a Shoptet je při importu nestáhne. Pro `IMAGES` a variantní `IMAGE_REF` se používají funkční `Catalog/.../source/...` URL.
 - Variantní produkty používají tvar porovnaný s exportem ručně nastaveného Shoptet produktu: parent nemá `CODE` ani `EXTERNAL_ID`, varianty nesou vlastní `CODE`, `CURRENCY`, `VAT`, `PRICE_VAT`, `AVAILABILITY`, `IMAGE_REF` a `PARAMETERS`.
 - SEGO obrázky jsou omezené na prvních 20 funkčních URL na produkt, aby import neposílal desítky duplicitních nebo doplňkových fotek na jeden variantní parent.
-- Zdrojový SEGO parametr `Barva` se do Shoptetu exportuje jako variantní parametr `Barva`. Aby se na detailu zobrazily kulaté vzorníky jako v referenčním e-shopu, musí v administraci/šabloně variant existovat odpovídající parametr a všechny použité hodnoty musí mít nastavenou barvu nebo obrázek; XML feed nastavuje hodnotu varianty a `IMAGE_REF`, ne vizuál vzorníku hodnoty.
+- Variantní parametr se obecně bere ze zdrojového `PARAM_NAME`; nepřejmenováváme hodnoty heuristicky, pokud to není pro SEGO nutné. Aktuální výjimka: rozměrové hodnoty typu `150x220mm`, které zdroj posílá jako `Barva`, se exportují jako `Rozměr`. Aby se na detailu zobrazily kulaté vzorníky jako v referenčním e-shopu, musí v administraci/šabloně variant existovat odpovídající parametr a všechny použité hodnoty musí mít nastavenou barvu nebo obrázek; XML feed nastavuje hodnotu varianty a `IMAGE_REF`, ne vizuál vzorníku hodnoty.
 - SEGO ceny se exportují jako celé Kč v `PRICE_VAT` s `VAT=21` a `CURRENCY=CZK`; desetinné ceny ze zdroje se zaokrouhlují.
 
 ## MVP rozsah
@@ -92,6 +92,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Unit test základního mapování kategorie.
 - Unit test mapování SEGO podkategorií.
 - Unit test slučování flat barevných variant.
+- Unit test feed-specific opravy SEGO rozměru chybně poslaného jako `Barva`.
 - Unit test filtrování nefunkčních SEGO variant preview obrázků.
 - Rebuild test přes fixture-backed downloader.
 - Po každé změně SEGO transformace spustit ruční kontrolu veřejné URL přes Shoptet XML validátor: https://www.shoptet.cz/xml-validace/

@@ -272,6 +272,7 @@ type variantInfo struct {
 	Key        string
 	ParentCode string
 	BaseName   string
+	ParamName  string
 	Value      string
 }
 
@@ -308,7 +309,7 @@ func (group *variantGroup) Add(item shoptet.Item, info variantInfo) {
 		group.images = append(group.images, image)
 	}
 
-	parameters := []shoptet.Parameter{{Name: variantParameterName, Value: info.Value}}
+	parameters := []shoptet.Parameter{{Name: info.ParamName, Value: info.Value}}
 	group.variants = append(group.variants, shoptet.Variant{
 		Code:         item.Code,
 		EAN:          item.EAN,
@@ -355,8 +356,8 @@ func flatVariantInfo(source sourceItem) (variantInfo, bool) {
 	}
 	baseName = strings.TrimSpace(baseName)
 	nameVariant = normalizeParameterValue(nameVariant)
-	color := source.ParameterValue("Barva")
-	if baseName == "" || color == "" || nameVariant == "" || !strings.EqualFold(color, nameVariant) {
+	sourceParam, ok := source.ParameterByValue(nameVariant)
+	if baseName == "" || !ok || nameVariant == "" {
 		return variantInfo{}, false
 	}
 
@@ -365,12 +366,36 @@ func flatVariantInfo(source sourceItem) (variantInfo, bool) {
 		return variantInfo{}, false
 	}
 
+	paramName := normalizeVariantParameterName(sourceParam.Name, sourceParam.Value)
 	return variantInfo{
-		Key:        slug + "|" + strings.ToLower(baseName),
+		Key:        slug + "|" + strings.ToLower(baseName) + "|" + strings.ToLower(paramName),
 		ParentCode: "sego-" + slug,
 		BaseName:   baseName,
-		Value:      color,
+		ParamName:  paramName,
+		Value:      sourceParam.Value,
 	}, true
+}
+
+func normalizeVariantParameterName(sourceName, value string) string {
+	if isDimensionVariantValue(value) {
+		return "Rozměr"
+	}
+
+	name := strings.TrimSpace(sourceName)
+	if name == "" {
+		return variantParameterName
+	}
+	return name
+}
+
+func isDimensionVariantValue(value string) bool {
+	normalized := strings.NewReplacer(" ", "", "×", "x").Replace(strings.ToLower(value))
+	if !strings.Contains(normalized, "x") || (!strings.Contains(normalized, "mm") && !strings.Contains(normalized, "cm")) {
+		return false
+	}
+	return strings.IndexFunc(normalized, func(r rune) bool {
+		return r >= '0' && r <= '9'
+	}) >= 0
 }
 
 func productSlug(rawURL string) string {
@@ -416,6 +441,41 @@ func (item sourceItem) ParameterValue(name string) string {
 		}
 	}
 	return ""
+}
+
+func (item sourceItem) ParameterByValue(value string) (sourceParameter, bool) {
+	value = normalizeParameterValue(value)
+	var best sourceParameter
+	bestScore := -1
+	for _, parameter := range item.Parameters {
+		parameterValue := normalizeParameterValue(parameter.Value)
+		if !strings.EqualFold(parameterValue, value) {
+			continue
+		}
+		score := variantParameterScore(parameter.Name)
+		if score > bestScore {
+			best = sourceParameter{
+				Name:  strings.TrimSpace(parameter.Name),
+				Value: parameterValue,
+			}
+			bestScore = score
+		}
+	}
+	return best, bestScore >= 0
+}
+
+func variantParameterScore(name string) int {
+	name = strings.TrimSpace(name)
+	switch name {
+	case variantParameterName:
+		return 100
+	case "Barva plastu":
+		return 10
+	case "":
+		return 0
+	default:
+		return 50
+	}
 }
 
 type sourceParameter struct {

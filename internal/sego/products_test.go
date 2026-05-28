@@ -132,6 +132,38 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	}
 }
 
+func TestParseProductsKeepsVariantParameterMeaning(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <ITEM_ID>MECH-1</ITEM_ID>
+    <PRODUCTNAME>Houpací mechanika | 150x220mm</PRODUCTNAME>
+    <URL>https://segocz.cz/produkty/detail/houpaci-mechanika?size=150x220</URL>
+    <PRICE_VAT>100.00</PRICE_VAT>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>150x220mm</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ITEM_ID>MECH-2</ITEM_ID>
+    <PRODUCTNAME>Houpací mechanika | 150x255mm</PRODUCTNAME>
+    <URL>https://segocz.cz/produkty/detail/houpaci-mechanika?size=150x255</URL>
+    <PRICE_VAT>120.00</PRICE_VAT>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>150x255mm</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse SEGO products: %v", err)
+	}
+	if stats.ProductsEmitted != 1 || stats.ItemsWithVariants != 1 || stats.VariantsEmitted != 2 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+
+	measurement := feed.Items[0].Variants[0].Parameters[0]
+	if measurement != (shoptet.Parameter{Name: "Rozměr", Value: "150x220mm"}) {
+		t.Fatalf("expected dimension parameter, got %#v", measurement)
+	}
+}
+
 func TestParseProductsMapsSegoSubcategories(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>
