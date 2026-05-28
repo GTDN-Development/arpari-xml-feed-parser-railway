@@ -139,13 +139,21 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 		}
 
 		stock, warehouses := transformStock(source.Stock)
+		categories, defaultCategory := transformCategories(source.Categories, name)
+		if len(categories) == 0 {
+			stats.ProductsSkipped = 1
+			slog.Warn("skipping STIMA simple product without mapped category", "name", name, "code", code)
+			return shoptet.Item{}, stats, false
+		}
 		return shoptet.Item{
-			Code:       code,
-			Name:       name,
-			EAN:        strings.TrimSpace(source.EAN),
-			PriceVAT:   strings.TrimSpace(source.PriceVAT),
-			Stock:      stock,
-			Warehouses: warehouses,
+			Code:            code,
+			Name:            name,
+			EAN:             strings.TrimSpace(source.EAN),
+			PriceVAT:        strings.TrimSpace(source.PriceVAT),
+			Stock:           stock,
+			Warehouses:      warehouses,
+			Categories:      categories,
+			DefaultCategory: defaultCategory,
 		}, stats, true
 	}
 
@@ -193,13 +201,21 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 		)
 	}
 
+	categories, defaultCategory := transformCategories(source.Categories, name)
+	if len(categories) == 0 {
+		stats.ProductsSkipped = 1
+		slog.Warn("skipping STIMA variant product without mapped category", "name", name, "code", parentCode(source.Code, firstValidVariantCode))
+		return shoptet.Item{}, stats, false
+	}
 	stats.VariantsEmitted = len(variants)
 	return shoptet.Item{
-		Code:     parentCode(source.Code, firstValidVariantCode),
-		Name:     name,
-		EAN:      strings.TrimSpace(source.EAN),
-		PriceVAT: strings.TrimSpace(source.PriceVAT),
-		Variants: variants,
+		Code:            parentCode(source.Code, firstValidVariantCode),
+		Name:            name,
+		EAN:             strings.TrimSpace(source.EAN),
+		PriceVAT:        strings.TrimSpace(source.PriceVAT),
+		Categories:      categories,
+		DefaultCategory: defaultCategory,
+		Variants:        variants,
 	}, stats, true
 }
 
@@ -266,12 +282,13 @@ func isAllowedVariantParameter(name string) bool {
 }
 
 type sourceShopItem struct {
-	Name     string          `xml:"NAME"`
-	Code     string          `xml:"CODE"`
-	EAN      string          `xml:"EAN"`
-	PriceVAT string          `xml:"PRICE_VAT"`
-	Stock    sourceStock     `xml:"STOCK"`
-	Variants []sourceVariant `xml:"VARIANTS>VARIANT"`
+	Name       string           `xml:"NAME"`
+	Code       string           `xml:"CODE"`
+	EAN        string           `xml:"EAN"`
+	PriceVAT   string           `xml:"PRICE_VAT"`
+	Stock      sourceStock      `xml:"STOCK"`
+	Categories sourceCategories `xml:"CATEGORIES"`
+	Variants   []sourceVariant  `xml:"VARIANTS>VARIANT"`
 }
 
 type sourceVariant struct {
@@ -295,4 +312,9 @@ type sourceWarehouse struct {
 type sourceParameter struct {
 	Name  string `xml:"NAME"`
 	Value string `xml:"VALUE"`
+}
+
+type sourceCategories struct {
+	Items   []string `xml:"CATEGORY"`
+	Default string   `xml:"DEFAULT_CATEGORY"`
 }

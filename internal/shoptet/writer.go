@@ -22,14 +22,16 @@ type Feed struct {
 }
 
 type Item struct {
-	Code         string
-	Name         string
-	PriceVAT     string
-	Stock        string
-	Warehouses   []Warehouse
-	Availability string
-	EAN          string
-	Variants     []Variant
+	Code            string
+	Name            string
+	PriceVAT        string
+	Stock           string
+	Warehouses      []Warehouse
+	Availability    string
+	EAN             string
+	Categories      []Category
+	DefaultCategory *Category
+	Variants        []Variant
 }
 
 type Variant struct {
@@ -50,6 +52,11 @@ type Warehouse struct {
 type Parameter struct {
 	Name  string
 	Value string
+}
+
+type Category struct {
+	ID   string
+	Path string
 }
 
 func Write(w io.Writer, feed Feed) error {
@@ -111,6 +118,14 @@ func ValidateWithLimits(feed Feed, limits Limits) error {
 				}
 			}
 		}
+		for categoryIndex, category := range item.Categories {
+			if strings.TrimSpace(category.Path) == "" {
+				return fmt.Errorf("SHOPITEM[%d] %q CATEGORY[%d] path is required", itemIndex, item.Code, categoryIndex)
+			}
+		}
+		if item.DefaultCategory != nil && strings.TrimSpace(item.DefaultCategory.Path) == "" {
+			return fmt.Errorf("SHOPITEM[%d] %q DEFAULT_CATEGORY path is required", itemIndex, item.Code)
+		}
 	}
 
 	return nil
@@ -136,6 +151,7 @@ func toShop(feed Feed) shopXML {
 			Stock:        toStockXML(item.Stock, item.Warehouses),
 			Availability: item.Availability,
 			EAN:          item.EAN,
+			Categories:   toCategoriesXML(item.Categories, item.DefaultCategory),
 		}
 		if len(item.Variants) > 0 {
 			variants := make([]shopVariantXML, 0, len(item.Variants))
@@ -154,6 +170,40 @@ func toShop(feed Feed) shopXML {
 		items = append(items, shopItem)
 	}
 	return shopXML{Items: items}
+}
+
+func toCategoriesXML(categories []Category, defaultCategory *Category) *shopCategoriesXML {
+	if len(categories) == 0 && defaultCategory == nil {
+		return nil
+	}
+
+	items := make([]shopCategoryXML, 0, len(categories))
+	for _, category := range categories {
+		path := strings.TrimSpace(category.Path)
+		if path == "" {
+			continue
+		}
+		items = append(items, shopCategoryXML{
+			ID:   strings.TrimSpace(category.ID),
+			Path: path,
+		})
+	}
+
+	var defaultItem *shopCategoryXML
+	if defaultCategory != nil {
+		path := strings.TrimSpace(defaultCategory.Path)
+		if path != "" {
+			defaultItem = &shopCategoryXML{
+				ID:   strings.TrimSpace(defaultCategory.ID),
+				Path: path,
+			}
+		}
+	}
+
+	if len(items) == 0 && defaultItem == nil {
+		return nil
+	}
+	return &shopCategoriesXML{Items: items, Default: defaultItem}
 }
 
 func toStockXML(stock string, warehouses []Warehouse) *shopStockXML {
@@ -214,13 +264,24 @@ type shopXML struct {
 }
 
 type shopItemXML struct {
-	Code         string           `xml:"CODE,omitempty"`
-	Name         string           `xml:"NAME,omitempty"`
-	PriceVAT     string           `xml:"PRICE_VAT,omitempty"`
-	Stock        *shopStockXML    `xml:"STOCK,omitempty"`
-	Availability string           `xml:"AVAILABILITY,omitempty"`
-	EAN          string           `xml:"EAN,omitempty"`
-	Variants     *shopVariantsXML `xml:"VARIANTS,omitempty"`
+	Code         string             `xml:"CODE,omitempty"`
+	Name         string             `xml:"NAME,omitempty"`
+	PriceVAT     string             `xml:"PRICE_VAT,omitempty"`
+	Stock        *shopStockXML      `xml:"STOCK,omitempty"`
+	Availability string             `xml:"AVAILABILITY,omitempty"`
+	EAN          string             `xml:"EAN,omitempty"`
+	Categories   *shopCategoriesXML `xml:"CATEGORIES,omitempty"`
+	Variants     *shopVariantsXML   `xml:"VARIANTS,omitempty"`
+}
+
+type shopCategoriesXML struct {
+	Items   []shopCategoryXML `xml:"CATEGORY"`
+	Default *shopCategoryXML  `xml:"DEFAULT_CATEGORY,omitempty"`
+}
+
+type shopCategoryXML struct {
+	ID   string `xml:"id,attr,omitempty"`
+	Path string `xml:",chardata"`
 }
 
 type shopVariantsXML struct {

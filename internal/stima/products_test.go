@@ -17,6 +17,11 @@ func TestParseProductsSimpleProduct(t *testing.T) {
     <CODE>ART-SIMPLE</CODE>
     <EAN>8590000000001</EAN>
     <PRICE_VAT>1234.00</PRICE_VAT>
+    <CATEGORIES>
+      <CATEGORY>Katalog &gt; Židle</CATEGORY>
+      <CATEGORY>Katalog &gt; Židle &gt; Dřevěné židle</CATEGORY>
+      <CATEGORY>Katalog &gt; Katalog 2026</CATEGORY>
+    </CATEGORIES>
     <STOCK>
       <WAREHOUSES>
         <WAREHOUSE>
@@ -46,12 +51,26 @@ func TestParseProductsSimpleProduct(t *testing.T) {
 	if len(item.Warehouses) != 1 || item.Warehouses[0] != (shoptet.Warehouse{Name: "HLAVNÍ SKLAD", Value: "5.000"}) {
 		t.Fatalf("unexpected warehouses: %#v", item.Warehouses)
 	}
+	if len(item.Categories) != 2 {
+		t.Fatalf("expected mapped categories, got %#v", item.Categories)
+	}
+	if item.Categories[1] != (shoptet.Category{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"}) {
+		t.Fatalf("unexpected mapped category: %#v", item.Categories[1])
+	}
+	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"}) {
+		t.Fatalf("unexpected default category: %#v", item.DefaultCategory)
+	}
 }
 
 func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>
     <NAME>Židle NANCY KR58</NAME>
+    <CATEGORIES>
+      <CATEGORY>Katalog &gt; Restaurační židle</CATEGORY>
+      <CATEGORY>Katalog &gt; Restaurační židle &gt; Stále skladem</CATEGORY>
+      <CATEGORY>Katalog &gt; Židle</CATEGORY>
+    </CATEGORIES>
     <VARIANTS>
       <VARIANT>
         <CODE>ART13627-k002-l244</CODE>
@@ -80,6 +99,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	if item.Code != "ART13627" {
 		t.Fatalf("expected derived parent code ART13627, got %q", item.Code)
 	}
+	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1128", Path: "ŽIDLE > RESTAURAČNÍ ŽIDLE"}) {
+		t.Fatalf("unexpected default category: %#v", item.DefaultCategory)
+	}
 	if len(item.Variants) != 1 {
 		t.Fatalf("expected 1 variant, got %d", len(item.Variants))
 	}
@@ -101,7 +123,7 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 
 func TestParseProductsTrimsProductsAboveShoptetVariantLimit(t *testing.T) {
 	var input bytes.Buffer
-	input.WriteString(`<SHOP><SHOPITEM><NAME>Large Variant Product</NAME><VARIANTS>`)
+	input.WriteString(`<SHOP><SHOPITEM><NAME>Large Variant Product</NAME><CATEGORIES><CATEGORY>Katalog &gt; Židle</CATEGORY></CATEGORIES><VARIANTS>`)
 	for i := 0; i < shoptet.DefaultMaxVariantsPerItem+2; i++ {
 		fmt.Fprintf(&input, `<VARIANT><CODE>ART-LARGE-%03d</CODE><PRICE_VAT>100.00</PRICE_VAT></VARIANT>`, i)
 	}
@@ -128,7 +150,7 @@ func TestParseProductsTrimsProductsAboveShoptetVariantLimit(t *testing.T) {
 func TestParseProductsSkipsVariantWithoutCode(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>
-    <NAME>Variant Product</NAME>
+    <NAME>Židle Variant Product</NAME>
     <VARIANTS>
       <VARIANT><PRICE_VAT>100.00</PRICE_VAT></VARIANT>
       <VARIANT><CODE>ART-SAFE-k001</CODE><PRICE_VAT>120.00</PRICE_VAT></VARIANT>

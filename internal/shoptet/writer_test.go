@@ -19,6 +19,11 @@ func TestWriteSimpleProduct(t *testing.T) {
 				Stock:        "7",
 				Availability: "Skladem",
 				EAN:          "8590000000001",
+				Categories: []Category{
+					{ID: "902", Path: "ŽIDLE"},
+					{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"},
+				},
+				DefaultCategory: &Category{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"},
 			},
 		},
 	})
@@ -52,6 +57,15 @@ func TestWriteSimpleProduct(t *testing.T) {
 	}
 	if item.EAN != "8590000000001" {
 		t.Fatalf("expected item EAN, got %q", item.EAN)
+	}
+	if item.Categories == nil || len(item.Categories.Items) != 2 {
+		t.Fatalf("expected item categories, got %#v", item.Categories)
+	}
+	if item.Categories.Items[1].ID != "905" || item.Categories.Items[1].Path != "ŽIDLE > DŘEVĚNÉ ŽIDLE" {
+		t.Fatalf("expected mapped category, got %#v", item.Categories.Items[1])
+	}
+	if item.Categories.Default == nil || item.Categories.Default.ID != "905" || item.Categories.Default.Path != "ŽIDLE > DŘEVĚNÉ ŽIDLE" {
+		t.Fatalf("expected default category, got %#v", item.Categories.Default)
 	}
 }
 

@@ -95,7 +95,7 @@ Endpoint `/feeds/hello.xml` vrací jednoduchý XML feed s jednou dummy položkou
 </SHOP>
 ```
 
-Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsahuje základní produktová/variantní pole, sklad a povolené variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`. Produkty s více než 512 variantami se při transformaci ořežou na prvních 512 variant v pořadí ze zdrojového feedu.
+Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsahuje základní produktová/variantní pole, sklad, cílové Shoptet kategorie a povolené variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`. Produkty s více než 512 variantami se při transformaci ořežou na prvních 512 variant v pořadí ze zdrojového feedu. Položky bez bezpečně určené cílové kategorie se přeskočí.
 
 Endpointy `/feeds/stima-stock.xml` a `/feeds/stima-stock-price.xml` vrací aktualizační MVP pro STIMA sklad, respektive sklad + cenu. Neobsahují katalogová pole jako popisy, obrázky nebo kategorie. I tyto feedy respektují Shoptet limit 512 variant na produkt.
 

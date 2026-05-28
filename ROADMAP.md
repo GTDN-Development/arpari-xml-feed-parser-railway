@@ -191,6 +191,7 @@ Rozsah:
 - stahovat `https://www.stima.cz/userfiles/xml/ITTC_SHT_products.xml`,
 - parsovat streamingově přes Go XML decoder,
 - generovat Shoptet produktový feed se základními poli,
+- mapovat bezpečné STIMA kategorie na existující Shoptet kategorie,
 - mapovat variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`,
 - odvodit parent `CODE` z první varianty, pokud STIMA parent kód nepošle,
 - automaticky oříznout produkty nad 512 variant na prvních 512 variant,
