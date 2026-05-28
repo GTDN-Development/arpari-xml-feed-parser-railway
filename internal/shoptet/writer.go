@@ -22,22 +22,23 @@ type Feed struct {
 }
 
 type Item struct {
-	Code             string
-	Name             string
-	ShortDescription string
-	Description      string
-	Price            string
-	PriceVAT         string
-	VAT              string
-	Currency         string
-	Stock            string
-	Warehouses       []Warehouse
-	Availability     string
-	EAN              string
-	Categories       []Category
-	DefaultCategory  *Category
-	Images           []Image
-	Variants         []Variant
+	Code                  string
+	Name                  string
+	ShortDescription      string
+	Description           string
+	Price                 string
+	PriceVAT              string
+	VAT                   string
+	Currency              string
+	Stock                 string
+	Warehouses            []Warehouse
+	Availability          string
+	EAN                   string
+	Categories            []Category
+	DefaultCategory       *Category
+	Images                []Image
+	InformationParameters []Parameter
+	Variants              []Variant
 }
 
 type Variant struct {
@@ -164,11 +165,12 @@ func toShop(feed Feed) shopXML {
 	items := make([]shopItemXML, 0, len(feed.Items))
 	for _, item := range feed.Items {
 		shopItem := shopItemXML{
-			Name:             item.Name,
-			ShortDescription: item.ShortDescription,
-			Description:      item.Description,
-			Categories:       toCategoriesXML(item.Categories, item.DefaultCategory),
-			Images:           toImagesXML(item.Images),
+			Name:                  item.Name,
+			ShortDescription:      item.ShortDescription,
+			Description:           item.Description,
+			Categories:            toCategoriesXML(item.Categories, item.DefaultCategory),
+			Images:                toImagesXML(item.Images),
+			InformationParameters: toInformationParametersXML(item.InformationParameters),
 		}
 		if len(item.Variants) > 0 {
 			shopItem.ExternalID = item.Code
@@ -308,27 +310,63 @@ func toParametersXML(parameters []Parameter) *shopParametersXML {
 	return &shopParametersXML{Items: items}
 }
 
+func toInformationParametersXML(parameters []Parameter) *shopInformationParametersXML {
+	if len(parameters) == 0 {
+		return nil
+	}
+
+	items := make([]shopInformationParameterXML, 0, len(parameters))
+	itemIndexes := make(map[string]int, len(parameters))
+	seenValues := make(map[string]struct{}, len(parameters))
+	for _, parameter := range parameters {
+		name := strings.TrimSpace(parameter.Name)
+		value := strings.TrimSpace(parameter.Value)
+		if name == "" || value == "" {
+			continue
+		}
+		valueKey := strings.ToLower(name) + "\x00" + strings.ToLower(value)
+		if _, ok := seenValues[valueKey]; ok {
+			continue
+		}
+		seenValues[valueKey] = struct{}{}
+		if index, ok := itemIndexes[name]; ok {
+			items[index].Values = append(items[index].Values, value)
+			continue
+		}
+		itemIndexes[name] = len(items)
+		items = append(items, shopInformationParameterXML{
+			Name:   name,
+			Values: []string{value},
+		})
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	return &shopInformationParametersXML{Items: items}
+}
+
 type shopXML struct {
 	XMLName xml.Name      `xml:"SHOP"`
 	Items   []shopItemXML `xml:"SHOPITEM"`
 }
 
 type shopItemXML struct {
-	ExternalID       string             `xml:"EXTERNAL_ID,omitempty"`
-	Code             string             `xml:"CODE,omitempty"`
-	Name             string             `xml:"NAME,omitempty"`
-	ShortDescription string             `xml:"SHORT_DESCRIPTION,omitempty"`
-	Description      string             `xml:"DESCRIPTION,omitempty"`
-	EAN              string             `xml:"EAN,omitempty"`
-	Currency         string             `xml:"CURRENCY,omitempty"`
-	VAT              string             `xml:"VAT,omitempty"`
-	Price            string             `xml:"PRICE,omitempty"`
-	PriceVAT         string             `xml:"PRICE_VAT,omitempty"`
-	Stock            *shopStockXML      `xml:"STOCK,omitempty"`
-	Availability     string             `xml:"AVAILABILITY,omitempty"`
-	Categories       *shopCategoriesXML `xml:"CATEGORIES,omitempty"`
-	Images           *shopImagesXML     `xml:"IMAGES,omitempty"`
-	Variants         *shopVariantsXML   `xml:"VARIANTS,omitempty"`
+	ExternalID            string                        `xml:"EXTERNAL_ID,omitempty"`
+	Code                  string                        `xml:"CODE,omitempty"`
+	Name                  string                        `xml:"NAME,omitempty"`
+	ShortDescription      string                        `xml:"SHORT_DESCRIPTION,omitempty"`
+	Description           string                        `xml:"DESCRIPTION,omitempty"`
+	EAN                   string                        `xml:"EAN,omitempty"`
+	Currency              string                        `xml:"CURRENCY,omitempty"`
+	VAT                   string                        `xml:"VAT,omitempty"`
+	Price                 string                        `xml:"PRICE,omitempty"`
+	PriceVAT              string                        `xml:"PRICE_VAT,omitempty"`
+	Stock                 *shopStockXML                 `xml:"STOCK,omitempty"`
+	Availability          string                        `xml:"AVAILABILITY,omitempty"`
+	Categories            *shopCategoriesXML            `xml:"CATEGORIES,omitempty"`
+	Images                *shopImagesXML                `xml:"IMAGES,omitempty"`
+	InformationParameters *shopInformationParametersXML `xml:"INFORMATION_PARAMETERS,omitempty"`
+	Variants              *shopVariantsXML              `xml:"VARIANTS,omitempty"`
 }
 
 type shopCategoriesXML struct {
@@ -420,4 +458,13 @@ type shopParametersXML struct {
 type shopParameterXML struct {
 	Name  string `xml:"NAME,omitempty"`
 	Value string `xml:"VALUE,omitempty"`
+}
+
+type shopInformationParametersXML struct {
+	Items []shopInformationParameterXML `xml:"INFORMATION_PARAMETER"`
+}
+
+type shopInformationParameterXML struct {
+	Name   string   `xml:"NAME,omitempty"`
+	Values []string `xml:"VALUE"`
 }

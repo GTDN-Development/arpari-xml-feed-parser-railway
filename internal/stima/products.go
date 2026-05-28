@@ -150,17 +150,18 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			return shoptet.Item{}, stats, false
 		}
 		return shoptet.Item{
-			Code:             code,
-			Name:             name,
-			ShortDescription: strings.TrimSpace(source.ShortDescription),
-			Description:      strings.TrimSpace(source.Description),
-			EAN:              strings.TrimSpace(source.EAN),
-			PriceVAT:         strings.TrimSpace(source.PriceVAT),
-			Stock:            stock,
-			Warehouses:       warehouses,
-			Categories:       categories,
-			DefaultCategory:  defaultCategory,
-			Images:           transformImages(source.Images),
+			Code:                  code,
+			Name:                  name,
+			ShortDescription:      strings.TrimSpace(source.ShortDescription),
+			Description:           strings.TrimSpace(source.Description),
+			EAN:                   strings.TrimSpace(source.EAN),
+			PriceVAT:              strings.TrimSpace(source.PriceVAT),
+			Stock:                 stock,
+			Warehouses:            warehouses,
+			Categories:            categories,
+			DefaultCategory:       defaultCategory,
+			Images:                transformImages(source.Images),
+			InformationParameters: transformInformationParameters(source.InformationParameters),
 		}, stats, true
 	}
 
@@ -216,16 +217,17 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 	}
 	stats.VariantsEmitted = len(variants)
 	return shoptet.Item{
-		Code:             parentCode(source.Code, firstValidVariantCode),
-		Name:             name,
-		ShortDescription: strings.TrimSpace(source.ShortDescription),
-		Description:      strings.TrimSpace(source.Description),
-		EAN:              strings.TrimSpace(source.EAN),
-		PriceVAT:         strings.TrimSpace(source.PriceVAT),
-		Categories:       categories,
-		DefaultCategory:  defaultCategory,
-		Images:           transformImages(source.Images),
-		Variants:         variants,
+		Code:                  parentCode(source.Code, firstValidVariantCode),
+		Name:                  name,
+		ShortDescription:      strings.TrimSpace(source.ShortDescription),
+		Description:           strings.TrimSpace(source.Description),
+		EAN:                   strings.TrimSpace(source.EAN),
+		PriceVAT:              strings.TrimSpace(source.PriceVAT),
+		Categories:            categories,
+		DefaultCategory:       defaultCategory,
+		Images:                transformImages(source.Images),
+		InformationParameters: transformInformationParameters(source.InformationParameters),
+		Variants:              variants,
 	}, stats, true
 }
 
@@ -282,6 +284,29 @@ func transformParameters(parameters []sourceParameter) []shoptet.Parameter {
 	return result
 }
 
+func transformInformationParameters(parameters []sourceParameter) []shoptet.Parameter {
+	if len(parameters) == 0 {
+		return nil
+	}
+
+	result := make([]shoptet.Parameter, 0, len(parameters))
+	seen := make(map[string]struct{}, len(parameters))
+	for _, parameter := range parameters {
+		name := strings.TrimSpace(parameter.Name)
+		value := strings.TrimSpace(parameter.Value)
+		if name == "" || value == "" {
+			continue
+		}
+		key := strings.ToLower(name) + "\x00" + strings.ToLower(value)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, shoptet.Parameter{Name: name, Value: value})
+	}
+	return result
+}
+
 func transformImages(images []string) []shoptet.Image {
 	if len(images) == 0 {
 		return nil
@@ -313,16 +338,17 @@ func isAllowedVariantParameter(name string) bool {
 }
 
 type sourceShopItem struct {
-	Name             string           `xml:"NAME"`
-	ShortDescription string           `xml:"SHORT_DESCRIPTION"`
-	Description      string           `xml:"DESCRIPTION"`
-	Code             string           `xml:"CODE"`
-	EAN              string           `xml:"EAN"`
-	PriceVAT         string           `xml:"PRICE_VAT"`
-	Stock            sourceStock      `xml:"STOCK"`
-	Categories       sourceCategories `xml:"CATEGORIES"`
-	Images           []string         `xml:"IMAGES>IMAGE"`
-	Variants         []sourceVariant  `xml:"VARIANTS>VARIANT"`
+	Name                  string            `xml:"NAME"`
+	ShortDescription      string            `xml:"SHORT_DESCRIPTION"`
+	Description           string            `xml:"DESCRIPTION"`
+	Code                  string            `xml:"CODE"`
+	EAN                   string            `xml:"EAN"`
+	PriceVAT              string            `xml:"PRICE_VAT"`
+	Stock                 sourceStock       `xml:"STOCK"`
+	Categories            sourceCategories  `xml:"CATEGORIES"`
+	Images                []string          `xml:"IMAGES>IMAGE"`
+	InformationParameters []sourceParameter `xml:"INFORMATION_PARAMETERS>INFORMATION_PARAMETER"`
+	Variants              []sourceVariant   `xml:"VARIANTS>VARIANT"`
 }
 
 type sourceVariant struct {

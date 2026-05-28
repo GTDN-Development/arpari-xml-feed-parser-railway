@@ -119,16 +119,17 @@ func transformProduct(source sourceProduct) (shoptet.Item, bool) {
 	stock, warehouses := transformAvailability(source.Availability)
 
 	return shoptet.Item{
-		Code:            code,
-		Name:            name,
-		Description:     transformDescription(source.Descriptions),
-		PriceVAT:        transformPrice(source.Prices),
-		Stock:           stock,
-		Warehouses:      warehouses,
-		EAN:             strings.TrimSpace(source.EAN),
-		Categories:      categories,
-		DefaultCategory: defaultCategory,
-		Images:          transformImages(source.Images),
+		Code:                  code,
+		Name:                  name,
+		Description:           transformDescription(source.Descriptions),
+		PriceVAT:              transformPrice(source.Prices),
+		Stock:                 stock,
+		Warehouses:            warehouses,
+		EAN:                   strings.TrimSpace(source.EAN),
+		Categories:            categories,
+		DefaultCategory:       defaultCategory,
+		Images:                transformImages(source.Images),
+		InformationParameters: transformParameters(source.Parameters),
 	}, true
 }
 
@@ -195,6 +196,50 @@ func transformImages(images []sourceImage) []shoptet.Image {
 	return result
 }
 
+func transformParameters(parameters []sourceParameter) []shoptet.Parameter {
+	if len(parameters) == 0 {
+		return nil
+	}
+
+	result := make([]shoptet.Parameter, 0, len(parameters))
+	seen := make(map[string]struct{}, len(parameters))
+	for _, parameter := range parameters {
+		name := strings.TrimSpace(parameter.Name)
+		value := transformParameterValue(parameter)
+		if name == "" || value == "" {
+			continue
+		}
+		key := strings.ToLower(name) + "\x00" + strings.ToLower(value)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, shoptet.Parameter{Name: name, Value: value})
+	}
+	return result
+}
+
+func transformParameterValue(parameter sourceParameter) string {
+	value := strings.TrimSpace(parameter.TextValue)
+	if value == "" {
+		value = normalizeNumber(parameter.NumericValue)
+	}
+	unit := strings.TrimSpace(parameter.Unit)
+	if value == "" || unit == "" || parameterNameContainsUnit(parameter.Name, unit) {
+		return value
+	}
+	return value + " " + unit
+}
+
+func parameterNameContainsUnit(name, unit string) bool {
+	name = strings.ToLower(strings.TrimSpace(name))
+	unit = strings.ToLower(strings.TrimSpace(unit))
+	if name == "" || unit == "" {
+		return false
+	}
+	return strings.Contains(name, "("+unit+")") || strings.Contains(name, " "+unit)
+}
+
 func transformCategory(categoryName string) ([]shoptet.Category, *shoptet.Category) {
 	name := strings.ToLower(strings.TrimSpace(categoryName))
 	var category shoptet.Category
@@ -255,6 +300,7 @@ type sourceProduct struct {
 	Availability sourceAvailability  `xml:"Availability"`
 	Descriptions []sourceDescription `xml:"Descriptions>Description"`
 	Images       []sourceImage       `xml:"Images>Image"`
+	Parameters   []sourceParameter   `xml:"Parameters>Parameter"`
 }
 
 type sourceCategory struct {
@@ -295,4 +341,11 @@ type sourceDescription struct {
 type sourceImage struct {
 	MediumURL string `xml:"mediumSizeUrl,attr"`
 	LargeURL  string `xml:"largeSizeUrl,attr"`
+}
+
+type sourceParameter struct {
+	Name         string `xml:"Name"`
+	TextValue    string `xml:"TextValue"`
+	NumericValue string `xml:"NumericValue"`
+	Unit         string `xml:"Unit"`
 }

@@ -29,6 +29,11 @@ func TestWriteSimpleProduct(t *testing.T) {
 				Images: []Image{
 					{URL: "https://www.stima.cz/userfiles/xml/pictures/simple.jpg"},
 				},
+				InformationParameters: []Parameter{
+					{Name: "Nosnost", Value: "120"},
+					{Name: "Nosnost", Value: "150"},
+					{Name: "Materiál", Value: "Kov"},
+				},
 			},
 		},
 	})
@@ -83,6 +88,12 @@ func TestWriteSimpleProduct(t *testing.T) {
 	}
 	if item.Images == nil || len(item.Images.Items) != 1 || item.Images.Items[0].URL != "https://www.stima.cz/userfiles/xml/pictures/simple.jpg" {
 		t.Fatalf("expected item images, got %#v", item.Images)
+	}
+	if item.InformationParameters == nil || len(item.InformationParameters.Items) != 2 {
+		t.Fatalf("expected item information parameters, got %#v", item.InformationParameters)
+	}
+	if item.InformationParameters.Items[0].Name != "Nosnost" || len(item.InformationParameters.Items[0].Values) != 2 {
+		t.Fatalf("expected grouped Nosnost values, got %#v", item.InformationParameters.Items[0])
 	}
 }
 

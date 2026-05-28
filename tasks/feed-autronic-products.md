@@ -25,6 +25,7 @@ Generovat Shoptet produktový XML feed z Autronic katalogu pro samostatný testo
 - Všechny ostatní kategorie musí parser vyřadit před generováním Shoptet XML.
 - Testovací endpoint `autronic-products-test` používá stejná pravidla, ale končí po prvních 5 výstupních produktech.
 - Katalog nesmí bez mapování přepsat citlivá produktová data původního katalogu.
+- Zdrojové `Parameters/Parameter` hodnoty se exportují jako Shoptet `INFORMATION_PARAMETERS`, tedy jako tabulkové doplňkové parametry, ne jako vybíratelné varianty.
 
 ## MVP rozsah
 
@@ -38,6 +39,7 @@ Generovat Shoptet produktový XML feed z Autronic katalogu pro samostatný testo
   - sklad po skladech
   - `DESCRIPTION`
   - `IMAGES`
+  - technické parametry v `INFORMATION_PARAMETERS`
   - základní cílové kategorie podle názvu zdrojové kategorie
 
 ## Implementace
@@ -48,6 +50,7 @@ Generovat Shoptet produktový XML feed z Autronic katalogu pro samostatný testo
 - Reálný rebuild ověřen 2026-05-28:
   - `autronic-products`: 5 750 přečteno, 800 emitováno, 4 950 přeskočeno.
   - `autronic-products-test`: 5 emitovaných produktů.
+  - `autronic-products`: 800 bloků `INFORMATION_PARAMETERS`, 23 065 informačních parametrů.
   - Výstupní XML je well-formed a publikace proběhla přes storage publisher.
 
 ## Otevřené otázky

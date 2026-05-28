@@ -31,6 +31,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - SEGO obrázky jsou omezené na prvních 20 funkčních URL na produkt, aby import neposílal desítky duplicitních nebo doplňkových fotek na jeden variantní parent.
 - Variantní parametr se obecně bere ze zdrojového `PARAM_NAME`; nepřejmenováváme hodnoty heuristicky, pokud to není pro SEGO nutné. Aktuální výjimka: rozměrové hodnoty typu `150x220mm`, které zdroj posílá jako `Barva`, se exportují jako `Rozměr`. Aby se na detailu zobrazily kulaté vzorníky jako v referenčním e-shopu, musí v administraci/šabloně variant existovat odpovídající parametr a všechny použité hodnoty musí mít nastavenou barvu nebo obrázek; XML feed nastavuje hodnotu varianty a `IMAGE_REF`, ne vizuál vzorníku hodnoty.
 - SEGO ceny se exportují jako celé Kč v `PRICE_VAT` s `VAT=21` a `CURRENCY=CZK`; desetinné ceny ze zdroje se zaokrouhlují.
+- Technické `PARAM` hodnoty ze zdroje se exportují včetně jednotek (`UNIT`) jako Shoptet `INFORMATION_PARAMETERS`, aby se zobrazily v tabulce doplňkových parametrů. Parametr použitý jako volba varianty se na parent produktu neduplikuje jako informační parametr.
 
 ## MVP rozsah
 
@@ -43,6 +44,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
   - dostupnost z `DELIVERY_DATE`
   - `DESCRIPTION`
   - `IMAGES`
+  - technické parametry v `INFORMATION_PARAMETERS`
 - Cílové kategorie:
   - síťované kancelářské židle
   - čalouněná kancelářská křesla

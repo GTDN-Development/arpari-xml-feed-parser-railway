@@ -141,17 +141,18 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 		vat = defaultVAT
 	}
 	return shoptet.Item{
-		Code:            code,
-		Name:            name,
-		Description:     normalizeDescription(source.Description),
-		PriceVAT:        price,
-		VAT:             vat,
-		Currency:        currency,
-		Availability:    transformDeliveryDate(source.DeliveryDate),
-		EAN:             strings.TrimSpace(source.EAN),
-		Categories:      []shoptet.Category{category},
-		DefaultCategory: &category,
-		Images:          transformImages(source),
+		Code:                  code,
+		Name:                  name,
+		Description:           normalizeDescription(source.Description),
+		PriceVAT:              price,
+		VAT:                   vat,
+		Currency:              currency,
+		Availability:          transformDeliveryDate(source.DeliveryDate),
+		EAN:                   strings.TrimSpace(source.EAN),
+		Categories:            []shoptet.Category{category},
+		DefaultCategory:       &category,
+		Images:                transformImages(source),
+		InformationParameters: transformInformationParameters(source.Parameters),
 	}, true
 }
 
@@ -254,6 +255,66 @@ func transformImages(source sourceItem) []shoptet.Image {
 	return images
 }
 
+func transformInformationParameters(parameters []sourceParameter) []shoptet.Parameter {
+	if len(parameters) == 0 {
+		return nil
+	}
+
+	result := make([]shoptet.Parameter, 0, len(parameters))
+	seen := make(map[string]struct{}, len(parameters))
+	for _, parameter := range parameters {
+		name := strings.TrimSpace(parameter.Name)
+		value := transformInformationParameterValue(parameter)
+		if name == "" || value == "" {
+			continue
+		}
+		key := strings.ToLower(name) + "\x00" + strings.ToLower(value)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, shoptet.Parameter{Name: name, Value: value})
+	}
+	return result
+}
+
+func transformInformationParameterValue(parameter sourceParameter) string {
+	value := normalizeParameterValue(parameter.Value)
+	unit := strings.TrimSpace(parameter.Unit)
+	if value == "" || unit == "" || parameterNameContainsUnit(parameter.Name, unit) {
+		return value
+	}
+	return value + " " + unit
+}
+
+func parameterNameContainsUnit(name, unit string) bool {
+	name = strings.ToLower(strings.TrimSpace(name))
+	unit = strings.ToLower(strings.TrimSpace(unit))
+	if name == "" || unit == "" {
+		return false
+	}
+	return strings.Contains(name, "("+unit+")") || strings.Contains(name, " "+unit)
+}
+
+func filterInformationParameters(parameters []shoptet.Parameter, selectors map[string]struct{}) []shoptet.Parameter {
+	if len(parameters) == 0 || len(selectors) == 0 {
+		return parameters
+	}
+
+	result := make([]shoptet.Parameter, 0, len(parameters))
+	for _, parameter := range parameters {
+		if _, ok := selectors[parameterKey(parameter.Name, parameter.Value)]; ok {
+			continue
+		}
+		result = append(result, parameter)
+	}
+	return result
+}
+
+func parameterKey(name, value string) string {
+	return strings.ToLower(strings.TrimSpace(name)) + "\x00" + strings.ToLower(normalizeParameterValue(value))
+}
+
 func isBrokenVariantPreviewURL(rawURL string) bool {
 	parsed, err := url.Parse(strings.TrimSpace(rawURL))
 	if err != nil {
@@ -269,29 +330,35 @@ type productEntry struct {
 }
 
 type variantInfo struct {
-	Key        string
-	ParentCode string
-	BaseName   string
-	ParamName  string
-	Value      string
+	Key             string
+	ParentCode      string
+	BaseName        string
+	ParamName       string
+	SourceParamName string
+	Value           string
 }
 
 type variantGroup struct {
-	parentCode      string
-	baseName        string
-	firstItem       shoptet.Item
-	variants        []shoptet.Variant
-	images          []shoptet.Image
-	seenImageURLs   map[string]struct{}
-	simpleFallbacks []shoptet.Item
+	parentCode                string
+	baseName                  string
+	firstItem                 shoptet.Item
+	variants                  []shoptet.Variant
+	images                    []shoptet.Image
+	seenImageURLs             map[string]struct{}
+	informationParameters     []shoptet.Parameter
+	seenInformationParameters map[string]struct{}
+	selectorParameters        map[string]struct{}
+	simpleFallbacks           []shoptet.Item
 }
 
 func newVariantGroup(info variantInfo, firstItem shoptet.Item) *variantGroup {
 	return &variantGroup{
-		parentCode:    info.ParentCode,
-		baseName:      info.BaseName,
-		firstItem:     firstItem,
-		seenImageURLs: make(map[string]struct{}),
+		parentCode:                info.ParentCode,
+		baseName:                  info.BaseName,
+		firstItem:                 firstItem,
+		seenImageURLs:             make(map[string]struct{}),
+		seenInformationParameters: make(map[string]struct{}),
+		selectorParameters:        make(map[string]struct{}),
 	}
 }
 
@@ -308,8 +375,17 @@ func (group *variantGroup) Add(item shoptet.Item, info variantInfo) {
 		group.seenImageURLs[url] = struct{}{}
 		group.images = append(group.images, image)
 	}
+	for _, parameter := range item.InformationParameters {
+		key := parameterKey(parameter.Name, parameter.Value)
+		if _, ok := group.seenInformationParameters[key]; ok {
+			continue
+		}
+		group.seenInformationParameters[key] = struct{}{}
+		group.informationParameters = append(group.informationParameters, parameter)
+	}
 
 	parameters := []shoptet.Parameter{{Name: info.ParamName, Value: info.Value}}
+	group.selectorParameters[parameterKey(info.SourceParamName, info.Value)] = struct{}{}
 	group.variants = append(group.variants, shoptet.Variant{
 		Code:         item.Code,
 		EAN:          item.EAN,
@@ -335,17 +411,18 @@ func (group *variantGroup) Item() shoptet.Item {
 	}
 
 	return shoptet.Item{
-		Code:            "",
-		Name:            group.baseName,
-		Description:     group.firstItem.Description,
-		PriceVAT:        group.firstItem.PriceVAT,
-		VAT:             group.firstItem.VAT,
-		Currency:        group.firstItem.Currency,
-		Availability:    group.firstItem.Availability,
-		Categories:      group.firstItem.Categories,
-		DefaultCategory: group.firstItem.DefaultCategory,
-		Images:          group.images,
-		Variants:        group.variants,
+		Code:                  "",
+		Name:                  group.baseName,
+		Description:           group.firstItem.Description,
+		PriceVAT:              group.firstItem.PriceVAT,
+		VAT:                   group.firstItem.VAT,
+		Currency:              group.firstItem.Currency,
+		Availability:          group.firstItem.Availability,
+		Categories:            group.firstItem.Categories,
+		DefaultCategory:       group.firstItem.DefaultCategory,
+		Images:                group.images,
+		InformationParameters: filterInformationParameters(group.informationParameters, group.selectorParameters),
+		Variants:              group.variants,
 	}
 }
 
@@ -368,11 +445,12 @@ func flatVariantInfo(source sourceItem) (variantInfo, bool) {
 
 	paramName := normalizeVariantParameterName(sourceParam.Name, sourceParam.Value)
 	return variantInfo{
-		Key:        slug + "|" + strings.ToLower(baseName) + "|" + strings.ToLower(paramName),
-		ParentCode: "sego-" + slug,
-		BaseName:   baseName,
-		ParamName:  paramName,
-		Value:      sourceParam.Value,
+		Key:             slug + "|" + strings.ToLower(baseName) + "|" + strings.ToLower(paramName),
+		ParentCode:      "sego-" + slug,
+		BaseName:        baseName,
+		ParamName:       paramName,
+		SourceParamName: sourceParam.Name,
+		Value:           sourceParam.Value,
 	}, true
 }
 
@@ -481,4 +559,5 @@ func variantParameterScore(name string) int {
 type sourceParameter struct {
 	Name  string `xml:"PARAM_NAME"`
 	Value string `xml:"VAL"`
+	Unit  string `xml:"UNIT"`
 }

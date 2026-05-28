@@ -29,6 +29,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
 - Produkty nad 512 variant se oříznou na prvních 512 variant v pořadí ze STIMA feedu.
 - Pokud STIMA parent produkt nemá `CODE`, odvodí se z první varianty, například `ART13627-k002-l244` -> `ART13627`.
 - U variantních produktů se odvozený parent kód zapisuje jako Shoptet `EXTERNAL_ID`, ne jako top-level `CODE`; Shoptet schéma jinak odmítne kombinaci parent `CODE` + `VARIANTS`.
+- Zdrojové `INFORMATION_PARAMETERS` se exportují do Shoptet `INFORMATION_PARAMETERS`. Aktuální STIMA feed tyto bloky posílá prázdné, proto ve výstupu zatím nejsou žádné tabulkové doplňkové parametry.
 - Kategorie se mapují na existující Shoptet kategorie z exportu `categories (1).csv`.
 - Používají se jen známé cílové kategorie; nejisté STIMA kategorie jako `Katalog 2026`, `Stále skladem`, `Doprodej` nebo `Masiv dub` se zatím ignorují.
 - Položka bez bezpečně určené cílové kategorie se přeskočí.
@@ -56,6 +57,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - variant `PRICE_VAT`
   - variant `STOCK`
   - variant `PARAMETERS`
+  - parent `INFORMATION_PARAMETERS`, pokud je STIMA ve zdroji pošle
 
 ## Aktuální ověření
 
@@ -75,11 +77,13 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - descriptions emitted: 207
   - image blocks: 517
   - images emitted: 1182
+  - information parameter blocks: 0
   - output size: přibližně 13.6 MB
 - Testovací feed `stima-products-test` ověřen 2026-05-28:
   - products emitted: 5
-  - variants emitted: 675
+  - variants emitted: 659
   - images emitted: 35
+  - information parameter blocks: 0
   - output size: přibližně 437 KB
 
 ## Otevřené otázky

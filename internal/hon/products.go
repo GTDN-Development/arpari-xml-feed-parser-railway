@@ -114,15 +114,16 @@ func transformProduct(source sourceItem) (shoptet.Item, bool) {
 
 	categories, defaultCategory := transformCategory(source.MainCategory)
 	return shoptet.Item{
-		Code:            code,
-		Name:            name,
-		Description:     strings.TrimSpace(source.Description),
-		PriceVAT:        strings.TrimSpace(source.PriceVAT),
-		Stock:           normalizeNumber(source.Stock),
-		Availability:    strings.TrimSpace(source.Availability),
-		Categories:      categories,
-		DefaultCategory: defaultCategory,
-		Images:          transformImages(source.Images),
+		Code:                  code,
+		Name:                  name,
+		Description:           strings.TrimSpace(source.Description),
+		PriceVAT:              strings.TrimSpace(source.PriceVAT),
+		Stock:                 normalizeNumber(source.Stock),
+		Availability:          strings.TrimSpace(source.Availability),
+		Categories:            categories,
+		DefaultCategory:       defaultCategory,
+		Images:                transformImages(source.Images),
+		InformationParameters: transformParameters(source.Parameters),
 	}, true
 }
 
@@ -151,6 +152,29 @@ func transformImages(urls []string) []shoptet.Image {
 		}
 		seen[url] = struct{}{}
 		result = append(result, shoptet.Image{URL: url})
+	}
+	return result
+}
+
+func transformParameters(parameters []sourceParameter) []shoptet.Parameter {
+	if len(parameters) == 0 {
+		return nil
+	}
+
+	result := make([]shoptet.Parameter, 0, len(parameters))
+	seen := make(map[string]struct{}, len(parameters))
+	for _, parameter := range parameters {
+		name := strings.TrimSpace(parameter.Name)
+		value := normalizeNumber(parameter.Value)
+		if name == "" || value == "" {
+			continue
+		}
+		key := strings.ToLower(name) + "\x00" + strings.ToLower(value)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		result = append(result, shoptet.Parameter{Name: name, Value: value})
 	}
 	return result
 }
@@ -189,13 +213,19 @@ func normalizeNumber(value string) string {
 }
 
 type sourceItem struct {
-	ID           string   `xml:"ID"`
-	MainCategory string   `xml:"MAIN_CATEGORY"`
-	Product      string   `xml:"PRODUCT"`
-	PriceVAT     string   `xml:"PRICE_VAT"`
-	Availability string   `xml:"DOSTUPNOST"`
-	Stock        string   `xml:"STOCK"`
-	PartNumber   string   `xml:"PART_NUMBER"`
-	Description  string   `xml:"DESCRIPTION"`
-	Images       []string `xml:"IMGURL>IMGURL"`
+	ID           string            `xml:"ID"`
+	MainCategory string            `xml:"MAIN_CATEGORY"`
+	Product      string            `xml:"PRODUCT"`
+	PriceVAT     string            `xml:"PRICE_VAT"`
+	Availability string            `xml:"DOSTUPNOST"`
+	Stock        string            `xml:"STOCK"`
+	PartNumber   string            `xml:"PART_NUMBER"`
+	Description  string            `xml:"DESCRIPTION"`
+	Images       []string          `xml:"IMGURL>IMGURL"`
+	Parameters   []sourceParameter `xml:"PARAM"`
+}
+
+type sourceParameter struct {
+	Name  string `xml:"PARAM_NAME"`
+	Value string `xml:"VAL"`
 }

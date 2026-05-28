@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	"github.com/fanda/arpari-xml-feed-parser-railway/internal/shoptet"
 )
 
 func TestParseProductsMapsHONItems(t *testing.T) {
@@ -19,6 +21,8 @@ func TestParseProductsMapsHONItems(t *testing.T) {
     <STOCK>74.0</STOCK>
     <PART_NUMBER>DY10010001-010042</PART_NUMBER>
     <DESCRIPTION>černá BI 201, kanc. židle bez podhlavníku</DESCRIPTION>
+    <PARAM><PARAM_NAME>Šířka</PARAM_NAME><VAL>20.0</VAL></PARAM>
+    <PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>85.50</VAL></PARAM>
   </SHOPITEM>
   <SHOPITEM>
     <PRODUCT>Bez kódu</PRODUCT>
@@ -48,6 +52,18 @@ func TestParseProductsMapsHONItems(t *testing.T) {
 	}
 	if item.DefaultCategory == nil || item.DefaultCategory.ID != "881" {
 		t.Fatalf("unexpected category: %#v", item.DefaultCategory)
+	}
+	expectedParameters := []shoptet.Parameter{
+		{Name: "Šířka", Value: "20"},
+		{Name: "Výška", Value: "85.5"},
+	}
+	if len(item.InformationParameters) != len(expectedParameters) {
+		t.Fatalf("expected information parameters, got %#v", item.InformationParameters)
+	}
+	for index, expected := range expectedParameters {
+		if item.InformationParameters[index] != expected {
+			t.Fatalf("unexpected information parameter %d: %#v", index, item.InformationParameters[index])
+		}
 	}
 }
 

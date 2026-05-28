@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	"github.com/fanda/arpari-xml-feed-parser-railway/internal/shoptet"
 )
 
 func TestParseProductsFiltersFurnitureAndMapsFields(t *testing.T) {
@@ -35,6 +37,22 @@ func TestParseProductsFiltersFurnitureAndMapsFields(t *testing.T) {
       <Images>
         <Image mediumSizeUrl="https://example.test/small.jpg" largeSizeUrl="https://example.test/large.jpg" />
       </Images>
+      <Parameters>
+        <Parameter type="Text">
+          <Name>Barva</Name>
+          <TextValue>Bílá</TextValue>
+        </Parameter>
+        <Parameter type="Numeric">
+          <Name>Výška (cm)</Name>
+          <NumericValue>108.0000</NumericValue>
+          <Unit>cm</Unit>
+        </Parameter>
+        <Parameter type="Numeric">
+          <Name>Počet balení</Name>
+          <NumericValue>1.0000</NumericValue>
+          <Unit>ks</Unit>
+        </Parameter>
+      </Parameters>
     </Product>
     <Product>
       <ProductCode>DE-FLOWER-1</ProductCode>
@@ -70,6 +88,19 @@ func TestParseProductsFiltersFurnitureAndMapsFields(t *testing.T) {
 	}
 	if item.DefaultCategory == nil || item.DefaultCategory.ID != "1284" {
 		t.Fatalf("unexpected category: %#v", item.DefaultCategory)
+	}
+	expectedParameters := []shoptet.Parameter{
+		{Name: "Barva", Value: "Bílá"},
+		{Name: "Výška (cm)", Value: "108"},
+		{Name: "Počet balení", Value: "1 ks"},
+	}
+	if len(item.InformationParameters) != len(expectedParameters) {
+		t.Fatalf("expected information parameters, got %#v", item.InformationParameters)
+	}
+	for index, expected := range expectedParameters {
+		if item.InformationParameters[index] != expected {
+			t.Fatalf("unexpected information parameter %d: %#v", index, item.InformationParameters[index])
+		}
 	}
 }
 

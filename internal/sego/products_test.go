@@ -21,6 +21,7 @@ func TestParseProductsMapsZboziItems(t *testing.T) {
     <IMGURL_ALTERNATIVE>https://segocz.cz/alt.jpg</IMGURL_ALTERNATIVE>
     <PRICE_VAT>10951.49</PRICE_VAT>
     <DELIVERY_DATE>0</DELIVERY_DATE>
+    <PARAM><PARAM_NAME>Nosnost</PARAM_NAME><VAL>120</VAL><UNIT>kg</UNIT></PARAM>
   </SHOPITEM>
   <SHOPITEM>
     <PRODUCTNAME>Bez kódu</PRODUCTNAME>
@@ -48,6 +49,9 @@ func TestParseProductsMapsZboziItems(t *testing.T) {
 	if len(item.Images) != 2 {
 		t.Fatalf("expected 2 images, got %#v", item.Images)
 	}
+	if len(item.InformationParameters) != 1 || item.InformationParameters[0] != (shoptet.Parameter{Name: "Nosnost", Value: "120 kg"}) {
+		t.Fatalf("expected information parameters, got %#v", item.InformationParameters)
+	}
 	if item.DefaultCategory == nil || item.DefaultCategory.ID != "881" {
 		t.Fatalf("unexpected category: %#v", item.DefaultCategory)
 	}
@@ -66,6 +70,7 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
     <IMGURL_ALTERNATIVE>https://segocz.cz/red.jpg</IMGURL_ALTERNATIVE>
     <PRICE_VAT>4623.00</PRICE_VAT>
     <DELIVERY_DATE>0</DELIVERY_DATE>
+    <PARAM><PARAM_NAME><![CDATA[Nosnost]]></PARAM_NAME><VAL><![CDATA[80]]></VAL><UNIT><![CDATA[kg]]></UNIT></PARAM>
     <PARAM><PARAM_NAME><![CDATA[Barva]]></PARAM_NAME><VAL><![CDATA[Červená]]></VAL></PARAM>
   </SHOPITEM>
   <SHOPITEM>
@@ -118,6 +123,9 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	}
 	if len(item.Variants) != 3 {
 		t.Fatalf("expected 3 variants, got %#v", item.Variants)
+	}
+	if len(item.InformationParameters) != 1 || item.InformationParameters[0] != (shoptet.Parameter{Name: "Nosnost", Value: "80 kg"}) {
+		t.Fatalf("expected parent information parameters without variant selector, got %#v", item.InformationParameters)
 	}
 
 	first := item.Variants[0]

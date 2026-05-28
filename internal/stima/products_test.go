@@ -29,6 +29,10 @@ func TestParseProductsSimpleProduct(t *testing.T) {
       <IMAGE>https://www.stima.cz/userfiles/xml/pictures/simple.jpg</IMAGE>
       <IMAGE>  </IMAGE>
     </IMAGES>
+    <INFORMATION_PARAMETERS>
+      <INFORMATION_PARAMETER><NAME>Materiál</NAME><VALUE>Buk</VALUE></INFORMATION_PARAMETER>
+      <INFORMATION_PARAMETER><NAME>Nosnost</NAME><VALUE>120 kg</VALUE></INFORMATION_PARAMETER>
+    </INFORMATION_PARAMETERS>
     <STOCK>
       <WAREHOUSES>
         <WAREHOUSE>
@@ -73,6 +77,18 @@ func TestParseProductsSimpleProduct(t *testing.T) {
 	if len(item.Images) != 1 || item.Images[0] != (shoptet.Image{URL: "https://www.stima.cz/userfiles/xml/pictures/simple.jpg"}) {
 		t.Fatalf("unexpected images: %#v", item.Images)
 	}
+	expectedParameters := []shoptet.Parameter{
+		{Name: "Materiál", Value: "Buk"},
+		{Name: "Nosnost", Value: "120 kg"},
+	}
+	if len(item.InformationParameters) != len(expectedParameters) {
+		t.Fatalf("expected information parameters, got %#v", item.InformationParameters)
+	}
+	for index, expected := range expectedParameters {
+		if item.InformationParameters[index] != expected {
+			t.Fatalf("unexpected information parameter %d: %#v", index, item.InformationParameters[index])
+		}
+	}
 }
 
 func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testing.T) {
@@ -89,6 +105,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
     <IMAGES>
       <IMAGE>https://www.stima.cz/userfiles/xml/pictures/nancy.jpg</IMAGE>
     </IMAGES>
+    <INFORMATION_PARAMETERS>
+      <INFORMATION_PARAMETER><NAME>Výška</NAME><VALUE>88 cm</VALUE></INFORMATION_PARAMETER>
+    </INFORMATION_PARAMETERS>
     <VARIANTS>
       <VARIANT>
         <CODE>ART13627-k002-l244</CODE>
@@ -125,6 +144,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	}
 	if len(item.Images) != 1 || item.Images[0].URL != "https://www.stima.cz/userfiles/xml/pictures/nancy.jpg" {
 		t.Fatalf("unexpected images: %#v", item.Images)
+	}
+	if len(item.InformationParameters) != 1 || item.InformationParameters[0] != (shoptet.Parameter{Name: "Výška", Value: "88 cm"}) {
+		t.Fatalf("unexpected information parameters: %#v", item.InformationParameters)
 	}
 	if len(item.Variants) != 1 {
 		t.Fatalf("expected 1 variant, got %d", len(item.Variants))
