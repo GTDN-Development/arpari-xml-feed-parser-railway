@@ -124,6 +124,9 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	if len(first.Parameters) != 1 || first.Parameters[0] != (shoptet.Parameter{Name: "Barva", Value: "Červená"}) {
 		t.Fatalf("unexpected first variant parameters: %#v", first.Parameters)
 	}
+	if first.ImageRef != "https://segocz.cz/red.jpg" {
+		t.Fatalf("unexpected first variant image ref: %q", first.ImageRef)
+	}
 }
 
 func TestParseProductsMapsSegoSubcategories(t *testing.T) {

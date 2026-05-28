@@ -271,8 +271,16 @@ func (group *variantGroup) Add(item shoptet.Item, info variantInfo) {
 		EAN:          item.EAN,
 		PriceVAT:     item.PriceVAT,
 		Availability: item.Availability,
+		ImageRef:     variantImageRef(item.Images),
 		Parameters:   parameters,
 	})
+}
+
+func variantImageRef(images []shoptet.Image) string {
+	if len(images) == 0 {
+		return ""
+	}
+	return strings.TrimSpace(images[0].URL)
 }
 
 func (group *variantGroup) Item() shoptet.Item {

@@ -44,6 +44,7 @@ type Variant struct {
 	Warehouses   []Warehouse
 	Availability string
 	EAN          string
+	ImageRef     string
 	Parameters   []Parameter
 }
 
@@ -173,6 +174,7 @@ func toShop(feed Feed) shopXML {
 					Stock:        toStockXML(variant.Stock, variant.Warehouses),
 					Availability: variant.Availability,
 					EAN:          variant.EAN,
+					ImageRef:     variant.ImageRef,
 					Parameters:   toParametersXML(variant.Parameters),
 				})
 			}
@@ -342,6 +344,7 @@ type shopVariantXML struct {
 	PriceVAT     string             `xml:"PRICE_VAT,omitempty"`
 	Stock        *shopStockXML      `xml:"STOCK,omitempty"`
 	Availability string             `xml:"AVAILABILITY,omitempty"`
+	ImageRef     string             `xml:"IMAGE_REF,omitempty"`
 	Parameters   *shopParametersXML `xml:"PARAMETERS,omitempty"`
 }
 

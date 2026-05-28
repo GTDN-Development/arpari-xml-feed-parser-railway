@@ -111,6 +111,7 @@ func TestWriteProductWithVariants(t *testing.T) {
 						PriceVAT:     "1100.00",
 						Stock:        "0",
 						Availability: "Na zakázku",
+						ImageRef:     "https://example.test/beech.jpg",
 					},
 				},
 			},
@@ -155,6 +156,10 @@ func TestWriteProductWithVariants(t *testing.T) {
 	}
 	if first.Parameters.Items[0].Name != "KOSTRA" || first.Parameters.Items[0].Value != "dub" {
 		t.Fatalf("expected KOSTRA parameter, got %#v", first.Parameters.Items[0])
+	}
+	second := parsed.Items[0].Variants.Items[1]
+	if second.ImageRef != "https://example.test/beech.jpg" {
+		t.Fatalf("expected second variant IMAGE_REF, got %q", second.ImageRef)
 	}
 }
 
