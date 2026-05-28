@@ -23,6 +23,7 @@ const ProductsURL = "https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_12
 const (
 	maxImagesPerProduct  = 20
 	variantParameterName = "Barva"
+	defaultVAT           = "21"
 )
 
 type Downloader interface {
@@ -134,14 +135,17 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 	price := formatWholePrice(source.PriceVAT)
 	category := targetCategory(source)
 	currency := ""
+	vat := ""
 	if price != "" {
 		currency = "CZK"
+		vat = defaultVAT
 	}
 	return shoptet.Item{
 		Code:            code,
 		Name:            name,
 		Description:     normalizeDescription(source.Description),
-		Price:           price,
+		PriceVAT:        price,
+		VAT:             vat,
 		Currency:        currency,
 		Availability:    transformDeliveryDate(source.DeliveryDate),
 		EAN:             strings.TrimSpace(source.EAN),
@@ -308,7 +312,8 @@ func (group *variantGroup) Add(item shoptet.Item, info variantInfo) {
 	group.variants = append(group.variants, shoptet.Variant{
 		Code:         item.Code,
 		EAN:          item.EAN,
-		Price:        item.Price,
+		PriceVAT:     item.PriceVAT,
+		VAT:          item.VAT,
 		Currency:     item.Currency,
 		Availability: item.Availability,
 		ImageRef:     variantImageRef(item.Images),
@@ -332,7 +337,8 @@ func (group *variantGroup) Item() shoptet.Item {
 		Code:            "",
 		Name:            group.baseName,
 		Description:     group.firstItem.Description,
-		Price:           group.firstItem.Price,
+		PriceVAT:        group.firstItem.PriceVAT,
+		VAT:             group.firstItem.VAT,
 		Currency:        group.firstItem.Currency,
 		Availability:    group.firstItem.Availability,
 		Categories:      group.firstItem.Categories,

@@ -98,6 +98,8 @@ func TestWriteProductWithVariants(t *testing.T) {
 					{
 						Code:         "CHAIR-001-OAK",
 						EAN:          "8590000000002",
+						Currency:     "CZK",
+						VAT:          "21",
 						PriceVAT:     "1000.00",
 						Warehouses:   []Warehouse{{Name: "HLAVNÍ SKLAD", Value: "3.000"}},
 						Availability: "Skladem",
@@ -148,6 +150,9 @@ func TestWriteProductWithVariants(t *testing.T) {
 	if first.Code != "CHAIR-001-OAK" {
 		t.Fatalf("expected first variant code, got %q", first.Code)
 	}
+	if first.Currency != "CZK" || first.VAT != "21" || first.PriceVAT != "1000.00" {
+		t.Fatalf("expected first variant price fields, got %#v", first)
+	}
 	if first.Stock == nil || len(first.Stock.Warehouses) != 1 || first.Stock.Warehouses[0].Name != "HLAVNÍ SKLAD" || first.Stock.Warehouses[0].Value != "3.000" {
 		t.Fatalf("expected first variant structured stock, got %#v", first.Stock)
 	}
@@ -173,7 +178,8 @@ func TestWriteProductWithVariantsAllowsAnonymousParent(t *testing.T) {
 				Variants: []Variant{
 					{
 						Code:         "CHAIR-001-OAK",
-						Price:        "1000.00",
+						PriceVAT:     "1000.00",
+						VAT:          "21",
 						Currency:     "CZK",
 						Availability: "Skladem",
 						ImageRef:     "https://example.test/oak.jpg",
@@ -195,7 +201,7 @@ func TestWriteProductWithVariantsAllowsAnonymousParent(t *testing.T) {
 		t.Fatalf("expected anonymous variant parent, got %#v", parsed.Items[0])
 	}
 	variant := parsed.Items[0].Variants.Items[0]
-	if variant.Price != "1000.00" || variant.Currency != "CZK" || variant.ImageRef != "https://example.test/oak.jpg" {
+	if variant.PriceVAT != "1000.00" || variant.VAT != "21" || variant.Currency != "CZK" || variant.ImageRef != "https://example.test/oak.jpg" {
 		t.Fatalf("unexpected variant fields: %#v", variant)
 	}
 }

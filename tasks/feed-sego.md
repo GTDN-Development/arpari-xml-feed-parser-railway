@@ -27,10 +27,10 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
 - SEGO flat varianty typu `Produkt | Barva` se slučují do Shoptet variant podle produktového URL slug a parametru `Barva`.
 - SEGO `Catalog/VariantImages/.../previewImg...` URL se do výstupu neposílají; zvenku vrací 404 a Shoptet je při importu nestáhne. Pro `IMAGES` a variantní `IMAGE_REF` se používají funkční `Catalog/.../source/...` URL.
-- Variantní produkty používají importní tvar ověřený proti starému Katuans feedu: parent nemá `CODE` ani `EXTERNAL_ID`, varianty nesou vlastní `CODE`, `PRICE`, `CURRENCY`, `AVAILABILITY`, `IMAGE_REF` a `PARAMETERS`.
+- Variantní produkty používají tvar porovnaný s exportem ručně nastaveného Shoptet produktu: parent nemá `CODE` ani `EXTERNAL_ID`, varianty nesou vlastní `CODE`, `CURRENCY`, `VAT`, `PRICE_VAT`, `AVAILABILITY`, `IMAGE_REF` a `PARAMETERS`.
 - SEGO obrázky jsou omezené na prvních 20 funkčních URL na produkt, aby import neposílal desítky duplicitních nebo doplňkových fotek na jeden variantní parent.
 - Zdrojový SEGO parametr `Barva` se do Shoptetu exportuje jako variantní parametr `Barva`. Aby se na detailu zobrazily kulaté vzorníky jako v referenčním e-shopu, musí v administraci/šabloně variant existovat odpovídající parametr a všechny použité hodnoty musí mít nastavenou barvu nebo obrázek; XML feed nastavuje hodnotu varianty a `IMAGE_REF`, ne vizuál vzorníku hodnoty.
-- SEGO ceny se exportují jako celé Kč v `PRICE`; desetinné ceny ze zdroje se zaokrouhlují.
+- SEGO ceny se exportují jako celé Kč v `PRICE_VAT` s `VAT=21` a `CURRENCY=CZK`; desetinné ceny ze zdroje se zaokrouhlují.
 
 ## MVP rozsah
 
@@ -39,7 +39,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Bezpečná základní pole:
   - `NAME`
   - `EAN`, pokud je ve zdroji
-  - `PRICE` a `CURRENCY`, pokud je ve zdroji cena
+  - `PRICE_VAT`, `VAT` a `CURRENCY`, pokud je ve zdroji cena
   - dostupnost z `DELIVERY_DATE`
   - `DESCRIPTION`
   - `IMAGES`

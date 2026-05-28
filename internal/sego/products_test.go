@@ -39,7 +39,7 @@ func TestParseProductsMapsZboziItems(t *testing.T) {
 	}
 
 	item := feed.Items[0]
-	if item.Code != "0745314610292" || item.Price != "10951" || item.Currency != "CZK" || item.Availability != "Skladem" {
+	if item.Code != "0745314610292" || item.PriceVAT != "10951" || item.VAT != "21" || item.Currency != "CZK" || item.Availability != "Skladem" {
 		t.Fatalf("unexpected item fields: %#v", item)
 	}
 	if item.Description != "Popis židle" {
@@ -121,7 +121,7 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	}
 
 	first := item.Variants[0]
-	if first.Code != "0745314610063" || first.EAN != "0745314610063" || first.Price != "4623" || first.Currency != "CZK" || first.Availability != "Skladem" {
+	if first.Code != "0745314610063" || first.EAN != "0745314610063" || first.PriceVAT != "4623" || first.VAT != "21" || first.Currency != "CZK" || first.Availability != "Skladem" {
 		t.Fatalf("unexpected first variant: %#v", first)
 	}
 	if len(first.Parameters) != 1 || first.Parameters[0] != (shoptet.Parameter{Name: "Barva", Value: "Červená"}) {
