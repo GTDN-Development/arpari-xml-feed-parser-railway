@@ -194,3 +194,34 @@ func TestParseProductsLimitsTestOutput(t *testing.T) {
 		t.Fatalf("unexpected feed: %#v", feed)
 	}
 }
+
+func TestParseProductsPreferVariantItemsKeepsCompleteVariantGroups(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM><ITEM_ID>SIMPLE-1</ITEM_ID><PRODUCTNAME>Simple 1</PRODUCTNAME></SHOPITEM>
+  <SHOPITEM><ITEM_ID>A-RED</ITEM_ID><PRODUCTNAME>Variant A | Červená</PRODUCTNAME><URL>https://segocz.cz/produkty/detail/variant-a?color=cervena</URL><PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Červená</VAL></PARAM></SHOPITEM>
+  <SHOPITEM><ITEM_ID>A-BLUE</ITEM_ID><PRODUCTNAME>Variant A | Modrá</PRODUCTNAME><URL>https://segocz.cz/produkty/detail/variant-a?color=modra</URL><PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Modrá</VAL></PARAM></SHOPITEM>
+  <SHOPITEM><ITEM_ID>SIMPLE-2</ITEM_ID><PRODUCTNAME>Simple 2</PRODUCTNAME></SHOPITEM>
+  <SHOPITEM><ITEM_ID>B-RED</ITEM_ID><PRODUCTNAME>Variant B | Červená</PRODUCTNAME><URL>https://segocz.cz/produkty/detail/variant-b?color=cervena</URL><PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Červená</VAL></PARAM></SHOPITEM>
+  <SHOPITEM><ITEM_ID>B-GREEN</ITEM_ID><PRODUCTNAME>Variant B | Zelená</PRODUCTNAME><URL>https://segocz.cz/produkty/detail/variant-b?color=zelena</URL><PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Zelená</VAL></PARAM></SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{
+		MaxProducts:        2,
+		PreferVariantItems: true,
+	})
+	if err != nil {
+		t.Fatalf("parse SEGO products: %v", err)
+	}
+	if stats.ProductsRead != 6 || stats.ProductsEmitted != 2 || stats.ItemsWithVariants != 2 || stats.VariantsEmitted != 4 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 2 {
+		t.Fatalf("expected 2 items, got %#v", feed.Items)
+	}
+	if feed.Items[0].Name != "Variant A" || len(feed.Items[0].Variants) != 2 {
+		t.Fatalf("expected complete Variant A group first, got %#v", feed.Items[0])
+	}
+	if feed.Items[1].Name != "Variant B" || len(feed.Items[1].Variants) != 2 {
+		t.Fatalf("expected complete Variant B group second, got %#v", feed.Items[1])
+	}
+}

@@ -50,7 +50,8 @@ func (downloader HTTPDownloader) Download(ctx context.Context, url string) (io.R
 }
 
 type ProductsOptions struct {
-	MaxProducts int
+	MaxProducts        int
+	PreferVariantItems bool
 }
 
 type ProductsStats struct {
@@ -139,18 +140,10 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 
 func emitProducts(entries []productEntry, options ProductsOptions, stats *ProductsStats) shoptet.Feed {
 	var result shoptet.Feed
-	for _, entry := range entries {
-		var item shoptet.Item
-		if entry.Group != nil {
-			item = entry.Group.Item()
-			if len(item.Variants) > 0 {
-				stats.ItemsWithVariants++
-				stats.VariantsEmitted += len(item.Variants)
-			}
-		} else if entry.HasItem {
-			item = entry.Item
-		} else {
-			continue
+	for _, item := range orderedItems(entries, options) {
+		if len(item.Variants) > 0 {
+			stats.ItemsWithVariants++
+			stats.VariantsEmitted += len(item.Variants)
 		}
 
 		stats.ProductsEmitted++
@@ -160,6 +153,32 @@ func emitProducts(entries []productEntry, options ProductsOptions, stats *Produc
 		}
 	}
 	return result
+}
+
+func orderedItems(entries []productEntry, options ProductsOptions) []shoptet.Item {
+	items := make([]shoptet.Item, 0, len(entries))
+	for _, entry := range entries {
+		if entry.Group != nil {
+			items = append(items, entry.Group.Item())
+		} else if entry.HasItem {
+			items = append(items, entry.Item)
+		}
+	}
+
+	if !options.PreferVariantItems {
+		return items
+	}
+
+	variantsFirst := make([]shoptet.Item, 0, len(items))
+	simpleItems := make([]shoptet.Item, 0, len(items))
+	for _, item := range items {
+		if len(item.Variants) > 0 {
+			variantsFirst = append(variantsFirst, item)
+		} else {
+			simpleItems = append(simpleItems, item)
+		}
+	}
+	return append(variantsFirst, simpleItems...)
 }
 
 func normalizeDescription(value string) string {

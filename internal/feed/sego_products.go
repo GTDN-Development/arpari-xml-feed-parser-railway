@@ -46,10 +46,17 @@ func (generator SegoTest) Generate(ctx context.Context, w io.Writer) (Result, er
 	if maxProducts <= 0 {
 		maxProducts = 20
 	}
-	return generateSegoProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, maxProducts)
+	return generateSegoProductsWithOptions(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, sego.ProductsOptions{
+		MaxProducts:        maxProducts,
+		PreferVariantItems: true,
+	})
 }
 
 func generateSegoProducts(ctx context.Context, w io.Writer, supplier string, configuredDownloader sego.Downloader, configuredSourceURL string, maxProducts int) (Result, error) {
+	return generateSegoProductsWithOptions(ctx, w, supplier, configuredDownloader, configuredSourceURL, sego.ProductsOptions{MaxProducts: maxProducts})
+}
+
+func generateSegoProductsWithOptions(ctx context.Context, w io.Writer, supplier string, configuredDownloader sego.Downloader, configuredSourceURL string, options sego.ProductsOptions) (Result, error) {
 	downloader := configuredDownloader
 	if downloader == nil {
 		downloader = sego.HTTPDownloader{}
@@ -66,7 +73,7 @@ func generateSegoProducts(ctx context.Context, w io.Writer, supplier string, con
 	}
 	defer body.Close()
 
-	feed, stats, err := sego.ParseProducts(ctx, body, sego.ProductsOptions{MaxProducts: maxProducts})
+	feed, stats, err := sego.ParseProducts(ctx, body, options)
 	if err != nil {
 		return Result{}, err
 	}
