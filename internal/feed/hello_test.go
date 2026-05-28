@@ -15,7 +15,9 @@ type helloShopItem struct {
 	Code     string `xml:"CODE"`
 	Name     string `xml:"NAME"`
 	PriceVAT string `xml:"PRICE_VAT"`
-	Stock    string `xml:"STOCK"`
+	Stock    struct {
+		Amount string `xml:"AMOUNT"`
+	} `xml:"STOCK"`
 }
 
 func TestHelloGenerateReturnsWellFormedXML(t *testing.T) {
@@ -43,7 +45,7 @@ func TestHelloGenerateReturnsWellFormedXML(t *testing.T) {
 	if parsed.Item.PriceVAT != "123.45" {
 		t.Fatalf("expected hello item price, got %q", parsed.Item.PriceVAT)
 	}
-	if parsed.Item.Stock != "7" {
-		t.Fatalf("expected hello item stock, got %q", parsed.Item.Stock)
+	if parsed.Item.Stock.Amount != "7" {
+		t.Fatalf("expected hello item stock, got %#v", parsed.Item.Stock)
 	}
 }

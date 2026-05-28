@@ -359,7 +359,7 @@ func (stock shopStockXML) MarshalXML(encoder *xml.Encoder, start xml.StartElemen
 			return err
 		}
 	} else if stock.Value != "" {
-		if err := encoder.EncodeToken(xml.CharData([]byte(stock.Value))); err != nil {
+		if err := encoder.EncodeElement(stock.Value, xml.StartElement{Name: xml.Name{Local: "AMOUNT"}}); err != nil {
 			return err
 		}
 	}
@@ -369,12 +369,16 @@ func (stock shopStockXML) MarshalXML(encoder *xml.Encoder, start xml.StartElemen
 func (stock *shopStockXML) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
 	var raw struct {
 		Value      string             `xml:",chardata"`
+		Amount     string             `xml:"AMOUNT"`
 		Warehouses []shopWarehouseXML `xml:"WAREHOUSES>WAREHOUSE"`
 	}
 	if err := decoder.DecodeElement(&raw, &start); err != nil {
 		return err
 	}
-	stock.Value = strings.TrimSpace(raw.Value)
+	stock.Value = strings.TrimSpace(raw.Amount)
+	if stock.Value == "" {
+		stock.Value = strings.TrimSpace(raw.Value)
+	}
 	stock.Warehouses = raw.Warehouses
 	return nil
 }

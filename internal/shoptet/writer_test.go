@@ -63,6 +63,9 @@ func TestWriteSimpleProduct(t *testing.T) {
 	if item.Stock == nil || item.Stock.Value != "7" {
 		t.Fatalf("expected item STOCK, got %#v", item.Stock)
 	}
+	if !strings.Contains(output.String(), "<AMOUNT>7</AMOUNT>") {
+		t.Fatalf("expected structured stock AMOUNT, got:\n%s", output.String())
+	}
 	if item.Availability != "Skladem" {
 		t.Fatalf("expected item AVAILABILITY, got %q", item.Availability)
 	}
