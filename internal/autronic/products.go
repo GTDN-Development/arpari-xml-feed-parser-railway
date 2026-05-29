@@ -113,11 +113,11 @@ func transformProduct(source sourceProduct) (shoptet.Item, bool) {
 		slog.Warn("skipping Autronic product without required identity", "code", code, "name", name)
 		return shoptet.Item{}, false
 	}
-	if !isFurnitureCategory(categoryShortName) {
+	if !isAllowedCategory(categoryShortName) {
 		return shoptet.Item{}, false
 	}
 
-	categories, defaultCategory := transformCategory(categoryName)
+	categories, defaultCategory := transformCategory(categoryShortName, categoryName)
 	stock, warehouses := transformAvailability(source.Availability)
 
 	return shoptet.Item{
@@ -136,8 +136,31 @@ func transformProduct(source sourceProduct) (shoptet.Item, bool) {
 	}, true
 }
 
-func isFurnitureCategory(shortName string) bool {
-	return strings.HasPrefix(strings.ToUpper(strings.TrimSpace(shortName)), "NA-")
+func isAllowedCategory(shortName string) bool {
+	shortName = strings.ToUpper(strings.TrimSpace(shortName))
+	if strings.HasPrefix(shortName, "NA-") {
+		return true
+	}
+
+	switch shortName {
+	case "BD-BO",
+		"BD-NS",
+		"BD-ODK",
+		"BD-ORG",
+		"BD-PAR",
+		"BD-PO",
+		"BD-REG",
+		"BD-REG-KOV",
+		"BD-REG-MAS",
+		"BD-ST-SAT",
+		"BD-TAB",
+		"BD-TAB-UL",
+		"BD-VES-KOV",
+		"BD-VES-MAS":
+		return true
+	default:
+		return false
+	}
 }
 
 func transformPrice(prices sourcePrices) string {
@@ -243,7 +266,11 @@ func parameterNameContainsUnit(name, unit string) bool {
 	return strings.Contains(name, "("+unit+")") || strings.Contains(name, " "+unit)
 }
 
-func transformCategory(categoryName string) ([]shoptet.Category, *shoptet.Category) {
+func transformCategory(categoryShortName, categoryName string) ([]shoptet.Category, *shoptet.Category) {
+	if category, ok := exactCategory(strings.ToUpper(strings.TrimSpace(categoryShortName))); ok {
+		return []shoptet.Category{category}, &category
+	}
+
 	name := strings.ToLower(strings.TrimSpace(categoryName))
 	var category shoptet.Category
 
@@ -277,6 +304,75 @@ func transformCategory(categoryName string) ([]shoptet.Category, *shoptet.Catego
 	}
 
 	return []shoptet.Category{category}, &category
+}
+
+func exactCategory(shortName string) (shoptet.Category, bool) {
+	switch shortName {
+	case "BD-BO":
+		return shoptet.Category{ID: "1200", Path: "BYTOVÉ DOPLŇKY > BOTNÍKY"}, true
+	case "BD-NS", "BD-ST-SAT":
+		return shoptet.Category{ID: "1194", Path: "BYTOVÉ DOPLŇKY > NĚMÍ SLUHOVÉ"}, true
+	case "BD-ODK":
+		return shoptet.Category{ID: "1212", Path: "BYTOVÉ DOPLŇKY > ODPADKOVÉ KOŠE"}, true
+	case "BD-ORG", "BD-PO":
+		return shoptet.Category{ID: "1206", Path: "BYTOVÉ DOPLŇKY > POLIČKY"}, true
+	case "BD-PAR":
+		return shoptet.Category{ID: "1209", Path: "BYTOVÉ DOPLŇKY > PARAVÁNY"}, true
+	case "BD-REG", "BD-REG-KOV", "BD-REG-MAS":
+		return shoptet.Category{ID: "1203", Path: "BYTOVÉ DOPLŇKY > REGALY"}, true
+	case "BD-TAB", "BD-TAB-UL":
+		return shoptet.Category{ID: "1155", Path: "ŽIDLE > TABURETY"}, true
+	case "BD-VES-KOV", "BD-VES-MAS":
+		return shoptet.Category{ID: "1191", Path: "BYTOVÉ DOPLŇKY > VĚŠÁKY"}, true
+	case "NA-KOM":
+		return shoptet.Category{ID: "1197", Path: "BYTOVÉ DOPLŇKY > KOMODY"}, true
+	case "NA-KRE-EL", "NA-KRE-HO", "NA-KRE-KT", "NA-KRE-POL":
+		return shoptet.Category{ID: "944", Path: "SEDACÍ SOUPRAVY > KŘESLA"}, true
+	case "NA-POH-PEV", "NA-POH-ROZ":
+		return shoptet.Category{ID: "941", Path: "SEDACÍ SOUPRAVY > POHOVKY"}, true
+	case "NA-POS-KOV":
+		return shoptet.Category{ID: "1185", Path: "LOŽNICE > POSTELE"}, true
+	case "NA-SED-POL":
+		return shoptet.Category{ID: "938", Path: "SEDACÍ SOUPRAVY > SEDACÍ SOUPRAVY"}, true
+	case "NA-SET-2", "NA-SET-4":
+		return shoptet.Category{ID: "1272", Path: "STOLY > JÍDELNÍ SETY"}, true
+	case "NA-SKF-DYH", "NA-SKF-MAS", "NA-SKF-MO":
+		return shoptet.Category{ID: "1263", Path: "STOLY > KONFERENČNÍ STOLY"}, true
+	case "NA-SKF-OP":
+		return shoptet.Category{ID: "1269", Path: "STOLY > ODKLÁDACÍ A PŘÍSTAVNÉ STOLKY"}, true
+	case "NA-STO-MAS":
+		return shoptet.Category{ID: "1245", Path: "STOLY > STOLY MASIV"}, true
+	case "NA-STO-PRAC":
+		return shoptet.Category{ID: "1257", Path: "STOLY > PRACOVNÍ STOLY"}, true
+	case "NA-STO-DYH", "NA-STO-JID", "NA-STO-ROZ":
+		return shoptet.Category{ID: "974", Path: "STOLY > JÍDELNÍ STOLY"}, true
+	case "NA-ZAH-BAL", "NA-ZAH-JIDSET", "NA-ZAH-RELSET":
+		return shoptet.Category{ID: "1221", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ SESTAVY"}, true
+	case "NA-ZAH-LEH":
+		return shoptet.Category{ID: "1224", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ LEHÁDKA"}, true
+	case "NA-ZAH-STO":
+		return shoptet.Category{ID: "1218", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ STOLY"}, true
+	case "NA-ZAH-ZID", "NA-ZAH-ZK":
+		return shoptet.Category{ID: "1215", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ ŽIDLE"}, true
+	case "NA-ZAH", "NA-ZAH-BOX", "NA-ZAH-ST":
+		return shoptet.Category{ID: "1227", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ DOPLŃKY"}, true
+	case "NA-ZID-BAR":
+		return shoptet.Category{ID: "1143", Path: "ŽIDLE > BAROVÉ ŽIDLE"}, true
+	case "NA-ZID-CAL":
+		return shoptet.Category{ID: "1134", Path: "ŽIDLE > ČALOUNĚNÉ ŽIDLE"}, true
+	case "NA-ZID-DR":
+		return shoptet.Category{ID: "905", Path: "ŽIDLE > DŘEVĚNÉ ŽIDLE"}, true
+	case "NA-ZID-PLAST":
+		return shoptet.Category{ID: "911", Path: "ŽIDLE > PLASTOVÉ ŽIDLE"}, true
+	case "NA-ZKA-CAL":
+		return shoptet.Category{ID: "1275", Path: "KANCELÁŘSKÉ ŽIDLE A KŘESLA > ČALOUNĚNÁ KANCELÁŘSKÁ KŘESLA"}, true
+	case "NA-ZKA-HER":
+		return shoptet.Category{ID: "899", Path: "KANCELÁŘSKÉ ŽIDLE A KŘESLA > HERNÍ KŘESLA"}, true
+	case "NA-ZKA-SIT":
+		return shoptet.Category{ID: "1284", Path: "KANCELÁŘSKÉ ŽIDLE A KŘESLA > SÍŤOVANÉ KANCELÁŘSKÉ ŽIDLE"}, true
+	default:
+		return shoptet.Category{}, false
+	}
 }
 
 func normalizeNumber(value string) string {

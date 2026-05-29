@@ -124,3 +124,35 @@ func TestParseProductsLimitsTestOutput(t *testing.T) {
 		t.Fatalf("unexpected feed: %#v", feed)
 	}
 }
+
+func TestParseProductsAutronicCategorySelection(t *testing.T) {
+	input := `<ProductFeed><Products>
+  <Product><ProductCode>NA-KOM-1</ProductCode><ProductName>Komoda</ProductName><ProductCategory><CategoryName>Komody</CategoryName><CategoryShortName>NA-KOM</CategoryShortName></ProductCategory></Product>
+  <Product><ProductCode>BD-BO-1</ProductCode><ProductName>Botník</ProductName><ProductCategory><CategoryName>Botníky</CategoryName><CategoryShortName>BD-BO</CategoryShortName></ProductCategory></Product>
+  <Product><ProductCode>BD-ORG-1</ProductCode><ProductName>Organizér</ProductName><ProductCategory><CategoryName>Organizéry</CategoryName><CategoryShortName>BD-ORG</CategoryShortName></ProductCategory></Product>
+  <Product><ProductCode>BD-ZR-1</ProductCode><ProductName>Zrcadlo</ProductName><ProductCategory><CategoryName>Zrcadla</CategoryName><CategoryShortName>BD-ZR</CategoryShortName></ProductCategory></Product>
+  <Product><ProductCode>DE-STOL-1</ProductCode><ProductName>Stolování</ProductName><ProductCategory><CategoryName>Stolování</CategoryName><CategoryShortName>DE-STOL-BAMB</CategoryShortName></ProductCategory></Product>
+</Products></ProductFeed>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse Autronic category selection: %v", err)
+	}
+	if stats.ProductsRead != 5 || stats.ProductsEmitted != 3 || stats.ProductsSkipped != 2 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 3 {
+		t.Fatalf("expected 3 emitted items, got %#v", feed.Items)
+	}
+
+	expected := []shoptet.Category{
+		{ID: "1197", Path: "BYTOVÉ DOPLŇKY > KOMODY"},
+		{ID: "1200", Path: "BYTOVÉ DOPLŇKY > BOTNÍKY"},
+		{ID: "1206", Path: "BYTOVÉ DOPLŇKY > POLIČKY"},
+	}
+	for index, category := range expected {
+		if feed.Items[index].DefaultCategory == nil || *feed.Items[index].DefaultCategory != category {
+			t.Fatalf("unexpected category for item %d: %#v", index, feed.Items[index].DefaultCategory)
+		}
+	}
+}
