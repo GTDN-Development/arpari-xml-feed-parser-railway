@@ -80,6 +80,9 @@ func TestParseProductsFiltersFurnitureAndMapsFields(t *testing.T) {
 	if item.Code != "NA-CHAIR-1" || item.PriceVAT != "1790.00" || item.EAN != "859000000001" {
 		t.Fatalf("unexpected item fields: %#v", item)
 	}
+	if item.Supplier != "Autronic" {
+		t.Fatalf("unexpected supplier: %q", item.Supplier)
+	}
 	if item.Stock != "3" || len(item.Warehouses) != 1 || item.Warehouses[0].Name != "Semčice" {
 		t.Fatalf("unexpected stock: %#v", item)
 	}

@@ -26,6 +26,7 @@ type Item struct {
 	Name                  string
 	ShortDescription      string
 	Description           string
+	Supplier              string
 	Price                 string
 	PriceVAT              string
 	VAT                   string
@@ -168,6 +169,7 @@ func toShop(feed Feed) shopXML {
 			Name:                  item.Name,
 			ShortDescription:      item.ShortDescription,
 			Description:           item.Description,
+			Supplier:              item.Supplier,
 			Categories:            toCategoriesXML(item.Categories, item.DefaultCategory),
 			Images:                toImagesXML(item.Images),
 			InformationParameters: toInformationParametersXML(item.InformationParameters),
@@ -356,6 +358,7 @@ type shopItemXML struct {
 	Name                  string                        `xml:"NAME,omitempty"`
 	ShortDescription      string                        `xml:"SHORT_DESCRIPTION,omitempty"`
 	Description           string                        `xml:"DESCRIPTION,omitempty"`
+	Supplier              string                        `xml:"SUPPLIER,omitempty"`
 	EAN                   string                        `xml:"EAN,omitempty"`
 	Currency              string                        `xml:"CURRENCY,omitempty"`
 	VAT                   string                        `xml:"VAT,omitempty"`

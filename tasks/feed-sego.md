@@ -23,6 +23,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Reálný zdroj má 144 položek.
 - Testovací endpoint `sego-test` používá stejná pravidla, ale končí po prvních 5 produktech.
 - Katalogová data nesmí bez mapování přepisovat citlivá data původního katalogu.
+- Každý produkt se označuje `SUPPLIER=SEGO`; hodnota je určená pro interní filtrování dodavatele v Shoptet administraci.
 - Kategorie se mapují na cílové Shoptet kategorie včetně podkategorií podle názvu, popisu a parametrů SEGO položky.
 - Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
 - SEGO flat varianty typu `Produkt | Hodnota` se slučují do Shoptet variant podle produktového URL slug a odpovídajícího zdrojového parametru.

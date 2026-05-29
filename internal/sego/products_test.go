@@ -46,6 +46,9 @@ func TestParseProductsMapsZboziItems(t *testing.T) {
 	if item.Description != "Popis židle" {
 		t.Fatalf("unexpected description: %q", item.Description)
 	}
+	if item.Supplier != "SEGO" {
+		t.Fatalf("unexpected supplier: %q", item.Supplier)
+	}
 	if len(item.Images) != 2 {
 		t.Fatalf("expected 2 images, got %#v", item.Images)
 	}
@@ -114,6 +117,9 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	}
 	if item.Description != "Pevná dětská židle" {
 		t.Fatalf("unexpected parent description: %q", item.Description)
+	}
+	if item.Supplier != "SEGO" {
+		t.Fatalf("unexpected parent supplier: %q", item.Supplier)
 	}
 	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1125", Path: "KANCELÁŘSKÉ ŽIDLE A KŘESLA > DĚTSKÉ ŽIDLE"}) {
 		t.Fatalf("unexpected parent category: %#v", item.DefaultCategory)

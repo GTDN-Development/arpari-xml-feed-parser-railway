@@ -24,6 +24,7 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 - Testovací endpoint `hon-test` používá stejná pravidla, ale končí po prvních 5 produktech.
 - Katalogová data nesmí bez mapování přepisovat citlivá data původního katalogu.
 - Kategorie jsou zatím mapované široce podle `MAIN_CATEGORY` na kancelářské židle, konferenční židle, židle nebo bytové doplňky.
+- Každý produkt se označuje `SUPPLIER=HON`; hodnota je určená pro interní filtrování dodavatele v Shoptet administraci.
 - Zdrojové `PARAM` hodnoty se exportují jako Shoptet `INFORMATION_PARAMETERS`, tedy jako tabulkové doplňkové parametry, ne jako vybíratelné varianty.
 
 ## MVP rozsah

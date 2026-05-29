@@ -27,6 +27,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - `Délka stolu`
   - `Rozklad`
 - Produkty nad 512 variant se oříznou na prvních 512 variant v pořadí ze STIMA feedu.
+- Každý produkt se označuje `SUPPLIER=STIMA`; hodnota je určená pro interní filtrování dodavatele v Shoptet administraci.
 - Pokud STIMA parent produkt nemá `CODE`, odvodí se z první varianty, například `ART13627-k002-l244` -> `ART13627`.
 - U variantních produktů se odvozený parent kód zapisuje jako Shoptet `EXTERNAL_ID`, ne jako top-level `CODE`; Shoptet schéma jinak odmítne kombinaci parent `CODE` + `VARIANTS`.
 - Zdrojové `INFORMATION_PARAMETERS` se exportují do Shoptet `INFORMATION_PARAMETERS`. Aktuální STIMA feed tyto bloky posílá prázdné, proto ve výstupu zatím nejsou žádné tabulkové doplňkové parametry.

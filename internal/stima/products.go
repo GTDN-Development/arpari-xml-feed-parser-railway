@@ -18,6 +18,7 @@ const (
 	ProductsURL   = "https://www.stima.cz/userfiles/xml/ITTC_SHT_products.xml"
 	StockURL      = "https://www.stima.cz/userfiles/xml/ITTC_SHT_stock.xml"
 	StockPriceURL = "https://www.stima.cz/userfiles/xml/ITTC_SHT_stock_price.xml"
+	supplierName  = "STIMA"
 )
 
 type Downloader interface {
@@ -154,6 +155,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			Name:                  name,
 			ShortDescription:      strings.TrimSpace(source.ShortDescription),
 			Description:           strings.TrimSpace(source.Description),
+			Supplier:              supplierName,
 			EAN:                   strings.TrimSpace(source.EAN),
 			PriceVAT:              strings.TrimSpace(source.PriceVAT),
 			Stock:                 stock,
@@ -221,6 +223,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 		Name:                  name,
 		ShortDescription:      strings.TrimSpace(source.ShortDescription),
 		Description:           strings.TrimSpace(source.Description),
+		Supplier:              supplierName,
 		EAN:                   strings.TrimSpace(source.EAN),
 		PriceVAT:              strings.TrimSpace(source.PriceVAT),
 		Categories:            categories,

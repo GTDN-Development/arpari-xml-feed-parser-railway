@@ -17,6 +17,7 @@ func TestWriteSimpleProduct(t *testing.T) {
 				Name:             "Hello world product",
 				ShortDescription: "Short product text",
 				Description:      "Long product text",
+				Supplier:         "Test Supplier",
 				PriceVAT:         "123.45",
 				Stock:            "7",
 				Availability:     "Skladem",
@@ -61,6 +62,9 @@ func TestWriteSimpleProduct(t *testing.T) {
 	}
 	if item.Description != "Long product text" {
 		t.Fatalf("expected item description, got %q", item.Description)
+	}
+	if item.Supplier != "Test Supplier" {
+		t.Fatalf("expected item supplier, got %q", item.Supplier)
 	}
 	if item.PriceVAT != "123.45" {
 		t.Fatalf("expected item PRICE_VAT, got %q", item.PriceVAT)

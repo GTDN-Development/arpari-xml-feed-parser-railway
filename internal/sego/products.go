@@ -24,6 +24,7 @@ const (
 	maxImagesPerProduct  = 20
 	variantParameterName = "Barva"
 	defaultVAT           = "21"
+	supplierName         = "SEGO"
 )
 
 type Downloader interface {
@@ -144,6 +145,7 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 		Code:                  code,
 		Name:                  name,
 		Description:           normalizeDescription(source.Description),
+		Supplier:              supplierName,
 		PriceVAT:              price,
 		VAT:                   vat,
 		Currency:              currency,
@@ -414,6 +416,7 @@ func (group *variantGroup) Item() shoptet.Item {
 		Code:                  "",
 		Name:                  group.baseName,
 		Description:           group.firstItem.Description,
+		Supplier:              group.firstItem.Supplier,
 		PriceVAT:              group.firstItem.PriceVAT,
 		VAT:                   group.firstItem.VAT,
 		Currency:              group.firstItem.Currency,

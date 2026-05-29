@@ -17,6 +17,8 @@ import (
 
 const ProductsURL = "https://www.webshop.officepro-brno.cz/import/HONClientFeed/HONClientFeed.xml"
 
+const supplierName = "HON"
+
 type Downloader interface {
 	Download(ctx context.Context, url string) (io.ReadCloser, error)
 }
@@ -117,6 +119,7 @@ func transformProduct(source sourceItem) (shoptet.Item, bool) {
 		Code:                  code,
 		Name:                  name,
 		Description:           strings.TrimSpace(source.Description),
+		Supplier:              supplierName,
 		PriceVAT:              strings.TrimSpace(source.PriceVAT),
 		Stock:                 normalizeNumber(source.Stock),
 		Availability:          strings.TrimSpace(source.Availability),

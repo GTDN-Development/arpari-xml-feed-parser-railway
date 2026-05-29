@@ -59,6 +59,9 @@ func TestParseProductsSimpleProduct(t *testing.T) {
 	if item.Code != "ART-SIMPLE" || item.Name != "Stůl SIMPLE" || item.EAN != "8590000000001" || item.PriceVAT != "1234.00" {
 		t.Fatalf("unexpected simple item: %#v", item)
 	}
+	if item.Supplier != "STIMA" {
+		t.Fatalf("unexpected supplier: %q", item.Supplier)
+	}
 	if item.ShortDescription != "Krátký popis" || item.Description != "Dlouhý popis" {
 		t.Fatalf("unexpected descriptions: %#v", item)
 	}
@@ -138,6 +141,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	}
 	if item.ShortDescription != "Krátký popis židle" || item.Description != "Dlouhý popis židle" {
 		t.Fatalf("unexpected descriptions: %#v", item)
+	}
+	if item.Supplier != "STIMA" {
+		t.Fatalf("unexpected supplier: %q", item.Supplier)
 	}
 	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1128", Path: "ŽIDLE > RESTAURAČNÍ ŽIDLE"}) {
 		t.Fatalf("unexpected default category: %#v", item.DefaultCategory)

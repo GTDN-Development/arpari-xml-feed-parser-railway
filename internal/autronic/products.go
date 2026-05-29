@@ -17,6 +17,8 @@ import (
 
 const ProductsURL = "https://autronic.cz/feeds/product-feed.xml"
 
+const supplierName = "Autronic"
+
 type Downloader interface {
 	Download(ctx context.Context, url string) (io.ReadCloser, error)
 }
@@ -122,6 +124,7 @@ func transformProduct(source sourceProduct) (shoptet.Item, bool) {
 		Code:                  code,
 		Name:                  name,
 		Description:           transformDescription(source.Descriptions),
+		Supplier:              supplierName,
 		PriceVAT:              transformPrice(source.Prices),
 		Stock:                 stock,
 		Warehouses:            warehouses,

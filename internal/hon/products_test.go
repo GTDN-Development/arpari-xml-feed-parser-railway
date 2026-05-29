@@ -44,6 +44,9 @@ func TestParseProductsMapsHONItems(t *testing.T) {
 	if item.Code != "DY10010001-010042" || item.Stock != "74" || item.PriceVAT != "10756.90" {
 		t.Fatalf("unexpected item fields: %#v", item)
 	}
+	if item.Supplier != "HON" {
+		t.Fatalf("unexpected supplier: %q", item.Supplier)
+	}
 	if item.Name != "MERENS BP - černá BI 201, kanc. židle bez podhlavníku" {
 		t.Fatalf("unexpected name: %q", item.Name)
 	}
