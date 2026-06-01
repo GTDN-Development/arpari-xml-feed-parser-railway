@@ -173,6 +173,41 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	}
 }
 
+func TestParseProductsUsesFallbackImageForKnownStimaOmission(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <NAME>Židle SHARON KT63</NAME>
+    <CATEGORIES>
+      <CATEGORY>Katalog &gt; Židle &gt; Dřevěné židle</CATEGORY>
+    </CATEGORIES>
+    <VARIANTS>
+      <VARIANT>
+        <CODE>ART13622-k005-l179</CODE>
+        <PRICE_VAT>2830.00</PRICE_VAT>
+        <PARAMETERS>
+          <PARAMETER><NAME>KOSTRA</NAME><VALUE>tm.hnědá</VALUE></PARAMETER>
+          <PARAMETER><NAME>Sedák</NAME><VALUE>lux 2 camel</VALUE></PARAMETER>
+        </PARAMETERS>
+      </VARIANT>
+    </VARIANTS>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, _, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse products: %v", err)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected 1 item, got %#v", feed.Items)
+	}
+	if len(feed.Items[0].Images) != 1 {
+		t.Fatalf("expected fallback image, got %#v", feed.Items[0].Images)
+	}
+	if feed.Items[0].Images[0].URL != fallbackProductImages["ART13622"][0] {
+		t.Fatalf("unexpected fallback image: %#v", feed.Items[0].Images)
+	}
+}
+
 func TestParseProductsTrimsProductsAboveShoptetVariantLimit(t *testing.T) {
 	var input bytes.Buffer
 	input.WriteString(`<SHOP><SHOPITEM><NAME>Large Variant Product</NAME><CATEGORIES><CATEGORY>Katalog &gt; Židle</CATEGORY></CATEGORIES><VARIANTS>`)

@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 )
 
@@ -187,7 +188,7 @@ func toShop(feed Feed) shopXML {
 					PriceVAT:     variant.PriceVAT,
 					Stock:        toStockXML(variant.Stock, variant.Warehouses),
 					Availability: variant.Availability,
-					ImageRef:     variant.ImageRef,
+					ImageRef:     normalizeImageURL(variant.ImageRef),
 					Parameters:   toParametersXML(variant.Parameters),
 				})
 			}
@@ -248,16 +249,29 @@ func toImagesXML(images []Image) *shopImagesXML {
 
 	items := make([]shopImageXML, 0, len(images))
 	for _, image := range images {
-		url := strings.TrimSpace(image.URL)
-		if url == "" {
+		imageURL := normalizeImageURL(image.URL)
+		if imageURL == "" {
 			continue
 		}
-		items = append(items, shopImageXML{URL: url})
+		items = append(items, shopImageXML{URL: imageURL})
 	}
 	if len(items) == 0 {
 		return nil
 	}
 	return &shopImagesXML{Items: items}
+}
+
+func normalizeImageURL(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+
+	parsed, err := url.Parse(raw)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return raw
+	}
+	return parsed.String()
 }
 
 func toStockXML(stock string, warehouses []Warehouse) *shopStockXML {

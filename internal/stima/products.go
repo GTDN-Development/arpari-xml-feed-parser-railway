@@ -21,6 +21,12 @@ const (
 	supplierName  = "STIMA"
 )
 
+var fallbackProductImages = map[string][]string{
+	"ART13622": {
+		"https://www.stima.cz/userfiles/money/zidle-sharon-kt63-uid-596BD3D3-6AF5-45D6-8E43-50EBCDE6105F/4EAFA535-1E29-461E-ABEF-70DB5E286389.jpg",
+	},
+}
+
 type Downloader interface {
 	Download(ctx context.Context, url string) (io.ReadCloser, error)
 }
@@ -162,7 +168,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			Warehouses:            warehouses,
 			Categories:            categories,
 			DefaultCategory:       defaultCategory,
-			Images:                transformImages(source.Images),
+			Images:                transformImages(productImageURLs(source.Images, code)),
 			InformationParameters: transformInformationParameters(source.InformationParameters),
 		}, stats, true
 	}
@@ -202,24 +208,26 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 	}
 	if stats.VariantsTrimmed > 0 {
 		stats.ProductsTrimmed = 1
+		code := parentCode(source.Code, firstValidVariantCode)
 		slog.Warn(
 			"trimmed STIMA product variants to Shoptet limit",
 			"name", name,
-			"code", parentCode(source.Code, firstValidVariantCode),
+			"code", code,
 			"kept", len(variants),
 			"trimmed", stats.VariantsTrimmed,
 		)
 	}
 
 	categories, defaultCategory := transformCategories(source.Categories, name)
+	code := parentCode(source.Code, firstValidVariantCode)
 	if len(categories) == 0 {
 		stats.ProductsSkipped = 1
-		slog.Warn("skipping STIMA variant product without mapped category", "name", name, "code", parentCode(source.Code, firstValidVariantCode))
+		slog.Warn("skipping STIMA variant product without mapped category", "name", name, "code", code)
 		return shoptet.Item{}, stats, false
 	}
 	stats.VariantsEmitted = len(variants)
 	return shoptet.Item{
-		Code:                  parentCode(source.Code, firstValidVariantCode),
+		Code:                  code,
 		Name:                  name,
 		ShortDescription:      strings.TrimSpace(source.ShortDescription),
 		Description:           strings.TrimSpace(source.Description),
@@ -228,7 +236,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 		PriceVAT:              strings.TrimSpace(source.PriceVAT),
 		Categories:            categories,
 		DefaultCategory:       defaultCategory,
-		Images:                transformImages(source.Images),
+		Images:                transformImages(productImageURLs(source.Images, code)),
 		InformationParameters: transformInformationParameters(source.InformationParameters),
 		Variants:              variants,
 	}, stats, true
@@ -329,6 +337,18 @@ func transformImages(images []string) []shoptet.Image {
 		result = append(result, shoptet.Image{URL: url})
 	}
 	return result
+}
+
+func productImageURLs(images []string, code string) []string {
+	for _, image := range images {
+		if strings.TrimSpace(image) != "" {
+			return images
+		}
+	}
+	if fallbackImages, ok := fallbackProductImages[strings.TrimSpace(code)]; ok {
+		return fallbackImages
+	}
+	return images
 }
 
 func isAllowedVariantParameter(name string) bool {

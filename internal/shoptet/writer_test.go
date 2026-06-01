@@ -255,6 +255,43 @@ func TestWriteEscapesXMLText(t *testing.T) {
 	}
 }
 
+func TestWriteNormalizesImageURLs(t *testing.T) {
+	var output bytes.Buffer
+
+	err := Write(&output, Feed{
+		Items: []Item{
+			{
+				Code: "CHAIR-001",
+				Name: "Chair",
+				Images: []Image{
+					{URL: "https://www.stima.cz/userfiles/xml/pictures/Fit_95_olše_75.jpg"},
+					{URL: "https://www.stima.cz/userfiles/xml/pictures/image with space.jpg"},
+				},
+				Variants: []Variant{
+					{
+						Code:     "CHAIR-001-A",
+						ImageRef: "https://www.stima.cz/userfiles/xml/pictures/kony-wotan-černá.jpg",
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("write product with normalized image URLs: %v", err)
+	}
+
+	xmlText := output.String()
+	if !strings.Contains(xmlText, "Fit_95_ol%C5%A1e_75.jpg") {
+		t.Fatalf("expected encoded IMAGE URL, got:\n%s", xmlText)
+	}
+	if !strings.Contains(xmlText, "image%20with%20space.jpg") {
+		t.Fatalf("expected encoded IMAGE URL space, got:\n%s", xmlText)
+	}
+	if !strings.Contains(xmlText, "kony-wotan-%C4%8Dern%C3%A1.jpg") {
+		t.Fatalf("expected encoded IMAGE_REF URL, got:\n%s", xmlText)
+	}
+}
+
 func TestValidateRejectsEmptyFeed(t *testing.T) {
 	err := Validate(Feed{})
 	if err == nil {
