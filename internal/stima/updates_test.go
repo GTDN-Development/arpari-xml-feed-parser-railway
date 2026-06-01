@@ -121,6 +121,10 @@ func TestParseStockSkipsItemsWithoutCodeOrPayload(t *testing.T) {
     <CODE>ART-NO-PAYLOAD</CODE>
   </SHOPITEM>
   <SHOPITEM>
+    <CODE>DOPRAVA</CODE>
+    <STOCK>1</STOCK>
+  </SHOPITEM>
+  <SHOPITEM>
     <VARIANTS>
       <VARIANT><STOCK>1</STOCK></VARIANT>
       <VARIANT><CODE>ART-OK-k001</CODE></VARIANT>
@@ -133,7 +137,7 @@ func TestParseStockSkipsItemsWithoutCodeOrPayload(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse stock: %v", err)
 	}
-	if stats.ProductsRead != 3 || stats.ProductsSkipped != 2 || stats.VariantsSkipped != 2 || stats.VariantsEmitted != 1 {
+	if stats.ProductsRead != 4 || stats.ProductsSkipped != 3 || stats.VariantsSkipped != 2 || stats.VariantsEmitted != 1 {
 		t.Fatalf("unexpected stats: %#v", stats)
 	}
 	if len(feed.Items) != 1 || feed.Items[0].Code != "ART" || len(feed.Items[0].Variants) != 1 {

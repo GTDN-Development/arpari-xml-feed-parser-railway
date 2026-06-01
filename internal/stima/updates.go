@@ -102,6 +102,11 @@ func transformUpdate(source sourceShopItem, maxVariants int, mode updateMode) (s
 			slog.Warn("skipping STIMA update product without CODE", "feed", mode.Name)
 			return shoptet.Item{}, stats, false
 		}
+		if isCatalogExcludedUpdateCode(code) {
+			stats.ProductsSkipped = 1
+			slog.Warn("skipping STIMA update product excluded from catalog feed", "feed", mode.Name, "code", code)
+			return shoptet.Item{}, stats, false
+		}
 		if !hasUpdatePayload(source.Stock, source.PriceVAT, mode) {
 			stats.ProductsSkipped = 1
 			slog.Warn("skipping STIMA update product without update payload", "feed", mode.Name, "code", code)
@@ -176,6 +181,10 @@ func transformUpdate(source sourceShopItem, maxVariants int, mode updateMode) (s
 		Code:     parentCode(source.Code, firstValidVariantCode),
 		Variants: variants,
 	}, stats, true
+}
+
+func isCatalogExcludedUpdateCode(code string) bool {
+	return strings.EqualFold(strings.TrimSpace(code), "DOPRAVA")
 }
 
 func hasUpdatePayload(stock sourceStock, priceVAT string, mode updateMode) bool {
