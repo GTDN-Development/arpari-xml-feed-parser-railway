@@ -117,11 +117,112 @@ func TestParseProductsLimitsTestOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse limited Autronic products: %v", err)
 	}
-	if stats.ProductsRead != 1 || stats.ProductsEmitted != 1 {
+	if stats.ProductsRead != 2 || stats.ProductsEmitted != 1 {
 		t.Fatalf("unexpected stats: %#v", stats)
 	}
 	if len(feed.Items) != 1 || feed.Items[0].Code != "NA-1" {
 		t.Fatalf("unexpected feed: %#v", feed)
+	}
+}
+
+func TestParseProductsGroupsColorVariants(t *testing.T) {
+	input := `<ProductFeed><Products>
+  <Product>
+    <ProductCode>CHAIR-BK</ProductCode>
+    <ProductName>Jídelní židle, černá, CHAIR-BK</ProductName>
+    <ProductCategory><CategoryName>Čalouněné židle</CategoryName><CategoryShortName>NA-ZID-CAL</CategoryShortName></ProductCategory>
+    <Ean>859000000001</Ean>
+    <Prices><RetailPriceIncludingVat value="1990.00" /></Prices>
+    <Availability><StockAvailabilityTotal Quantity="3" /></Availability>
+    <Images><Image largeSizeUrl="https://example.test/black.jpg" /></Images>
+    <Parameters>
+      <Parameter><Name>Barva</Name><TextValue>Černá</TextValue></Parameter>
+      <Parameter><Name>Materiál</Name><TextValue>Látka</TextValue></Parameter>
+    </Parameters>
+    <ColorVariants>
+      <Product><ProductCode>CHAIR-WT</ProductCode><Color>Bílá</Color></Product>
+    </ColorVariants>
+  </Product>
+  <Product>
+    <ProductCode>CHAIR-WT</ProductCode>
+    <ProductName>Jídelní židle, bílá, CHAIR-WT</ProductName>
+    <ProductCategory><CategoryName>Čalouněné židle</CategoryName><CategoryShortName>NA-ZID-CAL</CategoryShortName></ProductCategory>
+    <Ean>859000000002</Ean>
+    <Prices><RetailPriceIncludingVat value="2090.00" /></Prices>
+    <Availability><StockAvailabilityTotal Quantity="4" /></Availability>
+    <Images><Image largeSizeUrl="https://example.test/white.jpg" /></Images>
+    <Parameters>
+      <Parameter><Name>Barva</Name><TextValue>Bílá</TextValue></Parameter>
+      <Parameter><Name>Materiál</Name><TextValue>Látka</TextValue></Parameter>
+    </Parameters>
+    <ColorVariants>
+      <Product><ProductCode>CHAIR-BK</ProductCode><Color>Černá</Color></Product>
+    </ColorVariants>
+  </Product>
+</Products></ProductFeed>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse Autronic color variants: %v", err)
+	}
+	if stats.ProductsRead != 2 || stats.ProductsEmitted != 1 || stats.ItemsWithVariants != 1 || stats.VariantsEmitted != 2 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected 1 grouped item, got %#v", feed.Items)
+	}
+
+	item := feed.Items[0]
+	if item.Code != "" || item.Name != "Jídelní židle" {
+		t.Fatalf("unexpected parent item: %#v", item)
+	}
+	if len(item.Images) != 2 {
+		t.Fatalf("expected merged images, got %#v", item.Images)
+	}
+	if len(item.InformationParameters) != 1 || item.InformationParameters[0] != (shoptet.Parameter{Name: "Materiál", Value: "Látka"}) {
+		t.Fatalf("expected parent information parameters without Barva, got %#v", item.InformationParameters)
+	}
+	if len(item.Variants) != 2 {
+		t.Fatalf("expected 2 variants, got %#v", item.Variants)
+	}
+	if item.Variants[0].Code != "CHAIR-BK" || item.Variants[0].EAN != "859000000001" || item.Variants[0].PriceVAT != "1990.00" || item.Variants[0].Stock != "3" {
+		t.Fatalf("unexpected first variant: %#v", item.Variants[0])
+	}
+	if len(item.Variants[0].Parameters) != 1 || item.Variants[0].Parameters[0] != (shoptet.Parameter{Name: "Barva", Value: "Černá"}) {
+		t.Fatalf("unexpected first variant parameters: %#v", item.Variants[0].Parameters)
+	}
+	if item.Variants[0].ImageRef != "https://example.test/black.jpg" {
+		t.Fatalf("unexpected first image ref: %q", item.Variants[0].ImageRef)
+	}
+}
+
+func TestParseProductsDisambiguatesDuplicateColorVariants(t *testing.T) {
+	input := `<ProductFeed><Products>
+  <Product>
+    <ProductCode>CHAIR-BR1</ProductCode>
+    <ProductName>Jídelní židle, hnědá, látka, CHAIR-BR1</ProductName>
+    <ProductCategory><CategoryName>Čalouněné židle</CategoryName><CategoryShortName>NA-ZID-CAL</CategoryShortName></ProductCategory>
+    <Parameters><Parameter><Name>Barva</Name><TextValue>Hnědá</TextValue></Parameter></Parameters>
+    <ColorVariants><Product><ProductCode>CHAIR-BR2</ProductCode><Color>Hnědá</Color></Product></ColorVariants>
+  </Product>
+  <Product>
+    <ProductCode>CHAIR-BR2</ProductCode>
+    <ProductName>Jídelní židle, hnědá, samet, CHAIR-BR2</ProductName>
+    <ProductCategory><CategoryName>Čalouněné židle</CategoryName><CategoryShortName>NA-ZID-CAL</CategoryShortName></ProductCategory>
+    <Parameters><Parameter><Name>Barva</Name><TextValue>Hnědá</TextValue></Parameter></Parameters>
+    <ColorVariants><Product><ProductCode>CHAIR-BR1</ProductCode><Color>Hnědá</Color></Product></ColorVariants>
+  </Product>
+</Products></ProductFeed>`
+
+	feed, _, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse Autronic duplicate color variants: %v", err)
+	}
+	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 2 {
+		t.Fatalf("expected grouped variants, got %#v", feed.Items)
+	}
+	if feed.Items[0].Variants[0].Parameters[0].Value != "Hnědá (CHAIR-BR1)" || feed.Items[0].Variants[1].Parameters[0].Value != "Hnědá (CHAIR-BR2)" {
+		t.Fatalf("expected disambiguated colors, got %#v", feed.Items[0].Variants)
 	}
 }
 

@@ -17,7 +17,11 @@ import (
 
 const ProductsURL = "https://autronic.cz/feeds/product-feed.xml"
 
-const supplierName = "Autronic"
+const (
+	supplierName        = "Autronic"
+	variantParameter    = "Barva"
+	maxGroupImagesCount = 20
+)
 
 type Downloader interface {
 	Download(ctx context.Context, url string) (io.ReadCloser, error)
@@ -55,15 +59,17 @@ type ProductsOptions struct {
 }
 
 type ProductsStats struct {
-	ProductsRead    int
-	ProductsEmitted int
-	ProductsSkipped int
+	ProductsRead      int
+	ProductsEmitted   int
+	ProductsSkipped   int
+	ItemsWithVariants int
+	VariantsEmitted   int
 }
 
 func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (shoptet.Feed, ProductsStats, error) {
 	decoder := xml.NewDecoder(r)
-	var result shoptet.Feed
 	var stats ProductsStats
+	var entries []productEntry
 
 	for {
 		if err := ctx.Err(); err != nil {
@@ -73,7 +79,7 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 		token, err := decoder.Token()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				return result, stats, nil
+				return emitProducts(entries, options, &stats), stats, nil
 			}
 			return shoptet.Feed{}, stats, fmt.Errorf("parse Autronic products XML: %w", err)
 		}
@@ -95,12 +101,46 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 			continue
 		}
 
+		entries = append(entries, productEntry{Source: source, Item: item})
+	}
+}
+
+func emitProducts(entries []productEntry, options ProductsOptions, stats *ProductsStats) shoptet.Feed {
+	var result shoptet.Feed
+	if len(entries) == 0 {
+		return result
+	}
+
+	colorHints := variantColorHints(entries)
+	groups := variantGroups(entries)
+	emittedGroups := make(map[string]struct{}, len(groups.Items))
+	for _, entry := range entries {
+		root := groups.Find(entry.Item.Code)
+		if _, ok := emittedGroups[root]; ok {
+			continue
+		}
+		emittedGroups[root] = struct{}{}
+
+		group := groups.Items[root]
+		item := entry.Item
+		if len(group) > 1 {
+			item = transformVariantGroup(group, colorHints)
+			stats.ItemsWithVariants++
+			stats.VariantsEmitted += len(item.Variants)
+		}
+
 		stats.ProductsEmitted++
 		result.Items = append(result.Items, item)
 		if options.MaxProducts > 0 && stats.ProductsEmitted >= options.MaxProducts {
-			return result, stats, nil
+			return result
 		}
 	}
+	return result
+}
+
+type productEntry struct {
+	Source sourceProduct
+	Item   shoptet.Item
 }
 
 func transformProduct(source sourceProduct) (shoptet.Item, bool) {
@@ -134,6 +174,292 @@ func transformProduct(source sourceProduct) (shoptet.Item, bool) {
 		Images:                transformImages(source.Images),
 		InformationParameters: transformParameters(source.Parameters),
 	}, true
+}
+
+type variantGroupSet struct {
+	Parent map[string]string
+	Items  map[string][]productEntry
+}
+
+func (groups variantGroupSet) Find(code string) string {
+	if code == "" {
+		return ""
+	}
+	parent, ok := groups.Parent[code]
+	if !ok || parent == code {
+		return code
+	}
+	root := groups.Find(parent)
+	groups.Parent[code] = root
+	return root
+}
+
+func variantGroups(entries []productEntry) variantGroupSet {
+	groups := variantGroupSet{
+		Parent: make(map[string]string, len(entries)),
+		Items:  make(map[string][]productEntry, len(entries)),
+	}
+	for _, entry := range entries {
+		code := strings.TrimSpace(entry.Item.Code)
+		if code != "" {
+			groups.Parent[code] = code
+		}
+	}
+
+	union := func(left, right string) {
+		left = strings.TrimSpace(left)
+		right = strings.TrimSpace(right)
+		if left == "" || right == "" {
+			return
+		}
+		if _, ok := groups.Parent[left]; !ok {
+			return
+		}
+		if _, ok := groups.Parent[right]; !ok {
+			return
+		}
+		leftRoot := groups.Find(left)
+		rightRoot := groups.Find(right)
+		if leftRoot == rightRoot {
+			return
+		}
+		if rightRoot < leftRoot {
+			leftRoot, rightRoot = rightRoot, leftRoot
+		}
+		groups.Parent[rightRoot] = leftRoot
+	}
+
+	for _, entry := range entries {
+		for _, variant := range entry.Source.ColorVariants {
+			union(entry.Item.Code, variant.Code)
+		}
+	}
+
+	for _, entry := range entries {
+		root := groups.Find(entry.Item.Code)
+		if root == "" {
+			root = entry.Item.Code
+		}
+		groups.Items[root] = append(groups.Items[root], entry)
+	}
+	return groups
+}
+
+func transformVariantGroup(entries []productEntry, colorHints map[string]string) shoptet.Item {
+	first := entries[0].Item
+	colors := make(map[string]string, len(entries))
+	colorCounts := make(map[string]int, len(entries))
+	for _, entry := range entries {
+		color := variantColor(entry.Source, colorHints)
+		colors[entry.Item.Code] = color
+		colorCounts[normalizeKey(color)]++
+	}
+
+	variants := make([]shoptet.Variant, 0, len(entries))
+	for _, entry := range entries {
+		color := colors[entry.Item.Code]
+		variants = append(variants, shoptet.Variant{
+			Code:       entry.Item.Code,
+			EAN:        entry.Item.EAN,
+			PriceVAT:   entry.Item.PriceVAT,
+			Stock:      entry.Item.Stock,
+			Warehouses: entry.Item.Warehouses,
+			ImageRef:   firstImageURL(entry.Item.Images),
+			Parameters: []shoptet.Parameter{{
+				Name:  variantParameter,
+				Value: variantValue(color, entry.Item.Code, colorCounts),
+			}},
+		})
+	}
+
+	return shoptet.Item{
+		Name:                  parentName(entries, colors),
+		Description:           first.Description,
+		Supplier:              first.Supplier,
+		Categories:            first.Categories,
+		DefaultCategory:       first.DefaultCategory,
+		Images:                mergeGroupImages(entries),
+		InformationParameters: mergeInformationParameters(entries),
+		Variants:              variants,
+	}
+}
+
+func variantColorHints(entries []productEntry) map[string]string {
+	result := make(map[string]string, len(entries))
+	for _, entry := range entries {
+		for _, variant := range entry.Source.ColorVariants {
+			code := strings.TrimSpace(variant.Code)
+			color := strings.TrimSpace(variant.Color)
+			if code == "" || color == "" {
+				continue
+			}
+			if _, ok := result[code]; !ok {
+				result[code] = color
+			}
+		}
+	}
+	return result
+}
+
+func variantColor(source sourceProduct, hints map[string]string) string {
+	if color := sourceParameterValue(source.Parameters, variantParameter); color != "" {
+		return color
+	}
+	if color := strings.TrimSpace(source.Color); color != "" {
+		return color
+	}
+	if color := strings.TrimSpace(hints[strings.TrimSpace(source.Code)]); color != "" {
+		return color
+	}
+	return strings.TrimSpace(source.Code)
+}
+
+func variantValue(color, code string, colorCounts map[string]int) string {
+	color = strings.TrimSpace(color)
+	if color == "" {
+		return truncateVariantValue(code)
+	}
+	if colorCounts[normalizeKey(color)] <= 1 {
+		return truncateVariantValue(color)
+	}
+	return truncateVariantValue(color + " (" + strings.TrimSpace(code) + ")")
+}
+
+func parentName(entries []productEntry, colors map[string]string) string {
+	names := make([][]string, 0, len(entries))
+	for _, entry := range entries {
+		name := productBaseName(entry.Item.Name, entry.Item.Code, colors[entry.Item.Code])
+		parts := splitNameParts(name)
+		if len(parts) > 0 {
+			names = append(names, parts)
+		}
+	}
+	if len(names) == 0 {
+		return entries[0].Item.Name
+	}
+
+	common := append([]string(nil), names[0]...)
+	for _, parts := range names[1:] {
+		limit := min(len(common), len(parts))
+		index := 0
+		for index < limit && normalizeKey(common[index]) == normalizeKey(parts[index]) {
+			index++
+		}
+		common = common[:index]
+		if len(common) == 0 {
+			break
+		}
+	}
+	if len(common) > 0 {
+		return strings.Join(common, ", ")
+	}
+	return strings.Join(names[0], ", ")
+}
+
+func productBaseName(name, code, color string) string {
+	result := trimTrailingCode(strings.TrimSpace(name), code)
+	parts := splitNameParts(result)
+	filtered := parts[:0]
+	colorKey := normalizeKey(color)
+	for _, part := range parts {
+		if colorKey != "" && normalizeKey(part) == colorKey {
+			continue
+		}
+		filtered = append(filtered, part)
+	}
+	if len(filtered) == 0 {
+		return result
+	}
+	return strings.Join(filtered, ", ")
+}
+
+func trimTrailingCode(name, code string) string {
+	code = strings.TrimSpace(code)
+	if name == "" || code == "" || !strings.HasSuffix(strings.ToLower(name), strings.ToLower(code)) {
+		return name
+	}
+	return strings.TrimRight(strings.TrimSpace(name[:len(name)-len(code)]), " ,-")
+}
+
+func splitNameParts(name string) []string {
+	rawParts := strings.Split(name, ",")
+	parts := make([]string, 0, len(rawParts))
+	for _, part := range rawParts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			parts = append(parts, part)
+		}
+	}
+	return parts
+}
+
+func mergeGroupImages(entries []productEntry) []shoptet.Image {
+	result := make([]shoptet.Image, 0, maxGroupImagesCount)
+	seen := make(map[string]struct{}, maxGroupImagesCount)
+	for _, entry := range entries {
+		for _, image := range entry.Item.Images {
+			url := strings.TrimSpace(image.URL)
+			if url == "" {
+				continue
+			}
+			if _, ok := seen[url]; ok {
+				continue
+			}
+			seen[url] = struct{}{}
+			result = append(result, shoptet.Image{URL: url})
+			if len(result) >= maxGroupImagesCount {
+				return result
+			}
+		}
+	}
+	return result
+}
+
+func mergeInformationParameters(entries []productEntry) []shoptet.Parameter {
+	var result []shoptet.Parameter
+	seen := make(map[string]struct{})
+	for _, entry := range entries {
+		for _, parameter := range entry.Item.InformationParameters {
+			if strings.EqualFold(strings.TrimSpace(parameter.Name), variantParameter) {
+				continue
+			}
+			key := normalizeKey(parameter.Name) + "\x00" + normalizeKey(parameter.Value)
+			if _, ok := seen[key]; ok {
+				continue
+			}
+			seen[key] = struct{}{}
+			result = append(result, parameter)
+		}
+	}
+	return result
+}
+
+func firstImageURL(images []shoptet.Image) string {
+	if len(images) == 0 {
+		return ""
+	}
+	return strings.TrimSpace(images[0].URL)
+}
+
+func sourceParameterValue(parameters []sourceParameter, name string) string {
+	for _, parameter := range parameters {
+		if strings.EqualFold(strings.TrimSpace(parameter.Name), name) {
+			return transformParameterValue(parameter)
+		}
+	}
+	return ""
+}
+
+func truncateVariantValue(value string) string {
+	value = strings.TrimSpace(value)
+	if len([]rune(value)) <= 128 {
+		return value
+	}
+	return string([]rune(value)[:128])
+}
+
+func normalizeKey(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
 }
 
 func isAllowedCategory(shortName string) bool {
@@ -391,15 +717,17 @@ func normalizeNumber(value string) string {
 }
 
 type sourceProduct struct {
-	Code         string              `xml:"ProductCode"`
-	Name         string              `xml:"ProductName"`
-	Category     sourceCategory      `xml:"ProductCategory"`
-	EAN          string              `xml:"Ean"`
-	Prices       sourcePrices        `xml:"Prices"`
-	Availability sourceAvailability  `xml:"Availability"`
-	Descriptions []sourceDescription `xml:"Descriptions>Description"`
-	Images       []sourceImage       `xml:"Images>Image"`
-	Parameters   []sourceParameter   `xml:"Parameters>Parameter"`
+	Code          string               `xml:"ProductCode"`
+	Name          string               `xml:"ProductName"`
+	Color         string               `xml:"Color"`
+	Category      sourceCategory       `xml:"ProductCategory"`
+	EAN           string               `xml:"Ean"`
+	Prices        sourcePrices         `xml:"Prices"`
+	Availability  sourceAvailability   `xml:"Availability"`
+	Descriptions  []sourceDescription  `xml:"Descriptions>Description"`
+	Images        []sourceImage        `xml:"Images>Image"`
+	Parameters    []sourceParameter    `xml:"Parameters>Parameter"`
+	ColorVariants []sourceColorVariant `xml:"ColorVariants>Product"`
 }
 
 type sourceCategory struct {
@@ -447,4 +775,9 @@ type sourceParameter struct {
 	TextValue    string `xml:"TextValue"`
 	NumericValue string `xml:"NumericValue"`
 	Unit         string `xml:"Unit"`
+}
+
+type sourceColorVariant struct {
+	Code  string `xml:"ProductCode"`
+	Color string `xml:"Color"`
 }

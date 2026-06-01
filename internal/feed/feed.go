@@ -42,3 +42,14 @@ func All() []Generator {
 		HonTest{},
 	}
 }
+
+func Scheduled() []Generator {
+	return []Generator{
+		StimaProducts{},
+		StimaStock{},
+		StimaStockPrice{},
+		AutronicProducts{},
+		Sego{},
+		Hon{},
+	}
+}

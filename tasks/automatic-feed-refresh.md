@@ -2,8 +2,8 @@
 
 ## Metadata
 
-- Status: draft, čeká na implementaci
-- Last updated: 2026-05-28
+- Status: implemented
+- Last updated: 2026-06-01
 
 ## Cíl
 
@@ -13,9 +13,9 @@ Když dodavatel aktualizuje svůj zdrojový feed, projeví se to u nás až po d
 
 Pokud download, transformace nebo validace spadne, poslední validní XML zůstane zachované.
 
-## Navržená architektura
+## Implementovaná architektura
 
-Přidat chráněné interní rebuild endpointy:
+Chráněné interní rebuild endpointy:
 
 ```text
 POST /internal/rebuild/{supplier}
@@ -28,7 +28,20 @@ Endpointy musí být chráněné tokenem z environment variable, například:
 REBUILD_TOKEN
 ```
 
-Cron job pak nebude zapisovat do vlastního odděleného filesystemu. Jen zavolá hlavní web službu, takže rebuild poběží nad stejným `DATA_DIR` / Railway Volume, ze kterého server servíruje `/feeds/...`.
+Cron job nezapisuje do vlastního odděleného filesystemu. Jen spustí `/app/rebuild-trigger`, který zavolá hlavní web službu, takže rebuild poběží nad stejným `DATA_DIR` / Railway Volume, ze kterého server servíruje `/feeds/...`.
+
+Cron service variables:
+
+```text
+REBUILD_URL=https://<railway-domain>/internal/rebuild/all
+REBUILD_TOKEN=<stejný-token-jako-na-web-službě>
+```
+
+Cron service Start Command:
+
+```text
+/app/rebuild-trigger
+```
 
 ## Doporučená frekvence
 
@@ -77,13 +90,13 @@ ceny: 1x denně nebo každé 2-3 dny podle dodavatele
 
 ## Implementační kroky
 
-1. Přidat `REBUILD_TOKEN`.
-2. Přidat interní endpoint `POST /internal/rebuild/{supplier}`.
-3. Přidat interní endpoint `POST /internal/rebuild/all`.
-4. Sdílet rebuild logiku mezi `cmd/rebuild` a HTTP endpointem.
-5. Zajistit, že jeden feed fail neukončí celý `rebuild/all`.
-6. Na Railway vytvořit cron službu, která každé 3 dny zavolá `POST /internal/rebuild/all`.
-7. Ověřit `/status` a veřejné `/feeds/*.xml`.
+1. Hotovo: přidat `REBUILD_TOKEN`.
+2. Hotovo: přidat interní endpoint `POST /internal/rebuild/{supplier}`.
+3. Hotovo: přidat interní endpoint `POST /internal/rebuild/all`.
+4. Hotovo: sdílet rebuild logiku mezi `cmd/rebuild` a HTTP endpointem.
+5. Hotovo: zajistit, že jeden feed fail neukončí celý `rebuild/all`.
+6. Zbývá v Railway UI: vytvořit cron službu, která každé 3 dny zavolá `POST /internal/rebuild/all`.
+7. Zbývá po deployi: ověřit `/status` a veřejné `/feeds/*.xml`.
 
 ## Aktuální stav feedů
 

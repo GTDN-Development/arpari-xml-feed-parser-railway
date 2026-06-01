@@ -23,6 +23,8 @@ Implementováno:
 - SEGO katalogový MVP feed `sego` a test feed `sego-test`,
 - HON katalogový MVP feed `hon` a test feed `hon-test`,
 - endpointy `GET /feeds/*.xml` po ručních rebuild bězích,
+- chráněné endpointy `POST /internal/rebuild/{supplier}` a `POST /internal/rebuild/all`,
+- cron trigger binárka `cmd/rebuild-trigger` pro Railway Scheduled Job,
 - Shoptet XML writer pro jednoduché produkty, varianty, variantní parametry a sklad po skladech,
 - endpoint `GET /status` se stavem posledních rebuild běhů,
 - konfigurovatelný data adresář přes `DATA_DIR` nebo Railway Volume,
@@ -30,7 +32,7 @@ Implementováno:
 - `Dockerfile` pro Railway deployment,
 - `railway.json` s Dockerfile builderem.
 
-Další dodavatelské feedy a plánované spouštění budou doplněné v dalších krocích.
+Další dodavatelské feedy budou doplněné v dalších krocích.
 
 ## Požadavky pro lokální vývoj
 
@@ -90,6 +92,24 @@ curl http://localhost:8080/feeds/sego.xml
 curl http://localhost:8080/feeds/sego-test.xml
 curl http://localhost:8080/feeds/hon.xml
 curl http://localhost:8080/feeds/hon-test.xml
+```
+
+Ruční rebuild přes interní HTTP endpoint vyžaduje `REBUILD_TOKEN`:
+
+```bash
+REBUILD_TOKEN=dev-secret DATA_DIR=/tmp/arpari-data go run ./cmd/server
+curl -X POST http://localhost:8080/internal/rebuild/stima-stock \
+  -H "Authorization: Bearer dev-secret"
+curl -X POST http://localhost:8080/internal/rebuild/all \
+  -H "Authorization: Bearer dev-secret"
+```
+
+Lokální ověření stejné binárky, kterou volá Railway cron:
+
+```bash
+REBUILD_URL=http://localhost:8080/internal/rebuild/all \
+REBUILD_TOKEN=dev-secret \
+go run ./cmd/rebuild-trigger
 ```
 
 Očekávané odpovědi:
@@ -168,6 +188,7 @@ Railway použije:
 - `Dockerfile`,
 - environment variable `PORT`, kterou Railway nastavuje automaticky.
 - Railway Volume mount path z environment variable `RAILWAY_VOLUME_MOUNT_PATH`, pokud je ke službě připojený Volume.
+- environment variable `REBUILD_TOKEN` pro chráněné rebuild endpointy.
 
 Aplikace v kontejneru poslouchá na:
 
@@ -195,6 +216,47 @@ https://<railway-domain>/
 https://<railway-domain>/healthz
 https://<railway-domain>/status
 ```
+
+## Railway cron
+
+Nejjednodušší provozní setup:
+
+1. Na hlavní web službě nastav `REBUILD_TOKEN` na dlouhý náhodný token.
+2. Hlavní web služba musí mít připojený Volume na `/data`.
+3. V Railway vytvoř druhou službu ze stejného repozitáře, například `feed-cron`.
+4. U `feed-cron` nastav Start Command na:
+
+```text
+/app/rebuild-trigger
+```
+
+5. U `feed-cron` nastav variables:
+
+```text
+REBUILD_URL=https://<railway-domain>/internal/rebuild/all
+REBUILD_TOKEN=<stejný-token-jako-na-web-službě>
+```
+
+6. V Settings služby `feed-cron` nastav Cron Schedule:
+
+```text
+0 1 */3 * *
+```
+
+Railway cron běží v UTC, takže `0 1 */3 * *` znamená přibližně 03:00 v Česku během letního času a 02:00 během zimního času. Cron služba neukládá feedy sama; jen zavolá hlavní web službu, která rebuild provede nad svým Railway Volume.
+
+`POST /internal/rebuild/all` rebuildí produkční feedy:
+
+```text
+stima-products
+stima-stock
+stima-stock-price
+autronic-products
+sego
+hon
+```
+
+Testovací feedy a `hello` lze rebuildit ručně přes `POST /internal/rebuild/{supplier}` nebo přes `go run ./cmd/rebuild --supplier <name>`.
 
 ## Budoucí cílový tok
 

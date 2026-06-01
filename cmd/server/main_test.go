@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	feedrebuild "github.com/fanda/arpari-xml-feed-parser-railway/internal/rebuild"
 	runstatus "github.com/fanda/arpari-xml-feed-parser-railway/internal/status"
 )
 
@@ -120,4 +122,128 @@ func TestFeedHandlerServesExistingFeed(t *testing.T) {
 	if body := recorder.Body.String(); body != "<SHOP></SHOP>" {
 		t.Fatalf("expected feed response, got %q", body)
 	}
+}
+
+func TestRebuildSupplierRequiresConfiguredToken(t *testing.T) {
+	runner := &fakeRebuildRunner{}
+	request := httptest.NewRequest(http.MethodPost, "/internal/rebuild/stima-stock", nil)
+	request.Header.Set("Authorization", "Bearer secret")
+	recorder := httptest.NewRecorder()
+
+	newMuxWithRebuildRunner(t.TempDir(), "", runner).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected status %d, got %d", http.StatusServiceUnavailable, recorder.Code)
+	}
+	if runner.runNameCalls != 0 {
+		t.Fatalf("expected rebuild not to run, got %d calls", runner.runNameCalls)
+	}
+}
+
+func TestRebuildSupplierRejectsMissingToken(t *testing.T) {
+	runner := &fakeRebuildRunner{}
+	request := httptest.NewRequest(http.MethodPost, "/internal/rebuild/stima-stock", nil)
+	recorder := httptest.NewRecorder()
+
+	newMuxWithRebuildRunner(t.TempDir(), "secret", runner).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, recorder.Code)
+	}
+	if runner.runNameCalls != 0 {
+		t.Fatalf("expected rebuild not to run, got %d calls", runner.runNameCalls)
+	}
+}
+
+func TestRebuildSupplierRunsWithBearerToken(t *testing.T) {
+	runner := &fakeRebuildRunner{
+		runNameResult: feedrebuild.Result{
+			Supplier:       "stima-stock",
+			Filename:       "stima-stock.xml",
+			Status:         runstatus.Success,
+			ItemsProcessed: 2,
+		},
+	}
+	request := httptest.NewRequest(http.MethodPost, "/internal/rebuild/stima-stock", nil)
+	request.Header.Set("Authorization", "Bearer secret")
+	recorder := httptest.NewRecorder()
+
+	newMuxWithRebuildRunner(t.TempDir(), "secret", runner).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
+	}
+	if runner.runNameCalls != 1 || runner.runNameSupplier != "stima-stock" {
+		t.Fatalf("expected stima-stock rebuild, got supplier %q and %d calls", runner.runNameSupplier, runner.runNameCalls)
+	}
+
+	var response rebuildResponse
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatalf("decode rebuild response: %v", err)
+	}
+	if len(response.Results) != 1 || response.Results[0].Filename != "stima-stock.xml" {
+		t.Fatalf("unexpected rebuild response: %#v", response)
+	}
+}
+
+func TestRebuildSupplierReturnsNotFoundForUnknownSupplier(t *testing.T) {
+	runner := &fakeRebuildRunner{
+		runNameResult: feedrebuild.Result{
+			Supplier: "missing",
+			Status:   runstatus.Failed,
+			Error:    "unknown supplier",
+		},
+		runNameErr: feedrebuild.ErrUnknownSupplier,
+	}
+	request := httptest.NewRequest(http.MethodPost, "/internal/rebuild/missing", nil)
+	request.Header.Set("X-Rebuild-Token", "secret")
+	recorder := httptest.NewRecorder()
+
+	newMuxWithRebuildRunner(t.TempDir(), "secret", runner).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("expected status %d, got %d", http.StatusNotFound, recorder.Code)
+	}
+}
+
+func TestRebuildAllReturnsServerErrorWhenAnyFeedFails(t *testing.T) {
+	runner := &fakeRebuildRunner{
+		scheduledResults: []feedrebuild.Result{
+			{Supplier: "stima-stock", Filename: "stima-stock.xml", Status: runstatus.Success},
+			{Supplier: "hon", Filename: "hon.xml", Status: runstatus.Failed, Error: "download failed"},
+		},
+	}
+	request := httptest.NewRequest(http.MethodPost, "/internal/rebuild/all", nil)
+	request.Header.Set("Authorization", "Bearer secret")
+	recorder := httptest.NewRecorder()
+
+	newMuxWithRebuildRunner(t.TempDir(), "secret", runner).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status %d, got %d", http.StatusInternalServerError, recorder.Code)
+	}
+	if runner.runScheduledCalls != 1 {
+		t.Fatalf("expected scheduled rebuild to run once, got %d calls", runner.runScheduledCalls)
+	}
+}
+
+type fakeRebuildRunner struct {
+	runNameCalls    int
+	runNameSupplier string
+	runNameResult   feedrebuild.Result
+	runNameErr      error
+
+	runScheduledCalls int
+	scheduledResults  []feedrebuild.Result
+}
+
+func (runner *fakeRebuildRunner) RunName(_ context.Context, supplier string) (feedrebuild.Result, error) {
+	runner.runNameCalls++
+	runner.runNameSupplier = supplier
+	return runner.runNameResult, runner.runNameErr
+}
+
+func (runner *fakeRebuildRunner) RunScheduled(_ context.Context) []feedrebuild.Result {
+	runner.runScheduledCalls++
+	return runner.scheduledResults
 }
