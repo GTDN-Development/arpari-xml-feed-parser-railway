@@ -143,7 +143,7 @@ Endpoint `/feeds/autronic-products.xml` vrací katalogový MVP Autronicu filtrov
 
 Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Zboží.cz styl feedu. Obsahuje kód, název, EAN, cenu s DPH, dostupnost, popis, obrázky a základní mapování do kancelářských židlí. Endpoint `/feeds/sego-test.xml` vrací prvních 5 produktů.
 
-Endpoint `/feeds/hon.xml` vrací katalogový MVP z HON feedu. Obsahuje kód, název, cenu s DPH, sklad, dostupnost, popis, obrázky a základní mapování do kancelářských židlí / bytových doplňků. Endpoint `/feeds/hon-test.xml` vrací prvních 5 produktů.
+Endpoint `/feeds/hon.xml` vrací katalogový MVP z HON feedu. Obsahuje kód, název, cenu s DPH, sklad, dostupnost, popis, obrázky a základní mapování do kancelářských židlí / bytových doplňků. Položky se stejným `PRODUCT` a bezpečně rozpoznanou hodnotou z `DESCRIPTION` se skládají do variant s parametrem `Provedení`; nejasné skupiny zůstávají jako samostatné produkty. Endpoint `/feeds/hon-test.xml` vrací prvních 5 výstupních produktů.
 
 Endpoint `/status` vrací stav posledních lokálních rebuild běhů:
 

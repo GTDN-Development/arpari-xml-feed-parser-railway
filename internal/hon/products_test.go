@@ -80,10 +80,163 @@ func TestParseProductsLimitsTestOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse limited HON products: %v", err)
 	}
-	if stats.ProductsRead != 1 || stats.ProductsEmitted != 1 {
+	if stats.ProductsRead != 2 || stats.ProductsEmitted != 1 {
 		t.Fatalf("unexpected stats: %#v", stats)
 	}
 	if len(feed.Items) != 1 || feed.Items[0].Code != "1" {
 		t.Fatalf("unexpected feed: %#v", feed)
+	}
+}
+
+func TestParseProductsGroupsHONVariantsByProductAndDescription(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <ID>812728</ID>
+    <MAIN_CATEGORY>Ostatní židle</MAIN_CATEGORY>
+    <PRODUCT>DORA</PRODUCT>
+    <PRICE_VAT>1379.40</PRICE_VAT>
+    <DOSTUPNOST>Na dotaz</DOSTUPNOST>
+    <STOCK>0.0</STOCK>
+    <PART_NUMBER>DY60010001-041039</PART_NUMBER>
+    <DESCRIPTION>dřevěná židle,TŘEŠEŇ/CHROM</DESCRIPTION>
+    <IMGURL><IMGURL>https://example.test/dora-tresen-chrom.jpg</IMGURL></IMGURL>
+    <PARAM><PARAM_NAME>Šířka</PARAM_NAME><VAL>870.0</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ID>812729</ID>
+    <MAIN_CATEGORY>Ostatní židle</MAIN_CATEGORY>
+    <PRODUCT>DORA</PRODUCT>
+    <PRICE_VAT>1379.40</PRICE_VAT>
+    <DOSTUPNOST>Na dotaz</DOSTUPNOST>
+    <STOCK>0.0</STOCK>
+    <PART_NUMBER>DY60010002-041038</PART_NUMBER>
+    <DESCRIPTION>dřevěná židle,BUK/CHROM</DESCRIPTION>
+    <IMGURL><IMGURL>https://example.test/dora-buk-chrom.jpg</IMGURL></IMGURL>
+    <PARAM><PARAM_NAME>Šířka</PARAM_NAME><VAL>870.0</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ID>812730</ID>
+    <MAIN_CATEGORY>Ostatní židle</MAIN_CATEGORY>
+    <PRODUCT>DORA</PRODUCT>
+    <PRICE_VAT>1379.40</PRICE_VAT>
+    <DOSTUPNOST>Na dotaz</DOSTUPNOST>
+    <STOCK>0.0</STOCK>
+    <PART_NUMBER>DY60010003-040039</PART_NUMBER>
+    <DESCRIPTION>dřevěná židle,TŘEŠEŇ/HLINÍK</DESCRIPTION>
+    <IMGURL><IMGURL>https://example.test/dora-tresen-hlinik.jpg</IMGURL></IMGURL>
+    <PARAM><PARAM_NAME>Šířka</PARAM_NAME><VAL>870.0</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ID>812731</ID>
+    <MAIN_CATEGORY>Ostatní židle</MAIN_CATEGORY>
+    <PRODUCT>DORA</PRODUCT>
+    <PRICE_VAT>1379.40</PRICE_VAT>
+    <DOSTUPNOST>Na dotaz</DOSTUPNOST>
+    <STOCK>0.0</STOCK>
+    <PART_NUMBER>DY60010004-040038</PART_NUMBER>
+    <DESCRIPTION>dřevěná židle,BUK/HLINÍK</DESCRIPTION>
+    <IMGURL><IMGURL>https://example.test/dora-buk-hlinik.jpg</IMGURL></IMGURL>
+    <PARAM><PARAM_NAME>Šířka</PARAM_NAME><VAL>870.0</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse HON products: %v", err)
+	}
+	if stats.ProductsRead != 4 || stats.ProductsEmitted != 1 || stats.ItemsWithVariants != 1 || stats.VariantsEmitted != 4 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected grouped HON product, got %#v", feed.Items)
+	}
+
+	item := feed.Items[0]
+	if item.Code != "HON-DORA" || item.Name != "DORA" || item.Description != "dřevěná židle" {
+		t.Fatalf("unexpected parent item: %#v", item)
+	}
+	if len(item.Images) != 4 {
+		t.Fatalf("expected merged images, got %#v", item.Images)
+	}
+	if len(item.InformationParameters) != 1 || item.InformationParameters[0] != (shoptet.Parameter{Name: "Šířka", Value: "870"}) {
+		t.Fatalf("unexpected information parameters: %#v", item.InformationParameters)
+	}
+	if len(item.Variants) != 4 {
+		t.Fatalf("expected 4 variants, got %#v", item.Variants)
+	}
+	expectedValues := []string{"TŘEŠEŇ/CHROM", "BUK/CHROM", "TŘEŠEŇ/HLINÍK", "BUK/HLINÍK"}
+	for index, expectedValue := range expectedValues {
+		variant := item.Variants[index]
+		if len(variant.Parameters) != 1 || variant.Parameters[0] != (shoptet.Parameter{Name: "Provedení", Value: expectedValue}) {
+			t.Fatalf("unexpected variant parameter %d: %#v", index, variant.Parameters)
+		}
+		if variant.ImageRef == "" {
+			t.Fatalf("expected image ref on variant %d", index)
+		}
+	}
+}
+
+func TestParseProductsKeepsAmbiguousRepeatedProductsStandalone(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <ID>1</ID>
+    <MAIN_CATEGORY>Podložky pod židle</MAIN_CATEGORY>
+    <PRODUCT>Podložka</PRODUCT>
+    <PART_NUMBER>DYC0010001-000000</PART_NUMBER>
+    <DESCRIPTION>Podložka pod židle univerzální OFFICE /120x98 cm/</DESCRIPTION>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ID>2</ID>
+    <MAIN_CATEGORY>Podložky pod židle</MAIN_CATEGORY>
+    <PRODUCT>Podložka</PRODUCT>
+    <PART_NUMBER>DYC0020001-000000</PART_NUMBER>
+    <DESCRIPTION>Podložka pod židle s hroty na koberec OFFICE H /120x100 cm/</DESCRIPTION>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse HON products: %v", err)
+	}
+	if stats.ProductsRead != 2 || stats.ProductsEmitted != 2 || stats.ItemsWithVariants != 0 || stats.VariantsEmitted != 0 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 2 {
+		t.Fatalf("expected standalone products, got %#v", feed.Items)
+	}
+	for _, item := range feed.Items {
+		if len(item.Variants) != 0 {
+			t.Fatalf("expected simple product, got variants: %#v", item)
+		}
+	}
+}
+
+func TestParseProductsKeepsDuplicateVariantValuesStandalone(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <ID>1</ID>
+    <MAIN_CATEGORY>Židle</MAIN_CATEGORY>
+    <PRODUCT>DUP</PRODUCT>
+    <PART_NUMBER>DUP-1</PART_NUMBER>
+    <DESCRIPTION>židle,černá</DESCRIPTION>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ID>2</ID>
+    <MAIN_CATEGORY>Židle</MAIN_CATEGORY>
+    <PRODUCT>DUP</PRODUCT>
+    <PART_NUMBER>DUP-2</PART_NUMBER>
+    <DESCRIPTION>židle,černá</DESCRIPTION>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse HON products: %v", err)
+	}
+	if stats.ProductsEmitted != 2 || stats.ItemsWithVariants != 0 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 2 {
+		t.Fatalf("expected duplicate values to stay standalone, got %#v", feed.Items)
 	}
 }

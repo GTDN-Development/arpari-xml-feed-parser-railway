@@ -21,7 +21,7 @@ Base URL: `https://arpari-xml-feed-parser-railway-production.up.railway.app`
 
 - HON katalog: [hon.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/hon.xml)
   - Katalogový feed z HON XML.
-  - Produkty jsou jednoduché, bez variant.
+  - Opakované produkty bezpečně skládá do variant podle `PRODUCT` a hodnoty z `DESCRIPTION`.
   - Mapuje cenu, sklad, dostupnost, obrázky, parametry a cílové kategorie.
 
 ## STIMA aktualizační feedy

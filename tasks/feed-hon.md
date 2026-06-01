@@ -9,8 +9,8 @@
 - Test output endpoint: `/feeds/hon-test.xml`
 - Source URL: `https://www.webshop.officepro-brno.cz/import/HONClientFeed/HONClientFeed.xml`
 - Priority: první fáze
-- Status: MVP implementováno, čeká na ruční importní ladění
-- Last updated: 2026-05-28
+- Status: MVP implementováno, varianty doplněné
+- Last updated: 2026-06-01
 
 ## Cíl
 
@@ -26,11 +26,22 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 - Kategorie jsou zatím mapované široce podle `MAIN_CATEGORY` na kancelářské židle, konferenční židle, židle nebo bytové doplňky.
 - Každý produkt se označuje `SUPPLIER=HON`; hodnota je určená pro interní filtrování dodavatele v Shoptet administraci.
 - Zdrojové `PARAM` hodnoty se exportují jako Shoptet `INFORMATION_PARAMETERS`, tedy jako tabulkové doplňkové parametry, ne jako vybíratelné varianty.
+- Variantní produkty se skládají z položek se stejným `PRODUCT` a `MAIN_CATEGORY`, pokud jde z `DESCRIPTION` bezpečně vytáhnout unikátní hodnotu varianty.
+- Variantní parametr se jmenuje `Provedení`.
+- Nejasné skupiny, například dlouhé rozdílné popisy bez stabilní variantní hodnoty, zůstávají jako samostatné produkty.
 
 ## MVP rozsah
 
 - Identifikace produktu:
   - `CODE`
+- Variantní produkty:
+  - parent `EXTERNAL_ID`
+  - variant `CODE`
+  - variant `PRICE_VAT`
+  - variant `STOCK`
+  - variant `AVAILABILITY`
+  - variant `IMAGE_REF`
+  - variant `PARAMETERS`
 - Bezpečná základní pole:
   - `NAME`
   - `PRICE_VAT`, pokud je ve zdroji
@@ -45,16 +56,18 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 - Stav kódu: implementováno v `internal/hon/products.go` a `internal/feed/hon_products.go`.
 - Registry: supplier `hon` a `hon-test` jsou dostupné přes `cmd/rebuild`.
 - Lokální testy: `go test ./...` prochází.
-- Reálný rebuild ověřen 2026-05-28:
-  - `hon`: 517 přečteno, 517 emitováno.
-  - `hon-test`: 5 emitovaných produktů.
-  - `hon`: 517 bloků `INFORMATION_PARAMETERS`, 2 068 informačních parametrů.
-  - Výstupní XML je well-formed a publikace proběhla přes storage publisher.
+- Reálný rebuild ověřen 2026-06-01:
+  - `hon`: 517 přečteno, 208 emitovaných `SHOPITEM`.
+  - `hon`: 111 variantních produktů, 420 emitovaných variant.
+  - `hon`: 0 variantních produktů s duplicitní kombinací parametrů.
+  - `hon`: 208 bloků `INFORMATION_PARAMETERS`, 832 informačních parametrů.
+  - `hon`: 208 bloků obrázků, 517 obrázků.
+  - `hon-test`: 5 emitovaných produktů, z toho 2 variantní produkty a 9 variant.
+  - Reálný výstup ověřen proti Shoptet RNG schématu `products-supplier-v10.rng`.
 
 ## Otevřené otázky
 
 - Potvrdit, jestli `PART_NUMBER` je správný stabilní produktový kód pro párování v Shoptetu.
-- Potvrdit, zda HON položky se stejným `PRODUCT` mají zůstat samostatné produkty, nebo se mají později slučovat do variant.
 - Doladit cílové kategorie po ručním importním testu.
 - Má HON zakládat nové produkty, nebo jen aktualizovat existující?
 
@@ -71,6 +84,9 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 ## Testy
 
 - Unit test běžné HON položky.
+- Unit test variantního produktu složeného podle `PRODUCT` a `DESCRIPTION`.
+- Unit test nejasné skupiny, která zůstává jako samostatné produkty.
+- Unit test duplicitní hodnoty varianty, která zůstává jako samostatné produkty.
 - Unit test chybějícího produktu kódu.
 - Unit test limitu testovacího výstupu.
 - Unit test základního mapování kategorie.
