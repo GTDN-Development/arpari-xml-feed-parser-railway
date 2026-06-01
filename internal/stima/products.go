@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,12 +21,6 @@ const (
 	StockPriceURL = "https://www.stima.cz/userfiles/xml/ITTC_SHT_stock_price.xml"
 	supplierName  = "STIMA"
 )
-
-var fallbackProductImages = map[string][]string{
-	"ART13622": {
-		"https://www.stima.cz/userfiles/money/zidle-sharon-kt63-uid-596BD3D3-6AF5-45D6-8E43-50EBCDE6105F/4EAFA535-1E29-461E-ABEF-70DB5E286389.jpg",
-	},
-}
 
 type Downloader interface {
 	Download(ctx context.Context, url string) (io.ReadCloser, error)
@@ -148,6 +143,11 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			slog.Warn("skipping STIMA simple product without CODE", "name", name)
 			return shoptet.Item{}, stats, false
 		}
+		if shouldSkipUnavailableWithoutImages(source) {
+			stats.ProductsSkipped = 1
+			slog.Warn("skipping STIMA unavailable simple product without image", "name", name, "code", code)
+			return shoptet.Item{}, stats, false
+		}
 
 		stock, warehouses := transformStock(source.Stock)
 		categories, defaultCategory := transformCategories(source.Categories, name)
@@ -168,7 +168,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			Warehouses:            warehouses,
 			Categories:            categories,
 			DefaultCategory:       defaultCategory,
-			Images:                transformImages(productImageURLs(source.Images, code)),
+			Images:                transformImages(source.Images),
 			InformationParameters: transformInformationParameters(source.InformationParameters),
 		}, stats, true
 	}
@@ -220,6 +220,11 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 
 	categories, defaultCategory := transformCategories(source.Categories, name)
 	code := parentCode(source.Code, firstValidVariantCode)
+	if shouldSkipUnavailableWithoutImages(source) {
+		stats.ProductsSkipped = 1
+		slog.Warn("skipping STIMA unavailable variant product without image", "name", name, "code", code)
+		return shoptet.Item{}, stats, false
+	}
 	if len(categories) == 0 {
 		stats.ProductsSkipped = 1
 		slog.Warn("skipping STIMA variant product without mapped category", "name", name, "code", code)
@@ -236,7 +241,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 		PriceVAT:              strings.TrimSpace(source.PriceVAT),
 		Categories:            categories,
 		DefaultCategory:       defaultCategory,
-		Images:                transformImages(productImageURLs(source.Images, code)),
+		Images:                transformImages(source.Images),
 		InformationParameters: transformInformationParameters(source.InformationParameters),
 		Variants:              variants,
 	}, stats, true
@@ -339,16 +344,75 @@ func transformImages(images []string) []shoptet.Image {
 	return result
 }
 
-func productImageURLs(images []string, code string) []string {
+func shouldSkipUnavailableWithoutImages(source sourceShopItem) bool {
+	if hasUsableImage(source.Images) {
+		return false
+	}
+	known, positive := sourceStockAvailability(source)
+	return known && !positive
+}
+
+func hasUsableImage(images []string) bool {
 	for _, image := range images {
 		if strings.TrimSpace(image) != "" {
-			return images
+			return true
 		}
 	}
-	if fallbackImages, ok := fallbackProductImages[strings.TrimSpace(code)]; ok {
-		return fallbackImages
+	return false
+}
+
+func sourceStockAvailability(source sourceShopItem) (known bool, positive bool) {
+	if len(source.Variants) == 0 {
+		return stockAvailability(source.Stock)
 	}
-	return images
+
+	allKnown := true
+	anyKnown := false
+	for _, variant := range source.Variants {
+		variantKnown, variantPositive := stockAvailability(variant.Stock)
+		if variantPositive {
+			return true, true
+		}
+		if variantKnown {
+			anyKnown = true
+		} else {
+			allKnown = false
+		}
+	}
+	return anyKnown && allKnown, false
+}
+
+func stockAvailability(stock sourceStock) (known bool, positive bool) {
+	if quantity, ok := parseQuantity(stock.Value); ok {
+		known = true
+		if quantity > 0 {
+			positive = true
+		}
+	}
+
+	for _, warehouse := range stock.Warehouses {
+		quantity, ok := parseQuantity(warehouse.Value)
+		if !ok {
+			continue
+		}
+		known = true
+		if quantity > 0 {
+			positive = true
+		}
+	}
+	return known, positive
+}
+
+func parseQuantity(value string) (float64, bool) {
+	value = strings.TrimSpace(strings.ReplaceAll(value, ",", "."))
+	if value == "" {
+		return 0, false
+	}
+	quantity, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0, false
+	}
+	return quantity, true
 }
 
 func isAllowedVariantParameter(name string) bool {

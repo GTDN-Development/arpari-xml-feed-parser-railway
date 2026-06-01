@@ -173,38 +173,117 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	}
 }
 
-func TestParseProductsUsesFallbackImageForKnownStimaOmission(t *testing.T) {
+func TestParseProductsSkipsUnavailableSimpleProductWithoutImage(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>
-    <NAME>Židle SHARON KT63</NAME>
+    <NAME>Stůl COOL dub 130x80cm +40cm rozklad deska dub masiv 35mm podnož kov 8x2cm</NAME>
+    <CODE>ART13564-k009-08-02</CODE>
     <CATEGORIES>
-      <CATEGORY>Katalog &gt; Židle &gt; Dřevěné židle</CATEGORY>
+      <CATEGORY>Katalog &gt; Stoly</CATEGORY>
+    </CATEGORIES>
+    <STOCK>
+      <WAREHOUSES>
+        <WAREHOUSE>
+          <NAME>HLAVNÍ SKLAD</NAME>
+          <VALUE>0.000</VALUE>
+        </WAREHOUSE>
+      </WAREHOUSES>
+    </STOCK>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse products: %v", err)
+	}
+	if len(feed.Items) != 0 {
+		t.Fatalf("expected unavailable product without image to be skipped, got %#v", feed.Items)
+	}
+	if stats.ProductsRead != 1 || stats.ProductsSkipped != 1 || stats.ProductsEmitted != 0 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+}
+
+func TestParseProductsKeepsAvailableProductWithoutImage(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <NAME>Stůl Available</NAME>
+    <CODE>ART-AVAILABLE</CODE>
+    <CATEGORIES>
+      <CATEGORY>Katalog &gt; Stoly</CATEGORY>
+    </CATEGORIES>
+    <STOCK>
+      <WAREHOUSES>
+        <WAREHOUSE>
+          <NAME>HLAVNÍ SKLAD</NAME>
+          <VALUE>2.000</VALUE>
+        </WAREHOUSE>
+      </WAREHOUSES>
+    </STOCK>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse products: %v", err)
+	}
+	if len(feed.Items) != 1 || feed.Items[0].Code != "ART-AVAILABLE" {
+		t.Fatalf("expected available product to stay in feed, got %#v", feed.Items)
+	}
+	if stats.ProductsSkipped != 0 || stats.ProductsEmitted != 1 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+}
+
+func TestParseProductsKeepsVariantProductWithoutImageWhenAnyVariantAvailable(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <NAME>Židle Variant Product</NAME>
+    <CATEGORIES>
+      <CATEGORY>Katalog &gt; Židle</CATEGORY>
     </CATEGORIES>
     <VARIANTS>
-      <VARIANT>
-        <CODE>ART13622-k005-l179</CODE>
-        <PRICE_VAT>2830.00</PRICE_VAT>
-        <PARAMETERS>
-          <PARAMETER><NAME>KOSTRA</NAME><VALUE>tm.hnědá</VALUE></PARAMETER>
-          <PARAMETER><NAME>Sedák</NAME><VALUE>lux 2 camel</VALUE></PARAMETER>
-        </PARAMETERS>
-      </VARIANT>
+      <VARIANT><CODE>ART-VARIANT-001</CODE><STOCK>0.000</STOCK></VARIANT>
+      <VARIANT><CODE>ART-VARIANT-002</CODE><STOCK>3.000</STOCK></VARIANT>
     </VARIANTS>
   </SHOPITEM>
 </SHOP>`
 
-	feed, _, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
 	if err != nil {
 		t.Fatalf("parse products: %v", err)
 	}
-	if len(feed.Items) != 1 {
-		t.Fatalf("expected 1 item, got %#v", feed.Items)
+	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 2 {
+		t.Fatalf("expected variant product with available variant, got %#v", feed.Items)
 	}
-	if len(feed.Items[0].Images) != 1 {
-		t.Fatalf("expected fallback image, got %#v", feed.Items[0].Images)
+	if stats.ProductsSkipped != 0 || stats.ProductsEmitted != 1 {
+		t.Fatalf("unexpected stats: %#v", stats)
 	}
-	if feed.Items[0].Images[0].URL != fallbackProductImages["ART13622"][0] {
-		t.Fatalf("unexpected fallback image: %#v", feed.Items[0].Images)
+}
+
+func TestParseProductsSkipsVariantProductWithoutImageWhenAllVariantsUnavailable(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <NAME>Židle Variant Product</NAME>
+    <CATEGORIES>
+      <CATEGORY>Katalog &gt; Židle</CATEGORY>
+    </CATEGORIES>
+    <VARIANTS>
+      <VARIANT><CODE>ART-VARIANT-001</CODE><STOCK>0.000</STOCK></VARIANT>
+      <VARIANT><CODE>ART-VARIANT-002</CODE><STOCK>0.000</STOCK></VARIANT>
+    </VARIANTS>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse products: %v", err)
+	}
+	if len(feed.Items) != 0 {
+		t.Fatalf("expected unavailable variant product without image to be skipped, got %#v", feed.Items)
+	}
+	if stats.ProductsSkipped != 1 || stats.ProductsEmitted != 0 {
+		t.Fatalf("unexpected stats: %#v", stats)
 	}
 }
 
