@@ -33,7 +33,7 @@ Cron job nezapisuje do vlastního odděleného filesystemu. Jen spustí `/app/re
 Cron service variables:
 
 ```text
-REBUILD_URL=https://<railway-domain>/internal/rebuild/all
+REBUILD_URL=https://arpari-xml-feed-parser-railway-production.up.railway.app/internal/rebuild/all
 REBUILD_TOKEN=<stejný-token-jako-na-web-službě>
 ```
 
@@ -55,17 +55,17 @@ stima-stock: každé 3 dny v noci pro první MVP, později častěji podle dohod
 stima-stock-price: každé 3 dny v noci pro první MVP, později podle cenové strategie
 ```
 
-Railway cron výraz:
+Aktuální Railway cron výraz pro denní běh ve 04:00 českého letního času:
 
 ```text
-0 1 */3 * *
+0 2 * * *
 ```
 
-Railway cron běží v UTC. To znamená přibližně:
+Railway cron běží v UTC. To znamená:
 
 ```text
-03:00 v Česku v letním čase
-02:00 v Česku v zimním čase
+04:00 v Česku v letním čase
+03:00 v Česku v zimním čase
 ```
 
 Pozdější doporučení podle typu feedu:

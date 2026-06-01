@@ -196,6 +196,12 @@ Aplikace v kontejneru poslouchá na:
 0.0.0.0:${PORT}
 ```
 
+Produkční Railway doména:
+
+```text
+https://arpari-xml-feed-parser-railway-production.up.railway.app
+```
+
 Pro persistentní feedy na Railway:
 
 1. Připoj ke službě Railway Volume.
@@ -212,9 +218,9 @@ DATA_DIR -> RAILWAY_VOLUME_MOUNT_PATH -> data
 Po deployi ověř:
 
 ```text
-https://<railway-domain>/
-https://<railway-domain>/healthz
-https://<railway-domain>/status
+https://arpari-xml-feed-parser-railway-production.up.railway.app/
+https://arpari-xml-feed-parser-railway-production.up.railway.app/healthz
+https://arpari-xml-feed-parser-railway-production.up.railway.app/status
 ```
 
 ## Railway cron
@@ -233,17 +239,17 @@ Nejjednodušší provozní setup:
 5. U `feed-cron` nastav variables:
 
 ```text
-REBUILD_URL=https://<railway-domain>/internal/rebuild/all
+REBUILD_URL=https://arpari-xml-feed-parser-railway-production.up.railway.app/internal/rebuild/all
 REBUILD_TOKEN=<stejný-token-jako-na-web-službě>
 ```
 
 6. V Settings služby `feed-cron` nastav Cron Schedule:
 
 ```text
-0 1 */3 * *
+0 2 * * *
 ```
 
-Railway cron běží v UTC, takže `0 1 */3 * *` znamená přibližně 03:00 v Česku během letního času a 02:00 během zimního času. Cron služba neukládá feedy sama; jen zavolá hlavní web službu, která rebuild provede nad svým Railway Volume.
+Railway cron běží v UTC, takže `0 2 * * *` znamená 04:00 v Česku během letního času a 03:00 během zimního času. Pokud má běžet přesně ve 04:00 i v zimě, změň cron v Railway na `0 3 * * *`. Cron služba neukládá feedy sama; jen zavolá hlavní web službu, která rebuild provede nad svým Railway Volume.
 
 `POST /internal/rebuild/all` rebuildí produkční feedy:
 
