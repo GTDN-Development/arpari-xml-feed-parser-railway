@@ -18,9 +18,9 @@ import (
 const ProductsURL = "https://autronic.cz/feeds/product-feed.xml"
 
 const (
-	supplierName        = "Autronic"
-	variantParameter    = "Barva"
-	maxGroupImagesCount = 20
+	supplierName     = "Autronic"
+	variantParameter = "Barva"
+	maxProductImages = 10
 )
 
 type Downloader interface {
@@ -394,8 +394,8 @@ func splitNameParts(name string) []string {
 }
 
 func mergeGroupImages(entries []productEntry) []shoptet.Image {
-	result := make([]shoptet.Image, 0, maxGroupImagesCount)
-	seen := make(map[string]struct{}, maxGroupImagesCount)
+	result := make([]shoptet.Image, 0, maxProductImages)
+	seen := make(map[string]struct{}, maxProductImages)
 	for _, entry := range entries {
 		for _, image := range entry.Item.Images {
 			url := strings.TrimSpace(image.URL)
@@ -407,7 +407,7 @@ func mergeGroupImages(entries []productEntry) []shoptet.Image {
 			}
 			seen[url] = struct{}{}
 			result = append(result, shoptet.Image{URL: url})
-			if len(result) >= maxGroupImagesCount {
+			if len(result) >= maxProductImages {
 				return result
 			}
 		}
@@ -529,7 +529,7 @@ func transformDescription(descriptions []sourceDescription) string {
 }
 
 func transformImages(images []sourceImage) []shoptet.Image {
-	result := make([]shoptet.Image, 0, len(images))
+	result := make([]shoptet.Image, 0, min(len(images), maxProductImages))
 	seen := make(map[string]struct{}, len(images))
 	for _, image := range images {
 		url := strings.TrimSpace(image.LargeURL)
@@ -544,6 +544,9 @@ func transformImages(images []sourceImage) []shoptet.Image {
 		}
 		seen[url] = struct{}{}
 		result = append(result, shoptet.Image{URL: url})
+		if len(result) >= maxProductImages {
+			return result
+		}
 	}
 	return result
 }

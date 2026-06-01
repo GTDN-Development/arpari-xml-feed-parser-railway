@@ -125,6 +125,51 @@ func TestParseProductsLimitsTestOutput(t *testing.T) {
 	}
 }
 
+func TestTransformImagesLimitsAutronicGallery(t *testing.T) {
+	sourceImages := make([]sourceImage, 0, maxProductImages+2)
+	for index := range maxProductImages + 2 {
+		sourceImages = append(sourceImages, sourceImage{LargeURL: "https://example.test/image-" + string(rune('a'+index)) + ".jpg"})
+	}
+
+	images := transformImages(sourceImages)
+	if len(images) != maxProductImages {
+		t.Fatalf("expected %d images, got %#v", maxProductImages, images)
+	}
+	if images[0].URL != "https://example.test/image-a.jpg" || images[maxProductImages-1].URL != "https://example.test/image-j.jpg" {
+		t.Fatalf("unexpected image order after limit: %#v", images)
+	}
+}
+
+func TestMergeGroupImagesLimitsAutronicGallery(t *testing.T) {
+	entries := []productEntry{{
+		Item: shoptet.Item{Images: []shoptet.Image{
+			{URL: "https://example.test/image-01.jpg"},
+			{URL: "https://example.test/image-02.jpg"},
+			{URL: "https://example.test/image-03.jpg"},
+			{URL: "https://example.test/image-04.jpg"},
+			{URL: "https://example.test/image-05.jpg"},
+			{URL: "https://example.test/image-06.jpg"},
+		}},
+	}, {
+		Item: shoptet.Item{Images: []shoptet.Image{
+			{URL: "https://example.test/image-07.jpg"},
+			{URL: "https://example.test/image-08.jpg"},
+			{URL: "https://example.test/image-09.jpg"},
+			{URL: "https://example.test/image-10.jpg"},
+			{URL: "https://example.test/image-11.jpg"},
+			{URL: "https://example.test/image-12.jpg"},
+		}},
+	}}
+
+	images := mergeGroupImages(entries)
+	if len(images) != maxProductImages {
+		t.Fatalf("expected %d merged images, got %#v", maxProductImages, images)
+	}
+	if images[maxProductImages-1].URL != "https://example.test/image-10.jpg" {
+		t.Fatalf("unexpected merged image limit: %#v", images)
+	}
+}
+
 func TestParseProductsGroupsColorVariants(t *testing.T) {
 	input := `<ProductFeed><Products>
   <Product>
