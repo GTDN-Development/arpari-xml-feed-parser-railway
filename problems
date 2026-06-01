@@ -4,10 +4,16 @@
 
 - Datum kontroly: 2026-06-01
 - Produkt: `DY20060001-000119` / `CANTO WHITE PODHLAVNIK - cerna`
-- Problem: Shoptet import zalozi produkt, ale neprida obrazek. V import logu je varovani `Invalid image content`.
-- Zdrojovy HON feed obrazek obsahuje, takze nejde o chybejici `IMGURL` v XML.
-- URL obrazku ve zdrojovem i vystupnim feedu:
+- Problém: Shoptet založí produkt, ale nepřidá obrázek. Log hlásí `Invalid image content`.
+- Obrázek ve feedu je, ale jeho URL nevrací JPEG:
   `https://www.webshop.officepro-brno.cz/import/HONClientFeed/DY20060001-000119_B01_CANTO_WHITE_PODHLAVNIK_CERNA.jpg`
-- Overeni URL: server HON vraci `HTTP 303 Location: /`; po nasledovani redirectu se vrati HTML stranka (`content-type: text/html`), ne JPEG.
-- Zaver: problem je v nefunkcnim / neprimo presmerovanem obrazkovem URL na strane HON/OfficePro. Nas parser obrazek do Shoptet feedu propisuje spravne, ale Shoptet ho preskoci, protoze URL nevraci validni image content.
-- Mozne reseni: nechat opravit image URL u HON/OfficePro, nebo obrazky mirrorovat a ve feedu posilat vlastni verejne URL.
+- Závěr: chyba je na straně HON/OfficePro URL. Parser ji do Shoptetu propisuje správně.
+- Řešení: oprava URL u dodavatele, případně mirror obrázků.
+
+## Autronic feed
+
+- Datum kontroly: 2026-06-01
+- Problém: Shoptet u části obrázků hlásí timeout při stahování z `autronicshop-cdn.havit.cloud`.
+- Příčina: Autronic feed posílá velké galerie a Shoptet má krátký timeout na stažení obrázku.
+- Závěr: XML je v pořádku, problém je rychlost/dostupnost externí CDN při importu.
+- Řešení: omezili jsme Autronic feed na max. 10 obrázků na produkt, aby se snížil počet timeoutů.
