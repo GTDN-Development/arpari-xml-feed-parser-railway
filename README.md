@@ -264,6 +264,16 @@ hon
 
 Testovací feedy a `hello` lze rebuildit ručně přes `POST /internal/rebuild/{supplier}` nebo přes `go run ./cmd/rebuild --supplier <name>`.
 
+### Kontrola posledního rebuildu
+
+Stav posledních rebuild běhů je veřejně dostupný tady:
+
+```text
+https://arpari-xml-feed-parser-railway-production.up.railway.app/status
+```
+
+Po ranním cron běhu zkontroluj u produkčních feedů hodnotu `lastRunAt`. Čas je v UTC, takže při českém letním čase přičti 2 hodiny.
+
 ## Budoucí cílový tok
 
 ```text
