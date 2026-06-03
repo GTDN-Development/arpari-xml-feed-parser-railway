@@ -19,7 +19,7 @@ func TestParseProductsMapsZboziItems(t *testing.T) {
     <EAN>0745314610292</EAN>
     <IMGURL>https://segocz.cz/main.jpg</IMGURL>
     <IMGURL_ALTERNATIVE>https://segocz.cz/alt.jpg</IMGURL_ALTERNATIVE>
-    <PRICE_VAT>10951.49</PRICE_VAT>
+    <PRICE_VAT>10951.90</PRICE_VAT>
     <DELIVERY_DATE>0</DELIVERY_DATE>
     <PARAM><PARAM_NAME>Nosnost</PARAM_NAME><VAL>120</VAL><UNIT>kg</UNIT></PARAM>
   </SHOPITEM>
@@ -48,6 +48,9 @@ func TestParseProductsMapsZboziItems(t *testing.T) {
 	}
 	if item.Supplier != "SEGO" {
 		t.Fatalf("unexpected supplier: %q", item.Supplier)
+	}
+	if item.Manufacturer != "Pixel" {
+		t.Fatalf("unexpected manufacturer: %q", item.Manufacturer)
 	}
 	if len(item.Images) != 2 {
 		t.Fatalf("expected 2 images, got %#v", item.Images)
@@ -120,6 +123,9 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	}
 	if item.Supplier != "SEGO" {
 		t.Fatalf("unexpected parent supplier: %q", item.Supplier)
+	}
+	if item.Manufacturer != "SEGO" {
+		t.Fatalf("unexpected parent manufacturer fallback: %q", item.Manufacturer)
 	}
 	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1125", Path: "KANCELÁŘSKÉ ŽIDLE A KŘESLA > DĚTSKÉ ŽIDLE"}) {
 		t.Fatalf("unexpected parent category: %#v", item.DefaultCategory)

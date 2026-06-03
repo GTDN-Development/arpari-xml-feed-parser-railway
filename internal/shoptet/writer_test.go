@@ -66,7 +66,10 @@ func TestWriteSimpleProduct(t *testing.T) {
 	if item.Supplier != "Test Supplier" {
 		t.Fatalf("expected item supplier, got %q", item.Supplier)
 	}
-	if item.PriceVAT != "123.45" {
+	if item.Manufacturer != "Test Supplier" {
+		t.Fatalf("expected item manufacturer fallback, got %q", item.Manufacturer)
+	}
+	if item.PriceVAT != "123" {
 		t.Fatalf("expected item PRICE_VAT, got %q", item.PriceVAT)
 	}
 	if item.Stock == nil || item.Stock.Value != "7" {
@@ -165,7 +168,7 @@ func TestWriteProductWithVariants(t *testing.T) {
 	if first.Code != "CHAIR-001-OAK" {
 		t.Fatalf("expected first variant code, got %q", first.Code)
 	}
-	if first.Currency != "CZK" || first.VAT != "21" || first.PriceVAT != "1000.00" {
+	if first.Currency != "CZK" || first.VAT != "21" || first.PriceVAT != "1000" {
 		t.Fatalf("expected first variant price fields, got %#v", first)
 	}
 	if first.Stock == nil || len(first.Stock.Warehouses) != 1 || first.Stock.Warehouses[0].Name != "HLAVNÍ SKLAD" || first.Stock.Warehouses[0].Value != "3.000" {
@@ -216,7 +219,7 @@ func TestWriteProductWithVariantsAllowsAnonymousParent(t *testing.T) {
 		t.Fatalf("expected anonymous variant parent, got %#v", parsed.Items[0])
 	}
 	variant := parsed.Items[0].Variants.Items[0]
-	if variant.PriceVAT != "1000.00" || variant.VAT != "21" || variant.Currency != "CZK" || variant.ImageRef != "https://example.test/oak.jpg" {
+	if variant.PriceVAT != "1000" || variant.VAT != "21" || variant.Currency != "CZK" || variant.ImageRef != "https://example.test/oak.jpg" {
 		t.Fatalf("unexpected variant fields: %#v", variant)
 	}
 }
@@ -289,6 +292,22 @@ func TestWriteNormalizesImageURLs(t *testing.T) {
 	}
 	if !strings.Contains(xmlText, "kony-wotan-%C4%8Dern%C3%A1.jpg") {
 		t.Fatalf("expected encoded IMAGE_REF URL, got:\n%s", xmlText)
+	}
+}
+
+func TestFormatWholePriceDropsDecimalPart(t *testing.T) {
+	tests := map[string]string{
+		"2399.90":   "2399",
+		"2399,90":   "2399",
+		"1 234,50":  "1234",
+		"1000.00":   "1000",
+		"not-price": "not-price",
+	}
+
+	for input, expected := range tests {
+		if actual := FormatWholePrice(input); actual != expected {
+			t.Fatalf("FormatWholePrice(%q) = %q, expected %q", input, actual, expected)
+		}
 	}
 }
 

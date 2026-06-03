@@ -83,6 +83,9 @@ func TestParseProductsFiltersFurnitureAndMapsFields(t *testing.T) {
 	if item.Supplier != "Autronic" {
 		t.Fatalf("unexpected supplier: %q", item.Supplier)
 	}
+	if item.Manufacturer != "Autronic" {
+		t.Fatalf("unexpected manufacturer fallback: %q", item.Manufacturer)
+	}
 	if item.Stock != "3" || len(item.Warehouses) != 1 || item.Warehouses[0].Name != "Semčice" {
 		t.Fatalf("unexpected stock: %#v", item)
 	}
@@ -125,22 +128,23 @@ func TestParseProductsLimitsTestOutput(t *testing.T) {
 	}
 }
 
-func TestTransformImagesLimitsAutronicGallery(t *testing.T) {
-	sourceImages := make([]sourceImage, 0, maxProductImages+2)
-	for index := range maxProductImages + 2 {
+func TestTransformImagesKeepsFullAutronicGallery(t *testing.T) {
+	const totalImages = 12
+	sourceImages := make([]sourceImage, 0, totalImages)
+	for index := range totalImages {
 		sourceImages = append(sourceImages, sourceImage{LargeURL: "https://example.test/image-" + string(rune('a'+index)) + ".jpg"})
 	}
 
 	images := transformImages(sourceImages)
-	if len(images) != maxProductImages {
-		t.Fatalf("expected %d images, got %#v", maxProductImages, images)
+	if len(images) != totalImages {
+		t.Fatalf("expected %d images, got %#v", totalImages, images)
 	}
-	if images[0].URL != "https://example.test/image-a.jpg" || images[maxProductImages-1].URL != "https://example.test/image-j.jpg" {
-		t.Fatalf("unexpected image order after limit: %#v", images)
+	if images[0].URL != "https://example.test/image-a.jpg" || images[totalImages-1].URL != "https://example.test/image-l.jpg" {
+		t.Fatalf("unexpected image order: %#v", images)
 	}
 }
 
-func TestMergeGroupImagesLimitsAutronicGallery(t *testing.T) {
+func TestMergeGroupImagesKeepsFullAutronicGallery(t *testing.T) {
 	entries := []productEntry{{
 		Item: shoptet.Item{Images: []shoptet.Image{
 			{URL: "https://example.test/image-01.jpg"},
@@ -162,11 +166,11 @@ func TestMergeGroupImagesLimitsAutronicGallery(t *testing.T) {
 	}}
 
 	images := mergeGroupImages(entries)
-	if len(images) != maxProductImages {
-		t.Fatalf("expected %d merged images, got %#v", maxProductImages, images)
+	if len(images) != 12 {
+		t.Fatalf("expected 12 merged images, got %#v", images)
 	}
-	if images[maxProductImages-1].URL != "https://example.test/image-10.jpg" {
-		t.Fatalf("unexpected merged image limit: %#v", images)
+	if images[11].URL != "https://example.test/image-12.jpg" {
+		t.Fatalf("unexpected merged image order: %#v", images)
 	}
 }
 
@@ -220,6 +224,9 @@ func TestParseProductsGroupsColorVariants(t *testing.T) {
 	item := feed.Items[0]
 	if item.Code != "" || item.Name != "Jídelní židle" {
 		t.Fatalf("unexpected parent item: %#v", item)
+	}
+	if item.Manufacturer != "Autronic" {
+		t.Fatalf("unexpected parent manufacturer fallback: %q", item.Manufacturer)
 	}
 	if len(item.Images) != 2 {
 		t.Fatalf("expected merged images, got %#v", item.Images)

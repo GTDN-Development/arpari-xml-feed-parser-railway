@@ -161,6 +161,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			Name:                  name,
 			ShortDescription:      strings.TrimSpace(source.ShortDescription),
 			Description:           strings.TrimSpace(source.Description),
+			Manufacturer:          transformManufacturer(source.Manufacturer),
 			Supplier:              supplierName,
 			EAN:                   strings.TrimSpace(source.EAN),
 			PriceVAT:              strings.TrimSpace(source.PriceVAT),
@@ -236,6 +237,7 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 		Name:                  name,
 		ShortDescription:      strings.TrimSpace(source.ShortDescription),
 		Description:           strings.TrimSpace(source.Description),
+		Manufacturer:          transformManufacturer(source.Manufacturer),
 		Supplier:              supplierName,
 		EAN:                   strings.TrimSpace(source.EAN),
 		PriceVAT:              strings.TrimSpace(source.PriceVAT),
@@ -257,6 +259,13 @@ func parentCode(sourceCode, firstVariantCode string) string {
 		return strings.TrimSpace(before)
 	}
 	return code
+}
+
+func transformManufacturer(manufacturer string) string {
+	if manufacturer = strings.TrimSpace(manufacturer); manufacturer != "" {
+		return manufacturer
+	}
+	return supplierName
 }
 
 func transformStock(stock sourceStock) (string, []shoptet.Warehouse) {
@@ -428,6 +437,7 @@ type sourceShopItem struct {
 	Name                  string            `xml:"NAME"`
 	ShortDescription      string            `xml:"SHORT_DESCRIPTION"`
 	Description           string            `xml:"DESCRIPTION"`
+	Manufacturer          string            `xml:"MANUFACTURER"`
 	Code                  string            `xml:"CODE"`
 	EAN                   string            `xml:"EAN"`
 	PriceVAT              string            `xml:"PRICE_VAT"`

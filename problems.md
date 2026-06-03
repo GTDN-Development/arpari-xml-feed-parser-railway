@@ -19,6 +19,12 @@ Zjištění:
 
 Produkty bez fotky a s explicitním skladem `0` neimportovat. Produkty bez fotky se skladem `> 0` zatím v importu ponechat.
 
+Další zjištění:
+
+- Některé obrázky ve STIMA feedu odkazují na URL, které vrací `404`.
+- Některé variantové produkty mají duplicitní kombinace variantních parametrů, takže je Shoptet neumí rozlišit.
+- Tyto případy nebudeme uměle opravovat v parseru; jde o problém původních dat od dodavatele.
+
 ## HON feed
 
 **Datum kontroly:** 2026-06-01

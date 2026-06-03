@@ -62,6 +62,9 @@ func TestParseProductsSimpleProduct(t *testing.T) {
 	if item.Supplier != "STIMA" {
 		t.Fatalf("unexpected supplier: %q", item.Supplier)
 	}
+	if item.Manufacturer != "STIMA" {
+		t.Fatalf("unexpected manufacturer fallback: %q", item.Manufacturer)
+	}
 	if item.ShortDescription != "Krátký popis" || item.Description != "Dlouhý popis" {
 		t.Fatalf("unexpected descriptions: %#v", item)
 	}
@@ -144,6 +147,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	}
 	if item.Supplier != "STIMA" {
 		t.Fatalf("unexpected supplier: %q", item.Supplier)
+	}
+	if item.Manufacturer != "STIMA" {
+		t.Fatalf("unexpected manufacturer fallback: %q", item.Manufacturer)
 	}
 	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1128", Path: "ŽIDLE > RESTAURAČNÍ ŽIDLE"}) {
 		t.Fatalf("unexpected default category: %#v", item.DefaultCategory)

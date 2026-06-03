@@ -127,7 +127,7 @@ Endpoint `/feeds/hello.xml` vrací jednoduchý XML feed s jednou dummy položkou
   <SHOPITEM>
     <CODE>HELLO-001</CODE>
     <NAME>Hello world product</NAME>
-    <PRICE_VAT>123.45</PRICE_VAT>
+    <PRICE_VAT>123</PRICE_VAT>
     <STOCK>7</STOCK>
   </SHOPITEM>
 </SHOP>
@@ -139,7 +139,7 @@ Endpoint `/feeds/stima-products-test.xml` vrací stejnou katalogovou transformac
 
 Endpointy `/feeds/stima-stock.xml` a `/feeds/stima-stock-price.xml` vrací aktualizační MVP pro STIMA sklad, respektive sklad + cenu. Neobsahují katalogová pole jako popisy, obrázky nebo kategorie. I tyto feedy respektují Shoptet limit 512 variant na produkt.
 
-Endpoint `/feeds/autronic-products.xml` vrací katalogový MVP Autronicu filtrovaný na nábytkové kategorie s prefixem `NA-`. Obsahuje kód, název, EAN, cenu s DPH, sklad, sklad po skladech, popis, obrázky a základní mapování do cílových Shoptet kategorií. Endpoint `/feeds/autronic-products-test.xml` vrací prvních 5 výstupních produktů pro rychlý ruční import.
+Endpoint `/feeds/autronic-products.xml` vrací katalogový MVP Autronicu filtrovaný na nábytkové kategorie s prefixem `NA-`. Obsahuje kód, název, EAN, cenu s DPH, sklad, sklad po skladech, popis, všechny unikátní obrázky a základní mapování do cílových Shoptet kategorií. Endpoint `/feeds/autronic-products-test.xml` vrací prvních 5 výstupních produktů pro rychlý ruční import.
 
 Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Zboží.cz styl feedu. Obsahuje kód, název, EAN, cenu s DPH, dostupnost, popis, obrázky a základní mapování do kancelářských židlí. Endpoint `/feeds/sego-test.xml` vrací prvních 5 produktů.
 

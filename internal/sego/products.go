@@ -8,10 +8,8 @@ import (
 	"html"
 	"io"
 	"log/slog"
-	"math"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -133,7 +131,7 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 		return shoptet.Item{}, false
 	}
 
-	price := formatWholePrice(source.PriceVAT)
+	price := shoptet.FormatWholePrice(source.PriceVAT)
 	category := targetCategory(source)
 	currency := ""
 	vat := ""
@@ -145,6 +143,7 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 		Code:                  code,
 		Name:                  name,
 		Description:           normalizeDescription(source.Description),
+		Manufacturer:          transformManufacturer(source),
 		Supplier:              supplierName,
 		PriceVAT:              price,
 		VAT:                   vat,
@@ -216,18 +215,6 @@ func transformDeliveryDate(value string) string {
 		return ""
 	}
 	return "Dodání " + value + " dnů"
-}
-
-func formatWholePrice(value string) string {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return ""
-	}
-	amount, err := strconv.ParseFloat(strings.ReplaceAll(value, ",", "."), 64)
-	if err != nil {
-		return value
-	}
-	return strconv.FormatInt(int64(math.Round(amount)), 10)
 }
 
 func transformImages(source sourceItem) []shoptet.Image {
@@ -416,6 +403,7 @@ func (group *variantGroup) Item() shoptet.Item {
 		Code:                  "",
 		Name:                  group.baseName,
 		Description:           group.firstItem.Description,
+		Manufacturer:          group.firstItem.Manufacturer,
 		Supplier:              group.firstItem.Supplier,
 		PriceVAT:              group.firstItem.PriceVAT,
 		VAT:                   group.firstItem.VAT,
@@ -502,10 +490,18 @@ func normalizeParameterValue(value string) string {
 	return strings.Join(strings.Fields(value), " ")
 }
 
+func transformManufacturer(source sourceItem) string {
+	if brand := strings.TrimSpace(source.Brand); brand != "" {
+		return brand
+	}
+	return supplierName
+}
+
 type sourceItem struct {
 	ItemID            string            `xml:"ITEM_ID"`
 	ProductName       string            `xml:"PRODUCTNAME"`
 	Description       string            `xml:"DESCRIPTION"`
+	Brand             string            `xml:"BRAND"`
 	URL               string            `xml:"URL"`
 	EAN               string            `xml:"EAN"`
 	ImageURL          string            `xml:"IMGURL"`

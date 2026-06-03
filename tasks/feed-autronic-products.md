@@ -30,7 +30,7 @@ Generovat Shoptet produktový XML feed z Autronic katalogu pro samostatný testo
 - Zdrojové `Parameters/Parameter` hodnoty se exportují jako Shoptet `INFORMATION_PARAMETERS`, tedy jako tabulkové doplňkové parametry, ne jako vybíratelné varianty.
 - Zdrojové `ColorVariants` se slučují do Shoptet `VARIANTS`. Variantní parametr je `Barva`; pokud má jedna skupina více variant se stejnou barvou, hodnota se rozliší kódem varianty, například `Hnědá (CT-281 BR3)`.
 - Variantní parent nemá top-level `CODE`; jednotlivé varianty nesou původní Autronic `ProductCode`.
-- Obrázky jsou omezené na prvních 10 URL na výsledný Shoptet produkt, aby import netahal z Autronic CDN příliš velké galerie a snížil se počet timeoutů při stahování obrázků v Shoptetu.
+- Obrázky se neořezávají na pevný počet; výstup posílá všechny unikátní URL ze zdrojového produktu nebo sloučené variantní skupiny.
 
 ## MVP rozsah
 

@@ -4,7 +4,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"math"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -27,6 +29,7 @@ type Item struct {
 	Name                  string
 	ShortDescription      string
 	Description           string
+	Manufacturer          string
 	Supplier              string
 	Price                 string
 	PriceVAT              string
@@ -170,6 +173,7 @@ func toShop(feed Feed) shopXML {
 			Name:                  item.Name,
 			ShortDescription:      item.ShortDescription,
 			Description:           item.Description,
+			Manufacturer:          itemManufacturer(item),
 			Supplier:              item.Supplier,
 			Categories:            toCategoriesXML(item.Categories, item.DefaultCategory),
 			Images:                toImagesXML(item.Images),
@@ -184,8 +188,8 @@ func toShop(feed Feed) shopXML {
 					EAN:          variant.EAN,
 					Currency:     variant.Currency,
 					VAT:          variant.VAT,
-					Price:        variant.Price,
-					PriceVAT:     variant.PriceVAT,
+					Price:        FormatWholePrice(variant.Price),
+					PriceVAT:     FormatWholePrice(variant.PriceVAT),
 					Stock:        toStockXML(variant.Stock, variant.Warehouses),
 					Availability: variant.Availability,
 					ImageRef:     normalizeImageURL(variant.ImageRef),
@@ -198,14 +202,39 @@ func toShop(feed Feed) shopXML {
 			shopItem.EAN = item.EAN
 			shopItem.Currency = item.Currency
 			shopItem.VAT = item.VAT
-			shopItem.Price = item.Price
-			shopItem.PriceVAT = item.PriceVAT
+			shopItem.Price = FormatWholePrice(item.Price)
+			shopItem.PriceVAT = FormatWholePrice(item.PriceVAT)
 			shopItem.Stock = toStockXML(item.Stock, item.Warehouses)
 			shopItem.Availability = item.Availability
 		}
 		items = append(items, shopItem)
 	}
 	return shopXML{Items: items}
+}
+
+func itemManufacturer(item Item) string {
+	if manufacturer := strings.TrimSpace(item.Manufacturer); manufacturer != "" {
+		return manufacturer
+	}
+	return strings.TrimSpace(item.Supplier)
+}
+
+func FormatWholePrice(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+
+	normalized := strings.NewReplacer(
+		",", ".",
+		" ", "",
+		"\u00a0", "",
+	).Replace(value)
+	parsed, err := strconv.ParseFloat(normalized, 64)
+	if err != nil || math.IsNaN(parsed) || math.IsInf(parsed, 0) {
+		return value
+	}
+	return strconv.FormatInt(int64(parsed), 10)
 }
 
 func toCategoriesXML(categories []Category, defaultCategory *Category) *shopCategoriesXML {
@@ -372,6 +401,7 @@ type shopItemXML struct {
 	Name                  string                        `xml:"NAME,omitempty"`
 	ShortDescription      string                        `xml:"SHORT_DESCRIPTION,omitempty"`
 	Description           string                        `xml:"DESCRIPTION,omitempty"`
+	Manufacturer          string                        `xml:"MANUFACTURER,omitempty"`
 	Supplier              string                        `xml:"SUPPLIER,omitempty"`
 	EAN                   string                        `xml:"EAN,omitempty"`
 	Currency              string                        `xml:"CURRENCY,omitempty"`

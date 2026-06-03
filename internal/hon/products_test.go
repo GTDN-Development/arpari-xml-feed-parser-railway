@@ -47,6 +47,9 @@ func TestParseProductsMapsHONItems(t *testing.T) {
 	if item.Supplier != "HON" {
 		t.Fatalf("unexpected supplier: %q", item.Supplier)
 	}
+	if item.Manufacturer != "HON" {
+		t.Fatalf("unexpected manufacturer fallback: %q", item.Manufacturer)
+	}
 	if item.Name != "MERENS BP - černá BI 201, kanc. židle bez podhlavníku" {
 		t.Fatalf("unexpected name: %q", item.Name)
 	}
@@ -154,6 +157,9 @@ func TestParseProductsGroupsHONVariantsByProductAndDescription(t *testing.T) {
 	item := feed.Items[0]
 	if item.Code != "HON-DORA" || item.Name != "DORA" || item.Description != "dřevěná židle" {
 		t.Fatalf("unexpected parent item: %#v", item)
+	}
+	if item.Manufacturer != "HON" {
+		t.Fatalf("unexpected parent manufacturer fallback: %q", item.Manufacturer)
 	}
 	if len(item.Images) != 4 {
 		t.Fatalf("expected merged images, got %#v", item.Images)

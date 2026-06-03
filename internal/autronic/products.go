@@ -20,7 +20,6 @@ const ProductsURL = "https://autronic.cz/feeds/product-feed.xml"
 const (
 	supplierName     = "Autronic"
 	variantParameter = "Barva"
-	maxProductImages = 10
 )
 
 type Downloader interface {
@@ -164,6 +163,7 @@ func transformProduct(source sourceProduct) (shoptet.Item, bool) {
 		Code:                  code,
 		Name:                  name,
 		Description:           transformDescription(source.Descriptions),
+		Manufacturer:          transformManufacturer(source),
 		Supplier:              supplierName,
 		PriceVAT:              transformPrice(source.Prices),
 		Stock:                 stock,
@@ -275,6 +275,7 @@ func transformVariantGroup(entries []productEntry, colorHints map[string]string)
 	return shoptet.Item{
 		Name:                  parentName(entries, colors),
 		Description:           first.Description,
+		Manufacturer:          first.Manufacturer,
 		Supplier:              first.Supplier,
 		Categories:            first.Categories,
 		DefaultCategory:       first.DefaultCategory,
@@ -394,8 +395,8 @@ func splitNameParts(name string) []string {
 }
 
 func mergeGroupImages(entries []productEntry) []shoptet.Image {
-	result := make([]shoptet.Image, 0, maxProductImages)
-	seen := make(map[string]struct{}, maxProductImages)
+	var result []shoptet.Image
+	seen := make(map[string]struct{})
 	for _, entry := range entries {
 		for _, image := range entry.Item.Images {
 			url := strings.TrimSpace(image.URL)
@@ -407,9 +408,6 @@ func mergeGroupImages(entries []productEntry) []shoptet.Image {
 			}
 			seen[url] = struct{}{}
 			result = append(result, shoptet.Image{URL: url})
-			if len(result) >= maxProductImages {
-				return result
-			}
 		}
 	}
 	return result
@@ -528,8 +526,18 @@ func transformDescription(descriptions []sourceDescription) string {
 	return fallback
 }
 
+func transformManufacturer(source sourceProduct) string {
+	if brand := strings.TrimSpace(source.Brand); brand != "" {
+		return brand
+	}
+	if manufacturer := strings.TrimSpace(source.Manufacturer); manufacturer != "" {
+		return manufacturer
+	}
+	return supplierName
+}
+
 func transformImages(images []sourceImage) []shoptet.Image {
-	result := make([]shoptet.Image, 0, min(len(images), maxProductImages))
+	result := make([]shoptet.Image, 0, len(images))
 	seen := make(map[string]struct{}, len(images))
 	for _, image := range images {
 		url := strings.TrimSpace(image.LargeURL)
@@ -544,9 +552,6 @@ func transformImages(images []sourceImage) []shoptet.Image {
 		}
 		seen[url] = struct{}{}
 		result = append(result, shoptet.Image{URL: url})
-		if len(result) >= maxProductImages {
-			return result
-		}
 	}
 	return result
 }
@@ -722,6 +727,8 @@ func normalizeNumber(value string) string {
 type sourceProduct struct {
 	Code          string               `xml:"ProductCode"`
 	Name          string               `xml:"ProductName"`
+	Brand         string               `xml:"Brand"`
+	Manufacturer  string               `xml:"Manufacturer"`
 	Color         string               `xml:"Color"`
 	Category      sourceCategory       `xml:"ProductCategory"`
 	EAN           string               `xml:"Ean"`

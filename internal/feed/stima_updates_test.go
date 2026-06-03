@@ -83,7 +83,7 @@ func TestStimaStockPriceGenerateUsesFixtureBackedDownloader(t *testing.T) {
 	}
 
 	parsed := parseGeneratedUpdate(t, output.Bytes())
-	if len(parsed.Items) != 1 || parsed.Items[0].Code != "ART-SIMPLE" || parsed.Items[0].PriceVAT != "12900.00" {
+	if len(parsed.Items) != 1 || parsed.Items[0].Code != "ART-SIMPLE" || parsed.Items[0].PriceVAT != "12900" {
 		t.Fatalf("unexpected generated item: %#v", parsed.Items)
 	}
 	if len(parsed.Items[0].Stock.Warehouses) != 1 || parsed.Items[0].Stock.Warehouses[0].Value != "3.000" {

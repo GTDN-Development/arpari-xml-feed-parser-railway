@@ -42,7 +42,7 @@ func TestHelloGenerateReturnsWellFormedXML(t *testing.T) {
 	if parsed.Item.Name != "Hello world product" {
 		t.Fatalf("expected hello item name, got %q", parsed.Item.Name)
 	}
-	if parsed.Item.PriceVAT != "123.45" {
+	if parsed.Item.PriceVAT != "123" {
 		t.Fatalf("expected hello item price, got %q", parsed.Item.PriceVAT)
 	}
 	if parsed.Item.Stock.Amount != "7" {
