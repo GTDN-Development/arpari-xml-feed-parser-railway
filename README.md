@@ -141,7 +141,7 @@ Endpointy `/feeds/stima-stock.xml` a `/feeds/stima-stock-price.xml` vrací aktua
 
 Endpoint `/feeds/autronic-products.xml` vrací katalogový MVP Autronicu filtrovaný na nábytkové kategorie s prefixem `NA-`. Obsahuje kód, název, EAN, cenu s DPH, sklad, sklad po skladech, popis, všechny unikátní obrázky a základní mapování do cílových Shoptet kategorií. Endpoint `/feeds/autronic-products-test.xml` vrací prvních 5 výstupních produktů pro rychlý ruční import.
 
-Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Zboží.cz styl feedu. Obsahuje kód, název, EAN, cenu s DPH, dostupnost, popis, obrázky a základní mapování do kancelářských židlí. Endpoint `/feeds/sego-test.xml` vrací prvních 5 produktů.
+Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Heureka feedu. Obsahuje kód, název, EAN, cenu s DPH, dostupnost, popis, obrázky a základní mapování do kancelářských židlí. Endpoint `/feeds/sego-test.xml` vrací prvních 5 produktů. Produkční endpoint zůstává stejný i po přepnutí zdrojového SEGO feedu, aby nebylo nutné měnit automatický import v Shoptetu.
 
 Endpoint `/feeds/hon.xml` vrací katalogový MVP z HON feedu. Obsahuje kód, název, cenu s DPH, sklad, dostupnost, popis, obrázky a základní mapování do kancelářských židlí / bytových doplňků. Položky se stejným `PRODUCT` a bezpečně rozpoznanou hodnotou z `DESCRIPTION` se skládají do variant s parametrem `Provedení`; nejasné skupiny zůstávají jako samostatné produkty. Endpoint `/feeds/hon-test.xml` vrací prvních 5 výstupních produktů.
 
@@ -303,7 +303,7 @@ První fáze:
 - STIMA sklad + ceny: `https://www.stima.cz/userfiles/xml/ITTC_SHT_stock_price.xml`,
 - Autronic dostupnost: `https://autronic.cz/feeds/availability-feed.xml`,
 - případně Autronic katalog: `https://autronic.cz/feeds/product-feed.xml`,
-- SEGO: `https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_123456.xml`,
+- SEGO: `https://segocz.cz/src/Frontend/Files/Feeds/Catalog/heureka_feed.xml`,
 - HON: `https://www.webshop.officepro-brno.cz/import/HONClientFeed/HONClientFeed.xml`.
 
 U Autronicu platí pevné zadání: brát pouze kategorii nábytek. Všechny ostatní kategorie musí parser přeskočit.

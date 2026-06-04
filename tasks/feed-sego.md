@@ -7,18 +7,24 @@
 - Output endpoint: `/feeds/sego.xml`
 - Test generator name: `sego-test`
 - Test output endpoint: `/feeds/sego-test.xml`
-- Source URL: `https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_123456.xml`
+- Source URL: `https://segocz.cz/src/Frontend/Files/Feeds/Catalog/heureka_feed.xml`
 - Priority: první fáze
 - Status: MVP implementováno, čeká na ruční importní ladění
-- Last updated: 2026-05-28
+- Last updated: 2026-06-04
 
 ## Cíl
 
 Generovat Shoptet XML feed ze SEGO katalogového feedu.
 
+## Rozhodnutí
+
+- 2026-06-04: Produkční endpoint `/feeds/sego.xml` zůstává beze změny, aby se nemusel měnit automatický import v Shoptetu.
+- 2026-06-04: Zdroj SEGO se mění ze `zbozi_123456.xml` na `heureka_feed.xml`, protože obsahuje stejná základní katalogová data a navíc `VIDEO_URL` u části položek.
+- 2026-06-04: Video zatím nepřenášíme do výstupního Shoptet XML. Podpora videa je navazující krok, protože Shoptet video elementy patří do complete XML schématu (`RELATED_VIDEOS` / `RELATED_VIDEO` / `YOUTUBE_VIDEO_CODE`) a musí se samostatně ověřit proti konkrétnímu typu automatického importu.
+
 ## Aktuální pravidla
 
-- Zdroj je ve stylu Zboží.cz.
+- Zdroj je Heureka feed ve struktuře blízké původnímu Zboží.cz feedu.
 - Transformace do Shoptet XML struktury je implementovaná jako katalogový MVP.
 - Reálný zdroj má 144 položek.
 - Testovací endpoint `sego-test` používá stejná pravidla, ale končí po prvních 5 produktech.

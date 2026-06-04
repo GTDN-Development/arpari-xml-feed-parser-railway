@@ -16,7 +16,7 @@ import (
 	"github.com/fanda/arpari-xml-feed-parser-railway/internal/shoptet"
 )
 
-const ProductsURL = "https://segocz.cz/src/Frontend/Files/Feeds/Catalog/zbozi_123456.xml"
+const ProductsURL = "https://segocz.cz/src/Frontend/Files/Feeds/Catalog/heureka_feed.xml"
 
 const (
 	maxImagesPerProduct  = 20
