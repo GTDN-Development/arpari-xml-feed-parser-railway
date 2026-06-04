@@ -30,7 +30,7 @@ Implementováno:
 - konfigurovatelný data adresář přes `DATA_DIR` nebo Railway Volume,
 - základní test handleru,
 - `Dockerfile` pro Railway deployment,
-- `railway.json` s Dockerfile builderem.
+- service-specific Railway konfigurace `railway.web.json` a `railway.cron.json`.
 
 Další dodavatelské feedy budou doplněné v dalších krocích.
 
@@ -182,10 +182,11 @@ v případě, že `go test ./...` a lokální rebuild prošly.
 
 Repo je připravené na deploy přes Railway z Git repozitáře.
 
-Railway použije:
+Railway služby používají stejný `Dockerfile`, ale každá má vlastní config-as-code soubor:
 
-- root-level `railway.json`,
-- `Dockerfile`,
+- web služba `arpari-xml-feed-parser-railway`: `/railway.web.json`,
+- cron služba `feed-cron`: `/railway.cron.json`,
+- root-level `railway.json` je jen build-only fallback bez deploy start commandu,
 - environment variable `PORT`, kterou Railway nastavuje automaticky.
 - Railway Volume mount path z environment variable `RAILWAY_VOLUME_MOUNT_PATH`, pokud je ke službě připojený Volume.
 - environment variable `REBUILD_TOKEN` pro chráněné rebuild endpointy.
@@ -229,21 +230,24 @@ Nejjednodušší provozní setup:
 
 1. Na hlavní web službě nastav `REBUILD_TOKEN` na dlouhý náhodný token.
 2. Hlavní web služba musí mít připojený Volume na `/data`.
-3. V Railway vytvoř druhou službu ze stejného repozitáře, například `feed-cron`.
-4. U `feed-cron` nastav Start Command na:
+3. Web službě nastav v Railway Settings pole Railway Config File na `/railway.web.json`.
+4. V Railway vytvoř druhou službu ze stejného repozitáře, například `feed-cron`.
+5. U `feed-cron` nastav v Railway Settings pole Railway Config File na `/railway.cron.json`.
+
+Soubor `/railway.cron.json` nastavuje Start Command na:
 
 ```text
 /app/rebuild-trigger
 ```
 
-5. U `feed-cron` nastav variables:
+6. U `feed-cron` nastav variables:
 
 ```text
 REBUILD_URL=https://arpari-xml-feed-parser-railway-production.up.railway.app/internal/rebuild/all
 REBUILD_TOKEN=<stejný-token-jako-na-web-službě>
 ```
 
-6. V Settings služby `feed-cron` nastav Cron Schedule:
+Soubor `/railway.cron.json` nastavuje Cron Schedule:
 
 ```text
 0 2 * * *

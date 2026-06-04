@@ -43,6 +43,15 @@ Cron service Start Command:
 /app/rebuild-trigger
 ```
 
+Railway config-as-code soubory:
+
+```text
+web service: /railway.web.json
+cron service: /railway.cron.json
+```
+
+Root `railway.json` nesmí obsahovat sdílený `deploy.startCommand`, protože by se stejný příkaz aplikoval na web i cron službu.
+
 ## Doporučená frekvence
 
 Pro katalogové feedy stačí aktualizace každé 2-3 dny.
@@ -95,8 +104,9 @@ ceny: 1x denně nebo každé 2-3 dny podle dodavatele
 3. Hotovo: přidat interní endpoint `POST /internal/rebuild/all`.
 4. Hotovo: sdílet rebuild logiku mezi `cmd/rebuild` a HTTP endpointem.
 5. Hotovo: zajistit, že jeden feed fail neukončí celý `rebuild/all`.
-6. Zbývá v Railway UI: vytvořit cron službu, která každé 3 dny zavolá `POST /internal/rebuild/all`.
-7. Zbývá po deployi: ověřit `/status` a veřejné `/feeds/*.xml`.
+6. Hotovo: vytvořit cron službu, která zavolá `POST /internal/rebuild/all`.
+7. Hotovo: oddělit Railway config pro web a cron službu.
+8. Zbývá průběžně po deployi: ověřit `/status` a veřejné `/feeds/*.xml`.
 
 ## Aktuální stav feedů
 
@@ -114,5 +124,3 @@ ceny: 1x denně nebo každé 2-3 dny podle dodavatele
 ## Poznámka
 
 Cílový stav: katalogové a aktualizační feedy se nemají spouštět při startu serveru. Server má jen servírovat poslední publikovaný výstup. Automatické aktualizace má řešit cron.
-
-Dočasný stav pro první ruční testy: `railway.json` rebuildí první vlnu při startu služby, aby byly nové feed URL po deployi rovnou k dispozici. Rebuild chyby v tomto dočasném start commandu nesmí zastavit spuštění serveru.

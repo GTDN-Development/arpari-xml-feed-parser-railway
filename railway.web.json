@@ -3,5 +3,10 @@
   "build": {
     "builder": "DOCKERFILE",
     "buildCommand": null
+  },
+  "deploy": {
+    "startCommand": "/app/server",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
   }
 }

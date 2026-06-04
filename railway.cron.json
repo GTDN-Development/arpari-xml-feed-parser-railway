@@ -3,5 +3,10 @@
   "build": {
     "builder": "DOCKERFILE",
     "buildCommand": null
+  },
+  "deploy": {
+    "startCommand": "/app/rebuild-trigger",
+    "restartPolicyType": "NEVER",
+    "cronSchedule": "0 2 * * *"
   }
 }
