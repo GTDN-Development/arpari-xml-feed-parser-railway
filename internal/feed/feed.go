@@ -36,6 +36,7 @@ func All() []Generator {
 		StimaStockPrice{},
 		AutronicProducts{},
 		AutronicProductsTest{},
+		AutronicAvailability{},
 		Sego{},
 		SegoTest{},
 		Hon{},
@@ -49,6 +50,7 @@ func Scheduled() []Generator {
 		StimaStock{},
 		StimaStockPrice{},
 		AutronicProducts{},
+		AutronicAvailability{},
 		Sego{},
 		Hon{},
 	}

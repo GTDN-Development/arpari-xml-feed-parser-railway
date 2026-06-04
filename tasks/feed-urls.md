@@ -24,6 +24,13 @@ Base URL: `https://arpari-xml-feed-parser-railway-production.up.railway.app`
   - Opakované produkty bezpečně skládá do variant podle `PRODUCT` a hodnoty z `DESCRIPTION`.
   - Mapuje cenu, sklad, dostupnost, obrázky, parametry a cílové kategorie.
 
+## Autronic aktualizační feedy
+
+- Autronic sklad: [autronic-availability.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/autronic-availability.xml)
+  - Aktualizační skladový feed z Autronic availability feedu.
+  - Katalogový product feed používá jen pro filtr a variantní tvar.
+  - Nepřepisuje názvy, popisy, obrázky, ceny ani kategorie.
+
 ## STIMA aktualizační feedy
 
 - STIMA sklad: [stima-stock.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/stima-stock.xml)

@@ -115,11 +115,11 @@ ceny: 1x denně nebo každé 2-3 dny podle dodavatele
 - `stima-stock-price`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
 - `autronic-products`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
 - `autronic-products-test`: testovací feed s 5 produkty implementován.
+- `autronic-availability`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
 - `sego`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
 - `sego-test`: testovací feed s 5 produkty implementován.
 - `hon`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
 - `hon-test`: testovací feed s 5 produkty implementován.
-- `autronic-availability`: zatím draft task bez implementace.
 
 ## Poznámka
 

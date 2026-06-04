@@ -113,9 +113,10 @@ type generatedUpdateItem struct {
 }
 
 type generatedUpdateVariant struct {
-	Code     string               `xml:"CODE"`
-	PriceVAT string               `xml:"PRICE_VAT"`
-	Stock    generatedUpdateStock `xml:"STOCK"`
+	Code       string                     `xml:"CODE"`
+	PriceVAT   string                     `xml:"PRICE_VAT"`
+	Stock      generatedUpdateStock       `xml:"STOCK"`
+	Parameters []generatedUpdateParameter `xml:"PARAMETERS>PARAMETER"`
 }
 
 type generatedUpdateStock struct {
@@ -124,6 +125,11 @@ type generatedUpdateStock struct {
 }
 
 type generatedUpdateWarehouse struct {
+	Name  string `xml:"NAME"`
+	Value string `xml:"VALUE"`
+}
+
+type generatedUpdateParameter struct {
 	Name  string `xml:"NAME"`
 	Value string `xml:"VALUE"`
 }
