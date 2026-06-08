@@ -37,6 +37,14 @@ REBUILD_URL=https://arpari-xml-feed-parser-railway-production.up.railway.app/int
 REBUILD_TOKEN=<stejný-token-jako-na-web-službě>
 ```
 
+Volitelné retry variables:
+
+```text
+REBUILD_MAX_ATTEMPTS=5
+REBUILD_RETRY_DELAY=30s
+REBUILD_TIMEOUT=30m
+```
+
 Cron service Start Command:
 
 ```text

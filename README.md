@@ -136,7 +136,7 @@ Endpoint `/feeds/hello.xml` vrací jednoduchý XML feed s jednou dummy položkou
 </SHOP>
 ```
 
-Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsahuje základní produktová/variantní pole, krátký i dlouhý popis, sklad, cílové Shoptet kategorie, obrázky a povolené variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`. Produkty s více než 512 variantami se při transformaci ořežou na prvních 512 variant v pořadí ze zdrojového feedu. Položky bez bezpečně určené cílové kategorie se přeskočí.
+Endpoint `/feeds/stima-products.xml` vrací technické MVP STIMA katalogu. Obsahuje základní produktová/variantní pole, krátký i dlouhý popis, sklad, cílové Shoptet kategorie, obrázky a povolené variantní parametry `KOSTRA`, `Sedák`, `Délka stolu`, `Rozklad`, `Specifikace`. Produkty s více než 512 variantami se při transformaci ořežou na prvních 512 variant v pořadí ze zdrojového feedu. Položky bez bezpečně určené cílové kategorie se přeskočí.
 
 Endpoint `/feeds/stima-products-test.xml` vrací stejnou katalogovou transformaci jako `stima-products`, ale jen prvních 5 výstupních produktů. Slouží pro rychlé ruční testy v Shoptetu.
 
@@ -250,6 +250,14 @@ Soubor `/railway.cron.json` nastavuje Start Command na:
 ```text
 REBUILD_URL=https://arpari-xml-feed-parser-railway-production.up.railway.app/internal/rebuild/all
 REBUILD_TOKEN=<stejný-token-jako-na-web-službě>
+```
+
+Volitelné retry nastavení pro dočasné síťové chyby:
+
+```text
+REBUILD_MAX_ATTEMPTS=5
+REBUILD_RETRY_DELAY=30s
+REBUILD_TIMEOUT=30m
 ```
 
 Soubor `/railway.cron.json` nastavuje Cron Schedule:

@@ -32,6 +32,7 @@ func TestParseStockSimpleAndVariantItems(t *testing.T) {
         <PARAMETERS>
           <PARAMETER><NAME>KOSTRA</NAME><VALUE>olše</VALUE></PARAMETER>
           <PARAMETER><NAME>Sedák</NAME><VALUE>raven 15 šedá</VALUE></PARAMETER>
+          <PARAMETER><NAME>Specifikace</NAME><VALUE>výška 70</VALUE></PARAMETER>
         </PARAMETERS>
       </VARIANT>
     </VARIANTS>
@@ -65,8 +66,11 @@ func TestParseStockSimpleAndVariantItems(t *testing.T) {
 	if variant.Code != "ART13627-k002-l244" || variant.PriceVAT != "" || len(variant.Warehouses) != 1 || variant.Warehouses[0].Value != "4.00" {
 		t.Fatalf("unexpected stock variant: %#v", variant)
 	}
-	if len(variant.Parameters) != 2 {
+	if len(variant.Parameters) != 3 {
 		t.Fatalf("expected parameters on stock variant, got %#v", variant.Parameters)
+	}
+	if variant.Parameters[2] != (shoptet.Parameter{Name: "Specifikace", Value: "výška 70"}) {
+		t.Fatalf("expected specification parameter on stock variant, got %#v", variant.Parameters)
 	}
 }
 

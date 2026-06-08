@@ -26,6 +26,7 @@ Generovat Shoptet produktový XML feed ze STIMA katalogu produktů.
   - `Sedák`
   - `Délka stolu`
   - `Rozklad`
+  - `Specifikace`
 - Produkty nad 512 variant se oříznou na prvních 512 variant v pořadí ze STIMA feedu.
 - Každý produkt se označuje `SUPPLIER=STIMA`; hodnota je určená pro interní filtrování dodavatele v Shoptet administraci.
 - Pokud STIMA parent produkt nemá `CODE`, odvodí se z první varianty, například `ART13627-k002-l244` -> `ART13627`.

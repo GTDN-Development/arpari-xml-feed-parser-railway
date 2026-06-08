@@ -123,6 +123,7 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
         <PARAMETERS>
           <PARAMETER><NAME>KOSTRA</NAME><VALUE>olše</VALUE></PARAMETER>
           <PARAMETER><NAME>Sedák</NAME><VALUE>raven 15 šedá</VALUE></PARAMETER>
+          <PARAMETER><NAME>Specifikace</NAME><VALUE>výška 70</VALUE></PARAMETER>
           <PARAMETER><NAME>Barva</NAME><VALUE>ignored</VALUE></PARAMETER>
         </PARAMETERS>
       </VARIANT>
@@ -168,7 +169,7 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	if variant.Code != "ART13627-k002-l244" || variant.EAN != "8590000000002" || variant.PriceVAT != "2850.00" || variant.Stock != "4" {
 		t.Fatalf("unexpected variant: %#v", variant)
 	}
-	if len(variant.Parameters) != 2 {
+	if len(variant.Parameters) != 3 {
 		t.Fatalf("expected only allowed parameters, got %#v", variant.Parameters)
 	}
 	if variant.Parameters[0] != (shoptet.Parameter{Name: "KOSTRA", Value: "olše"}) {
@@ -176,6 +177,9 @@ func TestParseProductsVariantProductDerivesParentCodeAndMapsParameters(t *testin
 	}
 	if variant.Parameters[1] != (shoptet.Parameter{Name: "Sedák", Value: "raven 15 šedá"}) {
 		t.Fatalf("unexpected second parameter: %#v", variant.Parameters[1])
+	}
+	if variant.Parameters[2] != (shoptet.Parameter{Name: "Specifikace", Value: "výška 70"}) {
+		t.Fatalf("unexpected third parameter: %#v", variant.Parameters[2])
 	}
 }
 
@@ -241,7 +245,7 @@ func TestParseProductsKeepsAvailableProductWithoutImage(t *testing.T) {
 	}
 }
 
-func TestParseProductsKeepsVariantProductWithoutImageWhenAnyVariantAvailable(t *testing.T) {
+func TestParseProductsSkipsUnavailableVariantsWithoutImageWhenAnyVariantAvailable(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>
     <NAME>Židle Variant Product</NAME>
@@ -259,10 +263,13 @@ func TestParseProductsKeepsVariantProductWithoutImageWhenAnyVariantAvailable(t *
 	if err != nil {
 		t.Fatalf("parse products: %v", err)
 	}
-	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 2 {
-		t.Fatalf("expected variant product with available variant, got %#v", feed.Items)
+	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 1 {
+		t.Fatalf("expected variant product with only available variant, got %#v", feed.Items)
 	}
-	if stats.ProductsSkipped != 0 || stats.ProductsEmitted != 1 {
+	if feed.Items[0].Variants[0].Code != "ART-VARIANT-002" {
+		t.Fatalf("expected zero-stock no-image variant to be skipped, got %#v", feed.Items[0].Variants)
+	}
+	if stats.ProductsSkipped != 0 || stats.ProductsEmitted != 1 || stats.VariantsSkipped != 1 || stats.VariantsEmitted != 1 {
 		t.Fatalf("unexpected stats: %#v", stats)
 	}
 }

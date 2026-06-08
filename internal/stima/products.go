@@ -183,6 +183,11 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 			slog.Warn("skipping STIMA variant without CODE", "name", name, "variantIndex", variantIndex)
 			continue
 		}
+		if shouldSkipUnavailableVariantWithoutImages(source, sourceVariant) {
+			stats.VariantsSkipped++
+			slog.Debug("skipping STIMA unavailable variant without image", "name", name, "code", code)
+			continue
+		}
 		if firstValidVariantCode == "" {
 			firstValidVariantCode = code
 		}
@@ -361,6 +366,14 @@ func shouldSkipUnavailableWithoutImages(source sourceShopItem) bool {
 	return known && !positive
 }
 
+func shouldSkipUnavailableVariantWithoutImages(source sourceShopItem, variant sourceVariant) bool {
+	if hasUsableImage(source.Images) {
+		return false
+	}
+	known, positive := stockAvailability(variant.Stock)
+	return known && !positive
+}
+
 func hasUsableImage(images []string) bool {
 	for _, image := range images {
 		if strings.TrimSpace(image) != "" {
@@ -426,7 +439,7 @@ func parseQuantity(value string) (float64, bool) {
 
 func isAllowedVariantParameter(name string) bool {
 	switch name {
-	case "KOSTRA", "Sedák", "Délka stolu", "Rozklad":
+	case "KOSTRA", "Sedák", "Délka stolu", "Rozklad", "Specifikace":
 		return true
 	default:
 		return false
