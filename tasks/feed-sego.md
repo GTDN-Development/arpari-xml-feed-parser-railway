@@ -21,6 +21,8 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - 2026-06-04: Produkční endpoint `/feeds/sego.xml` zůstává beze změny, aby se nemusel měnit automatický import v Shoptetu.
 - 2026-06-04: Zdroj SEGO se mění ze `zbozi_123456.xml` na `heureka_feed.xml`, protože obsahuje stejná základní katalogová data a navíc `VIDEO_URL` u části položek.
 - 2026-06-04: Video zatím nepřenášíme do výstupního Shoptet XML. Podpora videa je navazující krok, protože Shoptet video elementy patří do complete XML schématu (`RELATED_VIDEOS` / `RELATED_VIDEO` / `YOUTUBE_VIDEO_CODE`) a musí se samostatně ověřit proti konkrétnímu typu automatického importu.
+- 2026-06-09: SEGO výstup používá jako Shoptet `CODE` primárně `EAN`, ne Heureka `ITEM_ID`. Starý zdroj `zbozi_123456.xml` měl `ITEM_ID == EAN`, zatímco nový `heureka_feed.xml` posílá `ITEM_ID` s prefixem. Párování podle nového `ITEM_ID` by v Shoptetu zakládalo duplicity.
+- 2026-06-09: Nový Heureka zdroj posílá u některých boolean parametrů interní labely `{$lblCoreYesLabel}` / `{$lblCoreNoLabel}`. Transformace je normalizuje na `Ano` / `Ne`, aby se šablonové tokeny nepropsaly na detail produktu.
 
 ## Aktuální pravidla
 
@@ -33,12 +35,14 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Kategorie se mapují na cílové Shoptet kategorie včetně podkategorií podle názvu, popisu a parametrů SEGO položky.
 - Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
 - SEGO flat varianty typu `Produkt | Hodnota` se slučují do Shoptet variant podle produktového URL slug a odpovídajícího zdrojového parametru.
+- Identifikace produktů a variant používá stabilní EAN, pokud je ve zdroji dostupný; `ITEM_ID` je pouze fallback pro položky bez EAN.
 - SEGO `Catalog/VariantImages/.../previewImg...` URL se do výstupu neposílají; zvenku vrací 404 a Shoptet je při importu nestáhne. Pro `IMAGES` a variantní `IMAGE_REF` se používají funkční `Catalog/.../source/...` URL.
 - Variantní produkty používají tvar porovnaný s exportem ručně nastaveného Shoptet produktu: parent nemá `CODE` ani `EXTERNAL_ID`, varianty nesou vlastní `CODE`, `CURRENCY`, `VAT`, `PRICE_VAT`, `AVAILABILITY`, `IMAGE_REF` a `PARAMETERS`.
 - SEGO obrázky jsou omezené na prvních 20 funkčních URL na produkt, aby import neposílal desítky duplicitních nebo doplňkových fotek na jeden variantní parent.
 - Variantní parametr se obecně bere ze zdrojového `PARAM_NAME`; nepřejmenováváme hodnoty heuristicky, pokud to není pro SEGO nutné. Aktuální výjimka: rozměrové hodnoty typu `150x220mm`, které zdroj posílá jako `Barva`, se exportují jako `Rozměr`. Aby se na detailu zobrazily kulaté vzorníky jako v referenčním e-shopu, musí v administraci/šabloně variant existovat odpovídající parametr a všechny použité hodnoty musí mít nastavenou barvu nebo obrázek; XML feed nastavuje hodnotu varianty a `IMAGE_REF`, ne vizuál vzorníku hodnoty.
 - SEGO ceny se exportují jako celé Kč v `PRICE_VAT` s `VAT=21` a `CURRENCY=CZK`; desetinné ceny ze zdroje se zaokrouhlují.
 - Technické `PARAM` hodnoty ze zdroje se exportují včetně jednotek (`UNIT`) jako Shoptet `INFORMATION_PARAMETERS`, aby se zobrazily v tabulce doplňkových parametrů. Parametr použitý jako volba varianty se na parent produktu neduplikuje jako informační parametr.
+- Boolean labely `{$lblCoreYesLabel}` a `{$lblCoreNoLabel}` se ve výstupu převádějí na `Ano` a `Ne`.
 
 ## MVP rozsah
 
@@ -77,7 +81,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 
 ## Otevřené otázky
 
-- Potvrdit, jestli `ITEM_ID` je správný stabilní produktový kód pro párování v Shoptetu.
+- Potvrdit, jestli EAN je ve všech budoucích SEGO zdrojích dlouhodobě stabilní párovací kód pro Shoptet.
 - Potvrdit, zda SEGO produkty mají zůstat jako jednoduché produkty, nebo se mají později slučovat do variant.
 - Doladit cílové kategorie po ručním importním testu.
 - Má SEGO zakládat nové produkty, nebo jen aktualizovat existující?

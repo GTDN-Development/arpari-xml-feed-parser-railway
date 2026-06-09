@@ -124,7 +124,7 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 }
 
 func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
-	code := strings.TrimSpace(source.ItemID)
+	code := stableProductCode(source)
 	name := strings.TrimSpace(source.ProductName)
 	if code == "" || name == "" {
 		slog.Warn("skipping SEGO product without required identity", "code", code, "name", name)
@@ -155,6 +155,13 @@ func transformSimpleProduct(source sourceItem) (shoptet.Item, bool) {
 		Images:                transformImages(source),
 		InformationParameters: transformInformationParameters(source.Parameters),
 	}, true
+}
+
+func stableProductCode(source sourceItem) string {
+	if ean := strings.TrimSpace(source.EAN); ean != "" {
+		return ean
+	}
+	return strings.TrimSpace(source.ItemID)
 }
 
 func emitProducts(entries []productEntry, options ProductsOptions, stats *ProductsStats) shoptet.Feed {
@@ -487,7 +494,15 @@ func productSlug(rawURL string) string {
 func normalizeParameterValue(value string) string {
 	value = html.UnescapeString(strings.TrimSpace(value))
 	value = strings.ReplaceAll(value, "\u00a0", " ")
-	return strings.Join(strings.Fields(value), " ")
+	value = strings.Join(strings.Fields(value), " ")
+	switch value {
+	case "{$lblCoreYesLabel}":
+		return "Ano"
+	case "{$lblCoreNoLabel}":
+		return "Ne"
+	default:
+		return value
+	}
 }
 
 func transformManufacturer(source sourceItem) string {

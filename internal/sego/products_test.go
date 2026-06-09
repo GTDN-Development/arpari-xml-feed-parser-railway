@@ -8,11 +8,11 @@ import (
 	"github.com/fanda/arpari-xml-feed-parser-railway/internal/shoptet"
 )
 
-func TestParseProductsMapsZboziItems(t *testing.T) {
+func TestParseProductsUsesStableEANCodeForHeurekaItems(t *testing.T) {
 	input := `<?xml version="1.0" encoding="utf-8"?>
 <SHOP xmlns="http://www.zbozi.cz/ns/offer/1.0">
   <SHOPITEM>
-    <ITEM_ID>0745314610292</ITEM_ID>
+    <ITEM_ID>10745314610292</ITEM_ID>
     <PRODUCTNAME>AIR plus | Černá</PRODUCTNAME>
     <DESCRIPTION><![CDATA[Popis&nbsp;židle]]></DESCRIPTION>
     <BRAND>Pixel</BRAND>
@@ -67,7 +67,7 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
 	input := `<?xml version="1.0" encoding="utf-8"?>
 <SHOP xmlns="http://www.zbozi.cz/ns/offer/1.0">
   <SHOPITEM>
-    <ITEM_ID>0745314610063</ITEM_ID>
+    <ITEM_ID>70745314610063</ITEM_ID>
     <PRODUCTNAME>Junior | Červená</PRODUCTNAME>
     <DESCRIPTION><![CDATA[Pevná dětská židle]]></DESCRIPTION>
     <URL>https://segocz.cz/produkty/detail/junior?color=cervena</URL>
@@ -80,7 +80,7 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
     <PARAM><PARAM_NAME><![CDATA[Barva]]></PARAM_NAME><VAL><![CDATA[Červená]]></VAL></PARAM>
   </SHOPITEM>
   <SHOPITEM>
-    <ITEM_ID>0745314610056</ITEM_ID>
+    <ITEM_ID>70745314610056</ITEM_ID>
     <PRODUCTNAME>Junior | Zelená</PRODUCTNAME>
     <URL>https://segocz.cz/produkty/detail/junior?color=zelena</URL>
     <EAN>0745314610056</EAN>
@@ -91,7 +91,7 @@ func TestParseProductsGroupsFlatColorVariants(t *testing.T) {
     <PARAM><PARAM_NAME><![CDATA[Barva]]></PARAM_NAME><VAL><![CDATA[Zelená]]></VAL></PARAM>
   </SHOPITEM>
   <SHOPITEM>
-    <ITEM_ID>0745314610070</ITEM_ID>
+    <ITEM_ID>70745314610070</ITEM_ID>
     <PRODUCTNAME>Junior | Modrá</PRODUCTNAME>
     <URL>https://segocz.cz/produkty/detail/junior?color=modra</URL>
     <EAN>0745314610070</EAN>
@@ -181,6 +181,40 @@ func TestParseProductsKeepsVariantParameterMeaning(t *testing.T) {
 	measurement := feed.Items[0].Variants[0].Parameters[0]
 	if measurement != (shoptet.Parameter{Name: "Rozměr", Value: "150x220mm"}) {
 		t.Fatalf("expected dimension parameter, got %#v", measurement)
+	}
+}
+
+func TestParseProductsNormalizesCoreBooleanLabels(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <ITEM_ID>10745314610063</ITEM_ID>
+    <EAN>0745314610063</EAN>
+    <PRODUCTNAME>Junior | Červená</PRODUCTNAME>
+    <PARAM><PARAM_NAME>Bederní opěrka fixní</PARAM_NAME><VAL>{$lblCoreNoLabel}</VAL></PARAM>
+    <PARAM><PARAM_NAME>Hloubkové nastavení sedáku</PARAM_NAME><VAL>{$lblCoreYesLabel}</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse SEGO products: %v", err)
+	}
+	if stats.ProductsEmitted != 1 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+
+	parameters := feed.Items[0].InformationParameters
+	expected := []shoptet.Parameter{
+		{Name: "Bederní opěrka fixní", Value: "Ne"},
+		{Name: "Hloubkové nastavení sedáku", Value: "Ano"},
+	}
+	if len(parameters) != len(expected) {
+		t.Fatalf("expected parameters %#v, got %#v", expected, parameters)
+	}
+	for index := range expected {
+		if parameters[index] != expected[index] {
+			t.Fatalf("parameter %d expected %#v, got %#v", index, expected[index], parameters[index])
+		}
 	}
 }
 
