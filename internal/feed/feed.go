@@ -53,6 +53,8 @@ func Scheduled() []Generator {
 		StimaStockPrice{},
 		AutronicProducts{},
 		AutronicAvailability{},
+		Drevocal{},
+		DrevocalTest{},
 		Sego{},
 		Hon{},
 	}
