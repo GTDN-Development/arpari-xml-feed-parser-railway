@@ -359,8 +359,9 @@ Rozsah:
 
 - Sakypaky,
 - Dřevočal,
-- ověřit varianty matrací a konfigurace,
-- vyhodnotit, jestli je potřeba rozšířit model příplatkových parametrů.
+- Dřevočal testovací feed `drevocal-test`,
+- Dřevočal varianty matrací skládat podle `ITEMGROUP_ID`,
+- Dřevočal variantní parametry: `Rozměr`, `Výška`, `Potah`.
 
 Akceptační kritéria:
 

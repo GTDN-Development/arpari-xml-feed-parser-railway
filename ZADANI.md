@@ -80,7 +80,7 @@ První fáze se bude věnovat těmto zdrojům:
 Do druhé fáze se odkládají:
 
 - Sakypaky s.r.o.: `https://www.sakypaky.cz/export/b2b_partners_cs.xml`,
-- Dřevočal s.r.o.: `https://www.matrace-drevocal.cz/feed/`.
+- Dřevočal s.r.o.: `https://www.matrace-drevocal.cz/feed-b2b.xml`.
 
 ### STIMA katalog
 
@@ -165,10 +165,14 @@ Feed podobný Heureka/Zboží stylu. Nutná transformace. Tento feed je odložen
 ### Dřevočal
 
 ```text
-https://www.matrace-drevocal.cz/feed/
+https://www.matrace-drevocal.cz/feed-b2b.xml
 ```
 
-Jednodušší XML feed. Nutné ověřit varianty matrací, hlavně výšky a dostupné konfigurace. Tento feed je odložený do druhé fáze a není součástí prvního MVP.
+B2B XML feed podle dokumentace `reference/drevocal/drevocal-b2b-feed-dokumentace-2026-05.pdf`.
+Jedna položka ve zdroji odpovídá jedné variantě matrace. Varianty jedné matrace se
+sdružují přes `ITEMGROUP_ID`, kód varianty je `ITEM_ID` a variantní parametry jsou
+`Rozměr`, `Výška` a `Potah`. Feed neobsahuje sklad ani dostupnost. Tento feed je
+odložený do druhé fáze a není součástí prvního MVP.
 
 ## Shoptet výstupy
 
@@ -188,6 +192,7 @@ Do druhé fáze se odkládají:
 ```text
 /feeds/sakypaky.xml
 /feeds/drevocal.xml
+/feeds/drevocal-test.xml
 ```
 
 Nástroj by měl mít i stavový výstup, kde bude vidět:

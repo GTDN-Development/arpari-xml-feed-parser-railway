@@ -325,7 +325,12 @@ U Autronicu platí pevné zadání: brát pouze kategorii nábytek. Všechny ost
 Druhá fáze:
 
 - Sakypaky: `https://www.sakypaky.cz/export/b2b_partners_cs.xml`,
-- Dřevočal: `https://www.matrace-drevocal.cz/feed/`.
+- Dřevočal: `https://www.matrace-drevocal.cz/feed-b2b.xml`.
+
+Poznámka k Dřevočalu: B2B feed je popsaný v
+`reference/drevocal/drevocal-b2b-feed-dokumentace-2026-05.pdf`. Jedna zdrojová
+položka je jedna varianta matrace; varianty se skládají podle `ITEMGROUP_ID` a
+variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
 
 Poznámka k Autronic dostupnostnímu feedu: `HEAD` request vrací 404, ale běžný `GET` vrací XML. Parser proto musí používat `GET`.
 

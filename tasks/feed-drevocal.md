@@ -5,45 +5,76 @@
 - Supplier: Dřevočal
 - Generator name: `drevocal`
 - Output endpoint: `/feeds/drevocal.xml`
-- Source URL: `https://www.matrace-drevocal.cz/feed/`
+- Test generator name: `drevocal-test`
+- Test output endpoint: `/feeds/drevocal-test.xml`
+- Source URL: `https://www.matrace-drevocal.cz/feed-b2b.xml`
+- Reference documentation: `reference/drevocal/drevocal-b2b-feed-dokumentace-2026-05.pdf`
 - Priority: druhá fáze
-- Status: draft, odloženo mimo první MVP
-- Last updated: 2026-05-28
+- Status: připraveno k implementaci podle B2B feed dokumentace
+- Last updated: 2026-06-11
 
 ## Cíl
 
-Generovat Shoptet XML feed z Dřevočal katalogového feedu.
+Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 
 ## Aktuální pravidla
 
 - Feed je odložený do druhé fáze.
-- Zdroj je podle zadání jednodušší XML feed.
-- Je nutné ověřit varianty matrací, hlavně výšky a dostupné konfigurace.
-- Kategorie bude potřeba řešit přes společné mapování.
+- Nový zdroj je B2B variantní feed ve stylu Heureka XML.
+- Jedna zdrojová položka `SHOPITEM` odpovídá jedné variantě matrace.
+- Varianty jednoho produktu se sdružují přes `ITEMGROUP_ID`.
+- Stabilní kód varianty je `ITEM_ID`.
+- Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
+- Feed obsahuje cenu s DPH, měnu, EAN, popis, URL a hlavní obrázek.
+- Feed neobsahuje sklad ani dostupnost.
+- Feed aktuálně neobsahuje kategorii; cílová Shoptet kategorie bude nastavena pravidlem pro matrace.
+- Testovací endpoint `drevocal-test` má používat stejná pravidla, ale pouze prvních 5 výstupních produktů.
+- Původní veřejný feed `https://www.matrace-drevocal.cz/feed/` byl jednodušší katalog bez variantních skupin a pro Shoptet napojení se dál nepoužívá.
+
+## Ověření zdroje 2026-06-11
+
+- Aktuální B2B feed má 3 773 variant.
+- Varianty jsou rozdělené do 57 produktových skupin.
+- Největší skupina má 189 variant, tedy je pod Shoptet limitem 512 variant na produkt.
+- Všechny položky mají parametry `Rozměr`, `Výška` a `Potah`.
+- EAN chybí u 6 variant.
+- Dokumentace uvádí očekávaný rozsah cca 8 000-9 000 variant; před ostrým importem je vhodné ověřit u Dřevočalu, jestli je aktuální feed kompletní.
 
 ## MVP rozsah
 
 - Identifikace produktu:
-  - `CODE`
+  - parent produkt podle `ITEMGROUP_ID`
+  - varianta podle `ITEM_ID`
 - Bezpečná základní pole:
-  - `NAME`
-  - `EAN`, pokud je ve zdroji
-  - `PRICE_VAT`, pokud je ve zdroji
-  - `STOCK` nebo dostupnost, pokud je ve zdroji
-- Varianty matrací, pokud je zdroj obsahuje.
+  - parent `NAME` odvozený ze společného názvu modelu
+  - variant `CODE`
+  - variant `EAN`, pokud je ve zdroji
+  - variant `PRICE_VAT`
+  - `CURRENCY`
+  - `DESCRIPTION`
+  - `IMAGES`
+  - cílová Shoptet kategorie pro matrace
+- Variantní parametry:
+  - `Rozměr`
+  - `Výška`
+  - `Potah`
 
 ## Otevřené otázky
 
-- Jaká je přesná XML struktura Dřevočal feedu?
-- Které pole je stabilní produktový kód?
-- Jak jsou zapsané varianty matrací?
-- Jak řešit rozměry, výšky a další konfigurace?
-- Jak mapovat Dřevočal kategorie na Shoptet?
+- Jakou přesnou cílovou Shoptet kategorii použít pro Dřevočal matrace?
+- Má importer odmítat varianty bez EAN, nebo je importovat bez EAN?
+- Má parent produkt používat popis a obrázek z první varianty ve skupině?
+- Je aktuální B2B feed kompletní, když dokumentace uvádí vyšší očekávaný počet variant?
 
 ## Akceptační kritéria
 
 - `go run ./cmd/rebuild --supplier drevocal` vytvoří validní XML.
 - Výstup je dostupný na `/feeds/drevocal.xml`.
+- `go run ./cmd/rebuild --supplier drevocal-test` vytvoří testovací feed s 5 produkty.
+- Testovací výstup je dostupný na `/feeds/drevocal-test.xml`.
+- Varianty jsou seskupené podle `ITEMGROUP_ID`.
+- Každá varianta používá `ITEM_ID` jako Shoptet `CODE`.
+- Každá varianta má parametry `Rozměr`, `Výška` a `Potah`.
 - Varianty matrací nepřekročí Shoptet limit 512 variant na produkt.
 - Chyba downloadu nebo transformace nepřepíše poslední validní XML.
 - `/status` ukazuje výsledek posledního běhu.
@@ -51,8 +82,10 @@ Generovat Shoptet XML feed z Dřevočal katalogového feedu.
 ## Testy
 
 - Unit test běžné Dřevočal položky.
-- Unit test matracové varianty.
+- Unit test seskupení variant podle `ITEMGROUP_ID`.
+- Unit test variantních parametrů `Rozměr`, `Výška`, `Potah`.
 - Unit test limitu 512 variant.
 - Unit test chybějícího produktu kódu.
+- Unit test chybějícího EAN.
 - Rebuild test přes fixture-backed downloader.
 - Ruční kontrola přes Shoptet XML validátor.
