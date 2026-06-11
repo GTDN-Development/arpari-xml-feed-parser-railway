@@ -24,6 +24,12 @@ Base URL: `https://arpari-xml-feed-parser-railway-production.up.railway.app`
   - Opakované produkty bezpečně skládá do variant podle `PRODUCT` a hodnoty z `DESCRIPTION`.
   - Mapuje cenu, sklad, dostupnost, obrázky, parametry a cílové kategorie.
 
+- Dřevočal katalog: [drevocal.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/drevocal.xml)
+  - Katalogový feed z Dřevočal B2B XML.
+  - Skládá varianty matrací podle `ITEMGROUP_ID`.
+  - Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
+  - Mapuje produkty do kategorie `LOŽNICE > MATRACE`.
+
 ## Autronic aktualizační feedy
 
 - Autronic sklad: [autronic-availability.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/autronic-availability.xml)
@@ -51,6 +57,7 @@ Poznámka: pro STIMA automatický import použít buď `stima-stock`, nebo `stim
 - SEGO test: [sego-test.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/sego-test.xml)
 - Autronic test: [autronic-products-test.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/autronic-products-test.xml)
 - HON test: [hon-test.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/hon-test.xml)
+- Dřevočal test: [drevocal-test.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/drevocal-test.xml)
 
 Testovací feedy jsou jen pro rychlou kontrolu importu. Nepoužívat pro ostré plnění katalogu.
 

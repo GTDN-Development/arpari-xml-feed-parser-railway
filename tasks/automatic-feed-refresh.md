@@ -128,6 +128,11 @@ ceny: 1x denně nebo každé 2-3 dny podle dodavatele
 - `sego-test`: testovací feed s 5 produkty implementován.
 - `hon`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
 - `hon-test`: testovací feed s 5 produkty implementován.
+- `drevocal`: MVP implementováno; ruční Shoptet test import čeká na feedback.
+- `drevocal-test`: testovací feed s 5 produkty implementován.
+
+Poznámka: `drevocal` zatím není součástí `POST /internal/rebuild/all`, aby nový dodavatel
+neovlivňoval produkční cron před prvním Shoptet test importem.
 
 ## Poznámka
 

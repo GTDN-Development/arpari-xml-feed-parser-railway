@@ -37,6 +37,8 @@ func All() []Generator {
 		AutronicProducts{},
 		AutronicProductsTest{},
 		AutronicAvailability{},
+		Drevocal{},
+		DrevocalTest{},
 		Sego{},
 		SegoTest{},
 		Hon{},

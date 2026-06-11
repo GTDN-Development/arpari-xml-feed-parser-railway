@@ -10,7 +10,7 @@
 - Source URL: `https://www.matrace-drevocal.cz/feed-b2b.xml`
 - Reference documentation: `reference/drevocal/drevocal-b2b-feed-dokumentace-2026-05.pdf`
 - Priority: druhá fáze
-- Status: připraveno k implementaci podle B2B feed dokumentace
+- Status: MVP implementováno, čeká na ruční Shoptet importní feedback
 - Last updated: 2026-06-11
 
 ## Cíl
@@ -27,7 +27,7 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
 - Feed obsahuje cenu s DPH, měnu, EAN, popis, URL a hlavní obrázek.
 - Feed neobsahuje sklad ani dostupnost.
-- Feed aktuálně neobsahuje kategorii; cílová Shoptet kategorie bude nastavena pravidlem pro matrace.
+- Feed aktuálně neobsahuje kategorii; cílová Shoptet kategorie bude nastavena pravidlem na `LOŽNICE > MATRACE` (`ID=1188`).
 - Testovací endpoint `drevocal-test` má používat stejná pravidla, ale pouze prvních 5 výstupních produktů.
 - Původní veřejný feed `https://www.matrace-drevocal.cz/feed/` byl jednodušší katalog bez variantních skupin a pro Shoptet napojení se dál nepoužívá.
 
@@ -39,6 +39,17 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Všechny položky mají parametry `Rozměr`, `Výška` a `Potah`.
 - EAN chybí u 6 variant.
 - Dokumentace uvádí očekávaný rozsah cca 8 000-9 000 variant; před ostrým importem je vhodné ověřit u Dřevočalu, jestli je aktuální feed kompletní.
+
+## Implementace
+
+- Stav kódu: implementováno v `internal/drevocal/products.go` a `internal/feed/drevocal_products.go`.
+- Registry: supplier `drevocal` a `drevocal-test` jsou dostupné přes `cmd/rebuild`.
+- Lokální testy: `go test ./...` prochází.
+- Reálný rebuild ověřen 2026-06-11:
+  - `drevocal`: 3 773 variant přečteno, 57 Shoptet produktů emitováno, 3 773 variant emitováno.
+  - `drevocal`: největší variantní produkt má 189 variant.
+  - `drevocal-test`: 5 Shoptet produktů emitováno, 377 variant emitováno.
+  - Výstupní XML je well-formed a publikace proběhla přes storage publisher.
 
 ## MVP rozsah
 
@@ -53,7 +64,7 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
   - `CURRENCY`
   - `DESCRIPTION`
   - `IMAGES`
-  - cílová Shoptet kategorie pro matrace
+  - cílová Shoptet kategorie `LOŽNICE > MATRACE` (`ID=1188`)
 - Variantní parametry:
   - `Rozměr`
   - `Výška`
@@ -61,7 +72,6 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 
 ## Otevřené otázky
 
-- Jakou přesnou cílovou Shoptet kategorii použít pro Dřevočal matrace?
 - Má importer odmítat varianty bez EAN, nebo je importovat bez EAN?
 - Má parent produkt používat popis a obrázek z první varianty ve skupině?
 - Je aktuální B2B feed kompletní, když dokumentace uvádí vyšší očekávaný počet variant?
