@@ -39,6 +39,8 @@ func All() []Generator {
 		AutronicAvailability{},
 		Drevocal{},
 		DrevocalTest{},
+		Sakypaky{},
+		SakypakyTest{},
 		Sego{},
 		SegoTest{},
 		Hon{},
@@ -55,6 +57,8 @@ func Scheduled() []Generator {
 		AutronicAvailability{},
 		Drevocal{},
 		DrevocalTest{},
+		Sakypaky{},
+		SakypakyTest{},
 		Sego{},
 		Hon{},
 	}

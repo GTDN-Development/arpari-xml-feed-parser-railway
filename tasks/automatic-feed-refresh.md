@@ -131,6 +131,9 @@ ceny: 1x denně nebo každé 2-3 dny podle dodavatele
 - `drevocal`: MVP implementováno; ruční Shoptet test import čeká na feedback.
 - `drevocal-test`: testovací feed s 5 produkty implementován.
 - `drevocal` a `drevocal-test`: součást `POST /internal/rebuild/all`, aby veřejné URL byly dostupné pro Shoptet test import.
+- `sakypaky`: MVP implementováno a lokálně ověřeno proti reálnému zdroji.
+- `sakypaky-test`: testovací feed s 5 výstupními produkty implementován.
+- `sakypaky` a `sakypaky-test`: součást `POST /internal/rebuild/all`, aby veřejné URL byly dostupné pro Shoptet test import.
 
 ## Poznámka
 

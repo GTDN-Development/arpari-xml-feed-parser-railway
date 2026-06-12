@@ -24,6 +24,7 @@ Implementováno:
 - SEGO katalogový MVP feed `sego` a test feed `sego-test`,
 - HON katalogový MVP feed `hon` a test feed `hon-test`,
 - Dřevočal katalogový MVP feed `drevocal` a test feed `drevocal-test`,
+- Sakypaky katalogový MVP feed `sakypaky` a test feed `sakypaky-test`,
 - endpointy `GET /feeds/*.xml` po ručních rebuild bězích,
 - chráněné endpointy `POST /internal/rebuild/{supplier}` a `POST /internal/rebuild/all`,
 - cron trigger binárka `cmd/rebuild-trigger` pro Railway Scheduled Job,
@@ -79,6 +80,8 @@ DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier hon
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier hon-test
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier drevocal
 DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier drevocal-test
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier sakypaky
+DATA_DIR=/tmp/arpari-data go run ./cmd/rebuild --supplier sakypaky-test
 DATA_DIR=/tmp/arpari-data go run ./cmd/server
 ```
 
@@ -100,6 +103,8 @@ curl http://localhost:8080/feeds/hon.xml
 curl http://localhost:8080/feeds/hon-test.xml
 curl http://localhost:8080/feeds/drevocal.xml
 curl http://localhost:8080/feeds/drevocal-test.xml
+curl http://localhost:8080/feeds/sakypaky.xml
+curl http://localhost:8080/feeds/sakypaky-test.xml
 ```
 
 Ruční rebuild přes interní HTTP endpoint vyžaduje `REBUILD_TOKEN`:
@@ -156,6 +161,8 @@ Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Heureka feedu. Obsahuj
 Endpoint `/feeds/hon.xml` vrací katalogový MVP z HON feedu. Obsahuje kód, název, cenu s DPH, sklad, dostupnost, popis, obrázky a základní mapování do kancelářských židlí / bytových doplňků. Položky se stejným `PRODUCT` a bezpečně rozpoznanou hodnotou z `DESCRIPTION` se skládají do variant s parametrem `Provedení`; nejasné skupiny zůstávají jako samostatné produkty. Endpoint `/feeds/hon-test.xml` vrací prvních 5 výstupních produktů.
 
 Endpoint `/feeds/drevocal.xml` vrací katalogový MVP z Dřevočal B2B feedu. Jedna zdrojová položka je jedna varianta matrace; výstup skládá varianty podle `ITEMGROUP_ID`, používá `ITEM_ID` jako kód varianty a variantní parametry `Rozměr`, `Výška` a `Potah`. Produkty mapuje do kategorie `LOŽNICE > MATRACE`. Endpoint `/feeds/drevocal-test.xml` vrací prvních 5 výstupních produktů pro Shoptet test import.
+
+Endpoint `/feeds/sakypaky.xml` vrací katalogový MVP ze Sakypaky B2B feedu. Bere sedací vaky, sedací pytle, taburety, houpačky, stolky, sety, náplně a opravné sady; vynechává pelechy / psí produkty, etikety, jmenovky a položky bez bezpečně namapované kategorie. Varianty skládá podle `ITEMGROUP_ID`, používá dodavatelský `CODE` jako kód varianty a variantní parametr `Barva`. Endpoint `/feeds/sakypaky-test.xml` vrací prvních 5 variantních výstupních produktů pro Shoptet test import.
 
 Endpoint `/status` vrací stav posledních lokálních rebuild běhů:
 

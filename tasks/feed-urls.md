@@ -30,6 +30,12 @@ Base URL: `https://arpari-xml-feed-parser-railway-production.up.railway.app`
   - Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
   - Mapuje produkty do kategorie `LOŽNICE > MATRACE`.
 
+- Sakypaky katalog: [sakypaky.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/sakypaky.xml)
+  - Katalogový feed ze Sakypaky B2B XML.
+  - Bere sedací vaky, sedací pytle, taburety, houpačky, stolky, sety, náplně a opravné sady.
+  - Vynechává pelechy / psí produkty, etikety, jmenovky a položky bez bezpečně namapované kategorie.
+  - Skládá varianty podle `ITEMGROUP_ID` a používá variantní parametr `Barva`.
+
 ## Autronic aktualizační feedy
 
 - Autronic sklad: [autronic-availability.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/autronic-availability.xml)
@@ -58,6 +64,7 @@ Poznámka: pro STIMA automatický import použít buď `stima-stock`, nebo `stim
 - Autronic test: [autronic-products-test.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/autronic-products-test.xml)
 - HON test: [hon-test.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/hon-test.xml)
 - Dřevočal test: [drevocal-test.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/drevocal-test.xml)
+- Sakypaky test: [sakypaky-test.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/sakypaky-test.xml)
 
 Testovací feedy jsou jen pro rychlou kontrolu importu. Nepoužívat pro ostré plnění katalogu.
 
