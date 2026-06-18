@@ -29,6 +29,8 @@ Base URL: `https://arpari-xml-feed-parser-railway-production.up.railway.app`
   - Skládá varianty matrací podle `ITEMGROUP_ID`.
   - Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
   - Mapuje produkty do kategorie `LOŽNICE > MATRACE`.
+  - Přenáší dostupnost z `AVAILABILITY`.
+  - Volitelný `GIFT` posílá jako doplňkový parametr `Dárek`.
 
 - Sakypaky katalog: [sakypaky.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/sakypaky.xml)
   - Katalogový feed ze Sakypaky B2B XML.

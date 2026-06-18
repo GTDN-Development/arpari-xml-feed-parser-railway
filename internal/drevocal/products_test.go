@@ -23,6 +23,8 @@ func TestParseProductsGroupsVariantsAndMapsFields(t *testing.T) {
     <DESCRIPTION><![CDATA[Eliška je ideální volbou.]]></DESCRIPTION>
     <URL>https://www.matrace-drevocal.cz/eliska</URL>
     <IMGURL>https://www.matrace-drevocal.cz/eliska.jpg</IMGURL>
+    <AVAILABILITY>Skladem</AVAILABILITY>
+    <GIFT>polštář Lukáš</GIFT>
     <PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>195x80</VAL></PARAM>
     <PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>19 cm</VAL></PARAM>
     <PARAM><PARAM_NAME>Potah</PARAM_NAME><VAL>Úplet</VAL></PARAM>
@@ -38,6 +40,8 @@ func TestParseProductsGroupsVariantsAndMapsFields(t *testing.T) {
     <DESCRIPTION><![CDATA[Eliška je ideální volbou.]]></DESCRIPTION>
     <URL>https://www.matrace-drevocal.cz/eliska</URL>
     <IMGURL>https://www.matrace-drevocal.cz/eliska.jpg</IMGURL>
+    <AVAILABILITY>Momentálně nedostupné</AVAILABILITY>
+    <GIFT>polštář Lukáš</GIFT>
     <PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>200x90</VAL></PARAM>
     <PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>19 cm</VAL></PARAM>
     <PARAM><PARAM_NAME>Potah</PARAM_NAME><VAL>Aloe Vera</VAL></PARAM>
@@ -71,12 +75,15 @@ func TestParseProductsGroupsVariantsAndMapsFields(t *testing.T) {
 	if len(item.Images) != 1 || item.Images[0].URL != "https://www.matrace-drevocal.cz/eliska.jpg" {
 		t.Fatalf("unexpected images: %#v", item.Images)
 	}
+	if len(item.InformationParameters) != 1 || item.InformationParameters[0] != (shoptet.Parameter{Name: "Dárek", Value: "polštář Lukáš"}) {
+		t.Fatalf("unexpected information parameters: %#v", item.InformationParameters)
+	}
 	if len(item.Variants) != 2 {
 		t.Fatalf("expected 2 variants, got %#v", item.Variants)
 	}
 
 	first := item.Variants[0]
-	if first.Code != "5211112" || first.EAN != "8596723002176" || first.PriceVAT != "3588.00" || first.Currency != "CZK" || first.VAT != "21" {
+	if first.Code != "5211112" || first.EAN != "8596723002176" || first.PriceVAT != "3588.00" || first.Currency != "CZK" || first.VAT != "21" || first.Availability != "Skladem" {
 		t.Fatalf("unexpected first variant: %#v", first)
 	}
 	expectedParameters := []shoptet.Parameter{
@@ -88,6 +95,9 @@ func TestParseProductsGroupsVariantsAndMapsFields(t *testing.T) {
 		if first.Parameters[index] != expected {
 			t.Fatalf("unexpected first variant parameter %d: %#v", index, first.Parameters[index])
 		}
+	}
+	if item.Variants[1].Availability != "Momentálně nedostupné" {
+		t.Fatalf("unexpected second variant availability: %#v", item.Variants[1])
 	}
 }
 

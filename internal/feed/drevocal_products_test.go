@@ -60,6 +60,8 @@ func TestDrevocalGenerateUsesFixtureBackedDownloader(t *testing.T) {
     <EAN>8596723002176</EAN>
     <DESCRIPTION>Eliška je ideální volbou.</DESCRIPTION>
     <IMGURL>https://www.matrace-drevocal.cz/eliska.jpg</IMGURL>
+    <AVAILABILITY>Skladem</AVAILABILITY>
+    <GIFT>polštář Lukáš</GIFT>
     <PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>195x80</VAL></PARAM>
     <PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>19 cm</VAL></PARAM>
     <PARAM><PARAM_NAME>Potah</PARAM_NAME><VAL>Úplet</VAL></PARAM>
@@ -85,11 +87,14 @@ func TestDrevocalGenerateUsesFixtureBackedDownloader(t *testing.T) {
 		t.Fatalf("unexpected generated items: %#v", parsed.Items)
 	}
 	variant := parsed.Items[0].Variants[0]
-	if variant.Code != "5211112" || variant.EAN != "8596723002176" || variant.PriceVAT != "3588" || variant.Currency != "CZK" {
+	if variant.Code != "5211112" || variant.EAN != "8596723002176" || variant.PriceVAT != "3588" || variant.Currency != "CZK" || variant.Availability != "Skladem" {
 		t.Fatalf("unexpected generated variant: %#v", variant)
 	}
 	if len(variant.Parameters) != 3 || variant.Parameters[0].Name != "Rozměr" || variant.Parameters[0].Value != "195x80" {
 		t.Fatalf("unexpected variant parameters: %#v", variant.Parameters)
+	}
+	if len(parsed.Items[0].InformationParameters) != 1 || parsed.Items[0].InformationParameters[0].Name != "Dárek" || parsed.Items[0].InformationParameters[0].Values[0] != "polštář Lukáš" {
+		t.Fatalf("unexpected information parameters: %#v", parsed.Items[0].InformationParameters)
 	}
 }
 
@@ -107,10 +112,11 @@ type generatedDrevocalShop struct {
 }
 
 type generatedDrevocalItem struct {
-	ExternalID string                      `xml:"EXTERNAL_ID"`
-	Name       string                      `xml:"NAME"`
-	Categories generatedDrevocalCategories `xml:"CATEGORIES"`
-	Variants   []generatedDrevocalVariant  `xml:"VARIANTS>VARIANT"`
+	ExternalID            string                              `xml:"EXTERNAL_ID"`
+	Name                  string                              `xml:"NAME"`
+	Categories            generatedDrevocalCategories         `xml:"CATEGORIES"`
+	InformationParameters []generatedDrevocalInformationParam `xml:"INFORMATION_PARAMETERS>INFORMATION_PARAMETER"`
+	Variants              []generatedDrevocalVariant          `xml:"VARIANTS>VARIANT"`
 }
 
 type generatedDrevocalCategories struct {
@@ -123,14 +129,20 @@ type generatedDrevocalCategory struct {
 }
 
 type generatedDrevocalVariant struct {
-	Code       string                       `xml:"CODE"`
-	EAN        string                       `xml:"EAN"`
-	PriceVAT   string                       `xml:"PRICE_VAT"`
-	Currency   string                       `xml:"CURRENCY"`
-	Parameters []generatedDrevocalParameter `xml:"PARAMETERS>PARAMETER"`
+	Code         string                       `xml:"CODE"`
+	EAN          string                       `xml:"EAN"`
+	PriceVAT     string                       `xml:"PRICE_VAT"`
+	Currency     string                       `xml:"CURRENCY"`
+	Availability string                       `xml:"AVAILABILITY"`
+	Parameters   []generatedDrevocalParameter `xml:"PARAMETERS>PARAMETER"`
 }
 
 type generatedDrevocalParameter struct {
 	Name  string `xml:"NAME"`
 	Value string `xml:"VALUE"`
+}
+
+type generatedDrevocalInformationParam struct {
+	Name   string   `xml:"NAME"`
+	Values []string `xml:"VALUE"`
 }

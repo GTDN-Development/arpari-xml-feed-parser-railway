@@ -8,10 +8,12 @@
 - Test generator name: `drevocal-test`
 - Test output endpoint: `/feeds/drevocal-test.xml`
 - Source URL: `https://www.matrace-drevocal.cz/feed-b2b.xml`
-- Reference documentation: `reference/drevocal/drevocal-b2b-feed-dokumentace-2026-05.pdf`
+- Reference documentation:
+  - `reference/drevocal/drevocal-b2b-feed-dokumentace-2026-05.pdf`
+  - `reference/drevocal/drevocal-b2b-feed-dokumentace-v1.1-2026-06.pdf`
 - Priority: druhá fáze
-- Status: MVP implementováno, čeká na ruční Shoptet importní feedback
-- Last updated: 2026-06-11
+- Status: MVP implementováno, doplněna podpora dostupnosti a dárku z feedu v1.1
+- Last updated: 2026-06-18
 
 ## Cíl
 
@@ -25,8 +27,9 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Varianty jednoho produktu se sdružují přes `ITEMGROUP_ID`.
 - Stabilní kód varianty je `ITEM_ID`.
 - Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
-- Feed obsahuje cenu s DPH, měnu, EAN, popis, URL a hlavní obrázek.
-- Feed neobsahuje sklad ani dostupnost.
+- Feed obsahuje cenu s DPH, měnu, EAN, popis, URL, hlavní obrázek a dostupnost `AVAILABILITY`.
+- Feed v1.1 může obsahovat volitelný element `GIFT`; aktuálně jde o text `polštář Lukáš`.
+- Feed neobsahuje sklad po kusech.
 - Feed aktuálně neobsahuje kategorii; cílová Shoptet kategorie bude nastavena pravidlem na `LOŽNICE > MATRACE` (`ID=1188`).
 - Testovací endpoint `drevocal-test` má používat stejná pravidla, ale pouze prvních 5 výstupních produktů.
 - Původní veřejný feed `https://www.matrace-drevocal.cz/feed/` byl jednodušší katalog bez variantních skupin a pro Shoptet napojení se dál nepoužívá.
@@ -40,10 +43,22 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - EAN chybí u 6 variant.
 - Dokumentace uvádí očekávaný rozsah cca 8 000-9 000 variant; před ostrým importem je vhodné ověřit u Dřevočalu, jestli je aktuální feed kompletní.
 
+## Ověření zdroje 2026-06-18
+
+- Aktuální B2B feed má 4 574 variant.
+- Varianty jsou rozdělené do 70 produktových skupin.
+- Všechny položky mají `AVAILABILITY=Skladem`.
+- `GIFT` je u 1 252 variant v 20 produktových skupinách.
+- Aktuální hodnota `GIFT` je `polštář Lukáš`.
+- Dřevočal v `GIFT` neposílá kód existujícího Shoptet produktu, jen text dárku.
+
 ## Implementace
 
 - Stav kódu: implementováno v `internal/drevocal/products.go` a `internal/feed/drevocal_products.go`.
 - Registry: supplier `drevocal` a `drevocal-test` jsou dostupné přes `cmd/rebuild`.
+- Dostupnost z `AVAILABILITY` se posílá na úroveň variant.
+- `GIFT` se posílá jako doplňkový parametr parent produktu `Dárek`.
+- Skutečný Shoptet dárek přes `GIFTS > CODE` zatím neposíláme, protože zdroj obsahuje jen text dárku, ne kód dárkového produktu.
 - Lokální testy: `go test ./...` prochází.
 - Reálný rebuild ověřen 2026-06-11:
   - `drevocal`: 3 773 variant přečteno, 57 Shoptet produktů emitováno, 3 773 variant emitováno.
@@ -62,8 +77,10 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
   - variant `EAN`, pokud je ve zdroji
   - variant `PRICE_VAT`
   - `CURRENCY`
+  - variant `AVAILABILITY`
   - `DESCRIPTION`
   - `IMAGES`
+  - doplňkový parametr `Dárek`, pokud zdroj obsahuje `GIFT`
   - cílová Shoptet kategorie `LOŽNICE > MATRACE` (`ID=1188`)
 - Variantní parametry:
   - `Rozměr`
@@ -75,6 +92,7 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Má importer odmítat varianty bez EAN, nebo je importovat bez EAN?
 - Má parent produkt používat popis a obrázek z první varianty ve skupině?
 - Je aktuální B2B feed kompletní, když dokumentace uvádí vyšší očekávaný počet variant?
+- Pokud má být dárek v Shoptetu veden jako skutečný dárkový produkt, je potřeba dodat kód produktu dárku v Shoptetu.
 
 ## Akceptační kritéria
 
@@ -85,6 +103,8 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Varianty jsou seskupené podle `ITEMGROUP_ID`.
 - Každá varianta používá `ITEM_ID` jako Shoptet `CODE`.
 - Každá varianta má parametry `Rozměr`, `Výška` a `Potah`.
+- Pokud zdroj obsahuje `AVAILABILITY`, varianta má dostupnost.
+- Pokud zdroj obsahuje `GIFT`, parent produkt má doplňkový parametr `Dárek`.
 - Varianty matrací nepřekročí Shoptet limit 512 variant na produkt.
 - Chyba downloadu nebo transformace nepřepíše poslední validní XML.
 - `/status` ukazuje výsledek posledního běhu.
@@ -97,5 +117,7 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Unit test limitu 512 variant.
 - Unit test chybějícího produktu kódu.
 - Unit test chybějícího EAN.
+- Unit test dostupnosti z `AVAILABILITY`.
+- Unit test doplňkového parametru `Dárek` z `GIFT`.
 - Rebuild test přes fixture-backed downloader.
 - Ruční kontrola přes Shoptet XML validátor.

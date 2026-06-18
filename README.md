@@ -160,7 +160,7 @@ Endpoint `/feeds/sego.xml` vrací katalogový MVP ze SEGO Heureka feedu. Obsahuj
 
 Endpoint `/feeds/hon.xml` vrací katalogový MVP z HON feedu. Obsahuje kód, název, cenu s DPH, sklad, dostupnost, popis, obrázky a základní mapování do kancelářských židlí / bytových doplňků. Položky se stejným `PRODUCT` a bezpečně rozpoznanou hodnotou z `DESCRIPTION` se skládají do variant s parametrem `Provedení`; nejasné skupiny zůstávají jako samostatné produkty. Endpoint `/feeds/hon-test.xml` vrací prvních 5 výstupních produktů.
 
-Endpoint `/feeds/drevocal.xml` vrací katalogový MVP z Dřevočal B2B feedu. Jedna zdrojová položka je jedna varianta matrace; výstup skládá varianty podle `ITEMGROUP_ID`, používá `ITEM_ID` jako kód varianty a variantní parametry `Rozměr`, `Výška` a `Potah`. Produkty mapuje do kategorie `LOŽNICE > MATRACE`. Endpoint `/feeds/drevocal-test.xml` vrací prvních 5 výstupních produktů pro Shoptet test import.
+Endpoint `/feeds/drevocal.xml` vrací katalogový MVP z Dřevočal B2B feedu. Jedna zdrojová položka je jedna varianta matrace; výstup skládá varianty podle `ITEMGROUP_ID`, používá `ITEM_ID` jako kód varianty a variantní parametry `Rozměr`, `Výška` a `Potah`. Produkty mapuje do kategorie `LOŽNICE > MATRACE`, na varianty přenáší dostupnost z `AVAILABILITY` a volitelný `GIFT` posílá jako doplňkový parametr `Dárek`. Endpoint `/feeds/drevocal-test.xml` vrací prvních 5 výstupních produktů pro Shoptet test import.
 
 Endpoint `/feeds/sakypaky.xml` vrací katalogový MVP ze Sakypaky B2B feedu. Bere sedací vaky, sedací pytle, taburety, houpačky, stolky, sety, náplně a opravné sady; vynechává pelechy / psí produkty, etikety, jmenovky a položky bez bezpečně namapované kategorie. Varianty skládá podle `ITEMGROUP_ID`, používá dodavatelský `CODE` jako kód varianty a variantní parametr `Barva`. Endpoint `/feeds/sakypaky-test.xml` vrací prvních 5 variantních výstupních produktů pro Shoptet test import.
 
@@ -342,9 +342,10 @@ Druhá fáze:
 - Dřevočal: `https://www.matrace-drevocal.cz/feed-b2b.xml`.
 
 Poznámka k Dřevočalu: B2B feed je popsaný v
-`reference/drevocal/drevocal-b2b-feed-dokumentace-2026-05.pdf`. Jedna zdrojová
-položka je jedna varianta matrace; varianty se skládají podle `ITEMGROUP_ID` a
-variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
+`reference/drevocal/drevocal-b2b-feed-dokumentace-v1.1-2026-06.pdf`. Jedna
+zdrojová položka je jedna varianta matrace; varianty se skládají podle
+`ITEMGROUP_ID` a variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
+Dokumentace v1.1 přidává `AVAILABILITY` a volitelné `GIFT`.
 
 Poznámka k Autronic dostupnostnímu feedu: `HEAD` request vrací 404, ale běžný `GET` vrací XML. Parser proto musí používat `GET`.
 

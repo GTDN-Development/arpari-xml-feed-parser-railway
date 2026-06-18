@@ -124,6 +124,7 @@ type variantEntry struct {
 	SourceName   string
 	Description  string
 	Manufacturer string
+	Gift         string
 	ImageURL     string
 	Parameters   map[string]string
 	Variant      shoptet.Variant
@@ -164,16 +165,18 @@ func transformVariant(source sourceItem) (variantEntry, bool) {
 		SourceName:   name,
 		Description:  strings.TrimSpace(source.Description),
 		Manufacturer: transformManufacturer(source.Manufacturer),
+		Gift:         strings.TrimSpace(source.Gift),
 		ImageURL:     strings.TrimSpace(source.ImageURL),
 		Parameters:   parameters,
 		Variant: shoptet.Variant{
-			Code:       code,
-			EAN:        strings.TrimSpace(source.EAN),
-			PriceVAT:   priceVAT,
-			VAT:        vat,
-			Currency:   currency,
-			ImageRef:   strings.TrimSpace(source.ImageURL),
-			Parameters: variantParameters,
+			Code:         code,
+			EAN:          strings.TrimSpace(source.EAN),
+			PriceVAT:     priceVAT,
+			VAT:          vat,
+			Currency:     currency,
+			Availability: strings.TrimSpace(source.Availability),
+			ImageRef:     strings.TrimSpace(source.ImageURL),
+			Parameters:   variantParameters,
 		},
 	}, true
 }
@@ -210,15 +213,16 @@ func emitProducts(groups map[string][]variantEntry, groupOrder []string, maxProd
 
 		first := entries[0]
 		item := shoptet.Item{
-			Code:            "DREVOCAL-" + groupID,
-			Name:            parentName(first),
-			Description:     first.Description,
-			Manufacturer:    first.Manufacturer,
-			Supplier:        supplierName,
-			Categories:      []shoptet.Category{mattressCategory},
-			DefaultCategory: &mattressCategory,
-			Images:          groupImages(entries),
-			Variants:        variants,
+			Code:                  "DREVOCAL-" + groupID,
+			Name:                  parentName(first),
+			Description:           first.Description,
+			Manufacturer:          first.Manufacturer,
+			Supplier:              supplierName,
+			Categories:            []shoptet.Category{mattressCategory},
+			DefaultCategory:       &mattressCategory,
+			Images:                groupImages(entries),
+			InformationParameters: giftInformationParameters(entries),
+			Variants:              variants,
 		}
 
 		result.Items = append(result.Items, item)
@@ -305,6 +309,23 @@ func groupImages(entries []variantEntry) []shoptet.Image {
 	return images
 }
 
+func giftInformationParameters(entries []variantEntry) []shoptet.Parameter {
+	seen := make(map[string]struct{}, len(entries))
+	var result []shoptet.Parameter
+	for _, entry := range entries {
+		gift := strings.TrimSpace(entry.Gift)
+		if gift == "" {
+			continue
+		}
+		if _, ok := seen[gift]; ok {
+			continue
+		}
+		seen[gift] = struct{}{}
+		result = append(result, shoptet.Parameter{Name: "Dárek", Value: gift})
+	}
+	return result
+}
+
 type sourceItem struct {
 	ItemID       string           `xml:"ITEM_ID"`
 	ItemGroupID  string           `xml:"ITEMGROUP_ID"`
@@ -316,6 +337,8 @@ type sourceItem struct {
 	Description  string           `xml:"DESCRIPTION"`
 	URL          string           `xml:"URL"`
 	ImageURL     string           `xml:"IMGURL"`
+	Availability string           `xml:"AVAILABILITY"`
+	Gift         string           `xml:"GIFT"`
 	Parameters   sourceParameters `xml:"PARAM"`
 }
 
