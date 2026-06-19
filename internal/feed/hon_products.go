@@ -30,7 +30,7 @@ func (Hon) Filename() string {
 }
 
 func (generator Hon) Generate(ctx context.Context, w io.Writer) (Result, error) {
-	return generateHonProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, 0)
+	return generateHonProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, 0, false)
 }
 
 func (HonTest) Name() string {
@@ -46,10 +46,10 @@ func (generator HonTest) Generate(ctx context.Context, w io.Writer) (Result, err
 	if maxProducts <= 0 {
 		maxProducts = 5
 	}
-	return generateHonProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, maxProducts)
+	return generateHonProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, maxProducts, false)
 }
 
-func generateHonProducts(ctx context.Context, w io.Writer, supplier string, configuredDownloader hon.Downloader, configuredSourceURL string, maxProducts int) (Result, error) {
+func generateHonProducts(ctx context.Context, w io.Writer, supplier string, configuredDownloader hon.Downloader, configuredSourceURL string, maxProducts int, includeCategories bool) (Result, error) {
 	downloader := configuredDownloader
 	if downloader == nil {
 		downloader = hon.HTTPDownloader{}
@@ -73,6 +73,9 @@ func generateHonProducts(ctx context.Context, w io.Writer, supplier string, conf
 	if len(feed.Items) == 0 {
 		return Result{ItemsSkipped: stats.ProductsSkipped}, fmt.Errorf("HON output is empty after transformation")
 	}
+	if !includeCategories {
+		stripCategories(feed)
+	}
 
 	slog.Info(
 		"HON products transformed",
@@ -95,4 +98,11 @@ func generateHonProducts(ctx context.Context, w io.Writer, supplier string, conf
 		ItemsProcessed: stats.ProductsEmitted,
 		ItemsSkipped:   stats.ProductsSkipped,
 	}, nil
+}
+
+func stripCategories(feed shoptet.Feed) {
+	for index := range feed.Items {
+		feed.Items[index].Categories = nil
+		feed.Items[index].DefaultCategory = nil
+	}
 }

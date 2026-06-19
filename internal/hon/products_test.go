@@ -91,6 +91,17 @@ func TestParseProductsLimitsTestOutput(t *testing.T) {
 	}
 }
 
+func TestTransformCategoryMapsMeetingChairsToExistingConferenceCategory(t *testing.T) {
+	categories, defaultCategory := transformCategory("Židle jednací OfficePro")
+	expected := shoptet.Category{ID: "1146", Path: "ŽIDLE > KONFERENČNÍ ŽIDLE"}
+	if len(categories) != 1 || categories[0] != expected {
+		t.Fatalf("unexpected categories: %#v", categories)
+	}
+	if defaultCategory == nil || *defaultCategory != expected {
+		t.Fatalf("unexpected default category: %#v", defaultCategory)
+	}
+}
+
 func TestParseProductsGroupsHONVariantsByProductAndDescription(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>

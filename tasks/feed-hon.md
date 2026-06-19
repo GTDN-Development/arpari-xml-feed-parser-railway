@@ -10,7 +10,7 @@
 - Source URL: `https://www.webshop.officepro-brno.cz/import/HONClientFeed/HONClientFeed.xml`
 - Priority: první fáze
 - Status: MVP implementováno, varianty doplněné
-- Last updated: 2026-06-01
+- Last updated: 2026-06-19
 
 ## Cíl
 
@@ -23,7 +23,7 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 - Reálný zdroj má 517 položek.
 - Testovací endpoint `hon-test` používá stejná pravidla, ale končí po prvních 5 produktech.
 - Katalogová data nesmí bez mapování přepisovat citlivá data původního katalogu.
-- Kategorie jsou zatím mapované široce podle `MAIN_CATEGORY` na kancelářské židle, konferenční židle, židle nebo bytové doplňky.
+- Kategorie jsou interně mapované široce podle `MAIN_CATEGORY`, ale pravidelný veřejný výstup je neexportuje, aby další import nepřepsal ruční zařazení produktů v Shoptetu.
 - Každý produkt se označuje `SUPPLIER=HON`; hodnota je určená pro interní filtrování dodavatele v Shoptet administraci.
 - Zdrojové `PARAM` hodnoty se exportují jako Shoptet `INFORMATION_PARAMETERS`, tedy jako tabulkové doplňkové parametry, ne jako vybíratelné varianty.
 - Variantní produkty se skládají z položek se stejným `PRODUCT` a `MAIN_CATEGORY`, pokud jde z `DESCRIPTION` bezpečně vytáhnout unikátní hodnotu varianty.
@@ -50,6 +50,7 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
   - `DESCRIPTION`
   - `IMAGES`
   - technické parametry v `INFORMATION_PARAMETERS`
+- Kategorie se do `hon.xml` a `hon-test.xml` záměrně neposílají.
 
 ## Implementace
 
@@ -90,5 +91,6 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 - Unit test chybějícího produktu kódu.
 - Unit test limitu testovacího výstupu.
 - Unit test základního mapování kategorie.
+- Unit test, že pravidelný HON výstup neobsahuje kategorie.
 - Rebuild test přes fixture-backed downloader.
 - Ruční kontrola přes Shoptet XML validátor.
