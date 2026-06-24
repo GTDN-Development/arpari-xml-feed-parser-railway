@@ -32,7 +32,7 @@ func TestParseProductsUsesStableEANCodeForHeurekaItems(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse SEGO products: %v", err)
 	}
-	if stats.ProductsRead != 2 || stats.ProductsEmitted != 1 || stats.ProductsSkipped != 1 {
+	if stats.ProductsRead != 2 || stats.ProductsEmitted != 1 || stats.ProductsSkipped != 1 || stats.ProductsExcluded != 0 {
 		t.Fatalf("unexpected stats: %#v", stats)
 	}
 	if len(feed.Items) != 1 {
@@ -60,6 +60,86 @@ func TestParseProductsUsesStableEANCodeForHeurekaItems(t *testing.T) {
 	}
 	if item.DefaultCategory == nil || item.DefaultCategory.ID != "881" {
 		t.Fatalf("unexpected category: %#v", item.DefaultCategory)
+	}
+}
+
+func TestParseProductsSkipsDefaultExcludedEANCodes(t *testing.T) {
+	input := `<?xml version="1.0" encoding="utf-8"?>
+<SHOP xmlns="http://www.zbozi.cz/ns/offer/1.0">
+  <SHOPITEM>
+    <ITEM_ID>550745314609678</ITEM_ID>
+    <PRODUCTNAME>Aid | koženka PACIFIC</PRODUCTNAME>
+    <EAN>0745314609678</EAN>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ITEM_ID>10745314610292</ITEM_ID>
+    <PRODUCTNAME>AIR plus | Černá</PRODUCTNAME>
+    <EAN>0745314610292</EAN>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse SEGO products: %v", err)
+	}
+	if stats.ProductsRead != 2 || stats.ProductsEmitted != 1 || stats.ProductsSkipped != 1 || stats.ProductsExcluded != 1 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 1 || feed.Items[0].Code != "0745314610292" {
+		t.Fatalf("expected only allowed product, got %#v", feed.Items)
+	}
+}
+
+func TestParseProductsSkipsCompleteExcludedVariantGroup(t *testing.T) {
+	input := `<?xml version="1.0" encoding="utf-8"?>
+<SHOP xmlns="http://www.zbozi.cz/ns/offer/1.0">
+  <SHOPITEM>
+    <ITEM_ID>550745314609678</ITEM_ID>
+    <PRODUCTNAME>Aid | koženka PACIFIC</PRODUCTNAME>
+    <URL>https://segocz.cz/produkty/detail/aid?color=pacific</URL>
+    <EAN>0745314609678</EAN>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>koženka PACIFIC</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ITEM_ID>550745314609685</ITEM_ID>
+    <PRODUCTNAME>Aid | koženka MECAMED</PRODUCTNAME>
+    <URL>https://segocz.cz/produkty/detail/aid?color=mecamed</URL>
+    <EAN>0745314609685</EAN>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>koženka MECAMED</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ITEM_ID>70745314610063</ITEM_ID>
+    <PRODUCTNAME>Junior | Červená</PRODUCTNAME>
+    <URL>https://segocz.cz/produkty/detail/junior?color=cervena</URL>
+    <EAN>0745314610063</EAN>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Červená</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ITEM_ID>70745314610056</ITEM_ID>
+    <PRODUCTNAME>Junior | Zelená</PRODUCTNAME>
+    <URL>https://segocz.cz/produkty/detail/junior?color=zelena</URL>
+    <EAN>0745314610056</EAN>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Zelená</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse SEGO products: %v", err)
+	}
+	if stats.ProductsRead != 4 || stats.ProductsEmitted != 1 || stats.ProductsSkipped != 2 || stats.ProductsExcluded != 2 || stats.ItemsWithVariants != 1 || stats.VariantsEmitted != 2 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected 1 remaining variant group, got %#v", feed.Items)
+	}
+	if feed.Items[0].Name != "Junior" {
+		t.Fatalf("expected Aid group to be removed, got %#v", feed.Items[0])
+	}
+	for _, variant := range feed.Items[0].Variants {
+		if variant.Code == "0745314609678" || variant.Code == "0745314609685" {
+			t.Fatalf("excluded variant code leaked into output: %#v", variant)
+		}
 	}
 }
 

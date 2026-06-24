@@ -87,6 +87,7 @@ func generateSegoProductsWithOptions(ctx context.Context, w io.Writer, supplier 
 		"productsRead", stats.ProductsRead,
 		"productsEmitted", stats.ProductsEmitted,
 		"productsSkipped", stats.ProductsSkipped,
+		"productsExcluded", stats.ProductsExcluded,
 		"itemsWithVariants", stats.ItemsWithVariants,
 		"variantsEmitted", stats.VariantsEmitted,
 	)

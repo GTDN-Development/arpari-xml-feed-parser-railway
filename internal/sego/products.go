@@ -59,12 +59,14 @@ func (downloader HTTPDownloader) Download(ctx context.Context, url string) (io.R
 type ProductsOptions struct {
 	MaxProducts        int
 	PreferVariantItems bool
+	ExcludedCodes      map[string]struct{}
 }
 
 type ProductsStats struct {
 	ProductsRead      int
 	ProductsEmitted   int
 	ProductsSkipped   int
+	ProductsExcluded  int
 	VariantsEmitted   int
 	ItemsWithVariants int
 }
@@ -74,6 +76,7 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 	var stats ProductsStats
 	var entries []productEntry
 	groups := make(map[string]*variantGroup)
+	excludedCodes := excludedProductCodes(options)
 
 	for {
 		if err := ctx.Err(); err != nil {
@@ -99,6 +102,14 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 		}
 
 		stats.ProductsRead++
+		code := stableProductCode(source)
+		if isProductCodeExcluded(code, excludedCodes) {
+			stats.ProductsSkipped++
+			stats.ProductsExcluded++
+			slog.Debug("skipping SEGO excluded product", "code", code, "name", strings.TrimSpace(source.ProductName))
+			continue
+		}
+
 		item, ok := transformSimpleProduct(source)
 		if !ok {
 			stats.ProductsSkipped++
