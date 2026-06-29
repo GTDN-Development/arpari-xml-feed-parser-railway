@@ -37,7 +37,7 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Normalizovaný export Shoptet kategorií je uložený v `reference/shoptet-categories.csv`.
 - SEGO flat varianty typu `Produkt | Hodnota` se slučují do Shoptet variant podle produktového URL slug a odpovídajícího zdrojového parametru.
 - Identifikace produktů a variant používá stabilní EAN, pokud je ve zdroji dostupný; `ITEM_ID` je pouze fallback pro položky bez EAN.
-- Produkty z blocklistu se vynechávají podle stejného stabilního kódu před skládáním variant. Aktuální blocklist obsahuje 44 EANů, tedy 22 kompletních variantních skupin.
+- Produkty z blocklistu se vynechávají podle stejného stabilního kódu před skládáním variant. Aktuální blocklist obsahuje 50 EANů.
 - SEGO `Catalog/VariantImages/.../previewImg...` URL se do výstupu neposílají; zvenku vrací 404 a Shoptet je při importu nestáhne. Pro `IMAGES` a variantní `IMAGE_REF` se používají funkční `Catalog/.../source/...` URL.
 - Variantní produkty používají tvar porovnaný s exportem ručně nastaveného Shoptet produktu: parent nemá `CODE` ani `EXTERNAL_ID`, varianty nesou vlastní `CODE`, `CURRENCY`, `VAT`, `PRICE_VAT`, `AVAILABILITY`, `IMAGE_REF` a `PARAMETERS`.
 - SEGO obrázky jsou omezené na prvních 20 funkčních URL na produkt, aby import neposílal desítky duplicitních nebo doplňkových fotek na jeden variantní parent.
@@ -74,10 +74,10 @@ Generovat Shoptet XML feed ze SEGO katalogového feedu.
 - Verzovaný blocklist produktů je v `internal/sego/excluded_products.csv`.
 - Registry: supplier `sego` a `sego-test` jsou dostupné přes `cmd/rebuild`.
 - Lokální testy: `go test ./...` prochází.
-- Reálný rebuild ověřen 2026-06-24:
-  - `sego`: 152 přečteno, 44 vynecháno přes blocklist, 78 emitovaných Shoptet produktů.
-  - `sego`: 18 produktů s variantami, 48 emitovaných variant.
-  - `sego-test`: 5 emitovaných Shoptet produktů, 44 vynecháno přes blocklist.
+- Reálný rebuild ověřen 2026-06-26:
+  - `sego`: 152 přečteno, 50 vynecháno přes blocklist, 74 emitovaných Shoptet produktů.
+  - `sego`: 16 produktů s variantami, 44 emitovaných variant.
+  - `sego-test`: 5 emitovaných Shoptet produktů, 50 vynecháno přes blocklist.
   - Výstupní XML je well-formed a publikace proběhla přes storage publisher.
 - Externí Shoptet validace je samostatný povinný krok a může odhalit chyby, které lokální well-formed kontrola nevidí.
 - Oficiální validátor: https://www.shoptet.cz/xml-validace/
