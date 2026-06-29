@@ -683,7 +683,7 @@ func exactCategory(shortName string) (shoptet.Category, bool) {
 	case "NA-ZAH-BAL", "NA-ZAH-JIDSET", "NA-ZAH-RELSET":
 		return shoptet.Category{ID: "1221", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ SESTAVY"}, true
 	case "NA-ZAH-LEH":
-		return shoptet.Category{ID: "1224", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ LEHÁDKA"}, true
+		return shoptet.Category{ID: "1224", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ LEHÁTKA"}, true
 	case "NA-ZAH-STO":
 		return shoptet.Category{ID: "1218", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ STOLY"}, true
 	case "NA-ZAH-ZID", "NA-ZAH-ZK":
