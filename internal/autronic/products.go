@@ -468,6 +468,7 @@ func isAllowedCategory(shortName string) bool {
 
 	switch shortName {
 	case "BD-BO",
+		"BD-STKV",
 		"BD-NS",
 		"BD-ODK",
 		"BD-ORG",
@@ -654,6 +655,8 @@ func exactCategory(shortName string) (shoptet.Category, bool) {
 		return shoptet.Category{ID: "1209", Path: "BYTOVÉ DOPLŇKY > PARAVÁNY"}, true
 	case "BD-REG", "BD-REG-KOV", "BD-REG-MAS":
 		return shoptet.Category{ID: "1203", Path: "BYTOVÉ DOPLŇKY > REGALY"}, true
+	case "BD-STKV":
+		return shoptet.Category{ID: "1227", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ DOPLŃKY"}, true
 	case "BD-TAB", "BD-TAB-UL":
 		return shoptet.Category{ID: "1155", Path: "ŽIDLE > TABURETY"}, true
 	case "BD-VES-KOV", "BD-VES-MAS":
@@ -664,6 +667,8 @@ func exactCategory(shortName string) (shoptet.Category, bool) {
 		return shoptet.Category{ID: "944", Path: "SEDACÍ SOUPRAVY > KŘESLA"}, true
 	case "NA-POH-PEV", "NA-POH-ROZ":
 		return shoptet.Category{ID: "941", Path: "SEDACÍ SOUPRAVY > POHOVKY"}, true
+	case "NA-POS-CAL":
+		return shoptet.Category{ID: "1185", Path: "LOŽNICE > POSTELE"}, true
 	case "NA-POS-KOV":
 		return shoptet.Category{ID: "1185", Path: "LOŽNICE > POSTELE"}, true
 	case "NA-SED-POL":

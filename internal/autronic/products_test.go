@@ -281,8 +281,10 @@ func TestParseProductsDisambiguatesDuplicateColorVariants(t *testing.T) {
 func TestParseProductsAutronicCategorySelection(t *testing.T) {
 	input := `<ProductFeed><Products>
   <Product><ProductCode>NA-KOM-1</ProductCode><ProductName>Komoda</ProductName><ProductCategory><CategoryName>Komody</CategoryName><CategoryShortName>NA-KOM</CategoryShortName></ProductCategory></Product>
+  <Product><ProductCode>NA-POS-CAL-1</ProductCode><ProductName>Čalouněná postel</ProductName><ProductCategory><CategoryName>Čalouněné postele</CategoryName><CategoryShortName>NA-POS-CAL</CategoryShortName></ProductCategory></Product>
   <Product><ProductCode>BD-BO-1</ProductCode><ProductName>Botník</ProductName><ProductCategory><CategoryName>Botníky</CategoryName><CategoryShortName>BD-BO</CategoryShortName></ProductCategory></Product>
   <Product><ProductCode>BD-ORG-1</ProductCode><ProductName>Organizér</ProductName><ProductCategory><CategoryName>Organizéry</CategoryName><CategoryShortName>BD-ORG</CategoryShortName></ProductCategory></Product>
+  <Product><ProductCode>BD-STKV-1</ProductCode><ProductName>Stojan na květiny</ProductName><ProductCategory><CategoryName>Stojany na květiny</CategoryName><CategoryShortName>BD-STKV</CategoryShortName></ProductCategory></Product>
   <Product><ProductCode>NA-ZAH-LEH-1</ProductCode><ProductName>Zahradní lehátko</ProductName><ProductCategory><CategoryName>Zahradní lehátka</CategoryName><CategoryShortName>NA-ZAH-LEH</CategoryShortName></ProductCategory></Product>
   <Product><ProductCode>BD-ZR-1</ProductCode><ProductName>Zrcadlo</ProductName><ProductCategory><CategoryName>Zrcadla</CategoryName><CategoryShortName>BD-ZR</CategoryShortName></ProductCategory></Product>
   <Product><ProductCode>DE-STOL-1</ProductCode><ProductName>Stolování</ProductName><ProductCategory><CategoryName>Stolování</CategoryName><CategoryShortName>DE-STOL-BAMB</CategoryShortName></ProductCategory></Product>
@@ -292,17 +294,19 @@ func TestParseProductsAutronicCategorySelection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse Autronic category selection: %v", err)
 	}
-	if stats.ProductsRead != 6 || stats.ProductsEmitted != 4 || stats.ProductsSkipped != 2 {
+	if stats.ProductsRead != 8 || stats.ProductsEmitted != 6 || stats.ProductsSkipped != 2 {
 		t.Fatalf("unexpected stats: %#v", stats)
 	}
-	if len(feed.Items) != 4 {
-		t.Fatalf("expected 4 emitted items, got %#v", feed.Items)
+	if len(feed.Items) != 6 {
+		t.Fatalf("expected 6 emitted items, got %#v", feed.Items)
 	}
 
 	expected := []shoptet.Category{
 		{ID: "1197", Path: "BYTOVÉ DOPLŇKY > KOMODY"},
+		{ID: "1185", Path: "LOŽNICE > POSTELE"},
 		{ID: "1200", Path: "BYTOVÉ DOPLŇKY > BOTNÍKY"},
 		{ID: "1206", Path: "BYTOVÉ DOPLŇKY > POLIČKY"},
+		{ID: "1227", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ DOPLŃKY"},
 		{ID: "1224", Path: "ZAHRADNÍ NÁBYTEK > ZAHRADNÍ LEHÁTKA"},
 	}
 	for index, category := range expected {
