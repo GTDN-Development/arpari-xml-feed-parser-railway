@@ -352,9 +352,9 @@ func parentName(entries []productEntry, colors map[string]string) string {
 		}
 	}
 	if len(common) > 0 {
-		return strings.Join(common, ", ")
+		return withGroupCode(strings.Join(common, ", "), variantGroupCode(entries))
 	}
-	return strings.Join(names[0], ", ")
+	return withGroupCode(strings.Join(names[0], ", "), variantGroupCode(entries))
 }
 
 func productBaseName(name, code, color string) string {
@@ -372,6 +372,111 @@ func productBaseName(name, code, color string) string {
 		return result
 	}
 	return strings.Join(filtered, ", ")
+}
+
+func withGroupCode(name, code string) string {
+	name = strings.TrimSpace(name)
+	code = strings.TrimSpace(code)
+	if name == "" || code == "" || textContainsCode(name, code) {
+		return name
+	}
+	return name + ", " + code
+}
+
+func textContainsCode(text, code string) bool {
+	text = strings.ToLower(text)
+	code = strings.ToLower(code)
+	start := 0
+	for {
+		index := strings.Index(text[start:], code)
+		if index < 0 {
+			return false
+		}
+		index += start
+		end := index + len(code)
+		if textBoundary(text, index-1) && textBoundary(text, end) {
+			return true
+		}
+		start = index + 1
+	}
+}
+
+func textBoundary(value string, index int) bool {
+	if index < 0 || index >= len(value) {
+		return true
+	}
+	return !isASCIIAlnum(value[index])
+}
+
+func isASCIIAlnum(value byte) bool {
+	return value >= 'a' && value <= 'z' || value >= '0' && value <= '9'
+}
+
+func variantGroupCode(entries []productEntry) string {
+	codes := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if code := strings.TrimSpace(entry.Item.Code); code != "" {
+			codes = append(codes, code)
+		}
+	}
+	if len(codes) < 2 {
+		return ""
+	}
+
+	prefix := codes[0]
+	for _, code := range codes[1:] {
+		prefix = commonCodePrefix(prefix, code)
+		if prefix == "" {
+			return ""
+		}
+	}
+
+	prefix = trimCodeSeparators(prefix)
+	for prefix != "" && !codePrefixBoundary(codes, prefix) {
+		prefix = previousCodePrefix(prefix)
+	}
+	return prefix
+}
+
+func commonCodePrefix(left, right string) string {
+	leftLower := strings.ToLower(left)
+	rightLower := strings.ToLower(right)
+	limit := min(len(leftLower), len(rightLower))
+	index := 0
+	for index < limit && leftLower[index] == rightLower[index] {
+		index++
+	}
+	return left[:index]
+}
+
+func codePrefixBoundary(codes []string, prefix string) bool {
+	for _, code := range codes {
+		if len(code) == len(prefix) {
+			continue
+		}
+		if len(code) < len(prefix) || !strings.EqualFold(code[:len(prefix)], prefix) || !isCodeSeparator(code[len(prefix)]) {
+			return false
+		}
+	}
+	return true
+}
+
+func previousCodePrefix(prefix string) string {
+	prefix = trimCodeSeparators(prefix)
+	for index := len(prefix) - 1; index >= 0; index-- {
+		if isCodeSeparator(prefix[index]) {
+			return trimCodeSeparators(prefix[:index])
+		}
+	}
+	return ""
+}
+
+func trimCodeSeparators(value string) string {
+	return strings.TrimRight(strings.TrimSpace(value), " -_/")
+}
+
+func isCodeSeparator(value byte) bool {
+	return value == ' ' || value == '-' || value == '_' || value == '/'
 }
 
 func trimTrailingCode(name, code string) string {

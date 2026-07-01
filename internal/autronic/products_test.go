@@ -222,7 +222,7 @@ func TestParseProductsGroupsColorVariants(t *testing.T) {
 	}
 
 	item := feed.Items[0]
-	if item.Code != "" || item.Name != "Jídelní židle" {
+	if item.Code != "" || item.Name != "Jídelní židle, CHAIR" {
 		t.Fatalf("unexpected parent item: %#v", item)
 	}
 	if item.Manufacturer != "Autronic" {
@@ -245,6 +245,53 @@ func TestParseProductsGroupsColorVariants(t *testing.T) {
 	}
 	if item.Variants[0].ImageRef != "https://example.test/black.jpg" {
 		t.Fatalf("unexpected first image ref: %q", item.Variants[0].ImageRef)
+	}
+}
+
+func TestParseProductsKeepsVariantGroupCodeInParentName(t *testing.T) {
+	input := `<ProductFeed><Products>
+  <Product>
+    <ProductCode>KA-B2361 BK</ProductCode>
+    <ProductName>Kancelářská židle, synchronní mechanismus, černá síťovina, KA-B2361 BK</ProductName>
+    <ProductCategory><CategoryName>Síťované kancelářské židle</CategoryName><CategoryShortName>NA-ZKA-SIT</CategoryShortName></ProductCategory>
+    <Parameters><Parameter><Name>Barva</Name><TextValue>Černá</TextValue></Parameter></Parameters>
+    <ColorVariants><Product><ProductCode>KA-B2361 GREY</ProductCode><Color>Šedá</Color></Product></ColorVariants>
+  </Product>
+  <Product>
+    <ProductCode>KA-B2361 GREY</ProductCode>
+    <ProductName>Kancelářská židle, synchronní mechanismus, šedá síťovina, KA-B2361 GREY</ProductName>
+    <ProductCategory><CategoryName>Síťované kancelářské židle</CategoryName><CategoryShortName>NA-ZKA-SIT</CategoryShortName></ProductCategory>
+    <Parameters><Parameter><Name>Barva</Name><TextValue>Šedá</TextValue></Parameter></Parameters>
+    <ColorVariants><Product><ProductCode>KA-B2361 BK</ProductCode><Color>Černá</Color></Product></ColorVariants>
+  </Product>
+  <Product>
+    <ProductCode>KA-B2363 BK</ProductCode>
+    <ProductName>Kancelářská židle, synchronní mechanismus, černá síťovina, KA-B2363 BK</ProductName>
+    <ProductCategory><CategoryName>Síťované kancelářské židle</CategoryName><CategoryShortName>NA-ZKA-SIT</CategoryShortName></ProductCategory>
+    <Parameters><Parameter><Name>Barva</Name><TextValue>Černá</TextValue></Parameter></Parameters>
+    <ColorVariants><Product><ProductCode>KA-B2363 GREY</ProductCode><Color>Šedá</Color></Product></ColorVariants>
+  </Product>
+  <Product>
+    <ProductCode>KA-B2363 GREY</ProductCode>
+    <ProductName>Kancelářská židle, synchronní mechanismus, šedá síťovina, KA-B2363 GREY</ProductName>
+    <ProductCategory><CategoryName>Síťované kancelářské židle</CategoryName><CategoryShortName>NA-ZKA-SIT</CategoryShortName></ProductCategory>
+    <Parameters><Parameter><Name>Barva</Name><TextValue>Šedá</TextValue></Parameter></Parameters>
+    <ColorVariants><Product><ProductCode>KA-B2363 BK</ProductCode><Color>Černá</Color></Product></ColorVariants>
+  </Product>
+</Products></ProductFeed>`
+
+	feed, _, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse Autronic variant group codes: %v", err)
+	}
+	if len(feed.Items) != 2 {
+		t.Fatalf("expected 2 grouped items, got %#v", feed.Items)
+	}
+	if feed.Items[0].Name != "Kancelářská židle, synchronní mechanismus, KA-B2361" {
+		t.Fatalf("unexpected first parent name: %q", feed.Items[0].Name)
+	}
+	if feed.Items[1].Name != "Kancelářská židle, synchronní mechanismus, KA-B2363" {
+		t.Fatalf("unexpected second parent name: %q", feed.Items[1].Name)
 	}
 }
 
