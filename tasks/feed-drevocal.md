@@ -27,7 +27,8 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Varianty jednoho produktu se sdružují přes `ITEMGROUP_ID`.
 - Stabilní kód varianty je `ITEM_ID`.
 - Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
-- Feed obsahuje cenu s DPH, měnu, EAN, popis, URL, hlavní obrázek a dostupnost `AVAILABILITY`.
+- Feed obsahuje cenu s DPH, měnu, EAN, URL, hlavní obrázek a dostupnost `AVAILABILITY`.
+- Výstup záměrně neposílá `DESCRIPTION`, aby automatický import Dřevočal nepřepisoval ručně spravované popisy ani při založení nových produktů.
 - Feed v1.1 může obsahovat volitelný element `GIFT`; aktuálně jde o text `polštář Lukáš`.
 - Feed neobsahuje sklad po kusech.
 - Feed aktuálně neobsahuje kategorii; cílová Shoptet kategorie bude nastavena pravidlem na `LOŽNICE > MATRACE` (`ID=1188`).
@@ -78,7 +79,6 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
   - variant `PRICE_VAT`
   - `CURRENCY`
   - variant `AVAILABILITY`
-  - `DESCRIPTION`
   - `IMAGES`
   - doplňkový parametr `Dárek`, pokud zdroj obsahuje `GIFT`
   - cílová Shoptet kategorie `LOŽNICE > MATRACE` (`ID=1188`)

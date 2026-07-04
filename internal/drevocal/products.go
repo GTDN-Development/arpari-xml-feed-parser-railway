@@ -122,7 +122,6 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 type variantEntry struct {
 	GroupID      string
 	SourceName   string
-	Description  string
 	Manufacturer string
 	Gift         string
 	ImageURL     string
@@ -163,7 +162,6 @@ func transformVariant(source sourceItem) (variantEntry, bool) {
 	return variantEntry{
 		GroupID:      groupID,
 		SourceName:   name,
-		Description:  strings.TrimSpace(source.Description),
 		Manufacturer: transformManufacturer(source.Manufacturer),
 		Gift:         strings.TrimSpace(source.Gift),
 		ImageURL:     strings.TrimSpace(source.ImageURL),
@@ -215,7 +213,6 @@ func emitProducts(groups map[string][]variantEntry, groupOrder []string, maxProd
 		item := shoptet.Item{
 			Code:                  "DREVOCAL-" + groupID,
 			Name:                  parentName(first),
-			Description:           first.Description,
 			Manufacturer:          first.Manufacturer,
 			Supplier:              supplierName,
 			Categories:            []shoptet.Category{mattressCategory},
@@ -334,7 +331,6 @@ type sourceItem struct {
 	PriceVAT     string           `xml:"PRICE_VAT"`
 	Currency     string           `xml:"CURRENCY"`
 	EAN          string           `xml:"EAN"`
-	Description  string           `xml:"DESCRIPTION"`
 	URL          string           `xml:"URL"`
 	ImageURL     string           `xml:"IMGURL"`
 	Availability string           `xml:"AVAILABILITY"`

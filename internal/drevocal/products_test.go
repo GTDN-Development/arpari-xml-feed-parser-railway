@@ -66,8 +66,8 @@ func TestParseProductsGroupsVariantsAndMapsFields(t *testing.T) {
 	if item.Supplier != "DŘEVOČAL" || item.Manufacturer != "DŘEVOČAL" {
 		t.Fatalf("unexpected supplier/manufacturer: %#v", item)
 	}
-	if item.Description != "Eliška je ideální volbou." {
-		t.Fatalf("unexpected description: %q", item.Description)
+	if item.Description != "" {
+		t.Fatalf("expected Dřevočal description to be omitted, got %q", item.Description)
 	}
 	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1188", Path: "LOŽNICE > MATRACE"}) {
 		t.Fatalf("unexpected category: %#v", item.DefaultCategory)

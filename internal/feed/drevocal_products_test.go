@@ -86,6 +86,9 @@ func TestDrevocalGenerateUsesFixtureBackedDownloader(t *testing.T) {
 	if len(parsed.Items) != 1 || parsed.Items[0].ExternalID != "DREVOCAL-521" {
 		t.Fatalf("unexpected generated items: %#v", parsed.Items)
 	}
+	if parsed.Items[0].Description != "" {
+		t.Fatalf("expected generated Dřevočal output without DESCRIPTION, got %q", parsed.Items[0].Description)
+	}
 	variant := parsed.Items[0].Variants[0]
 	if variant.Code != "5211112" || variant.EAN != "8596723002176" || variant.PriceVAT != "3588" || variant.Currency != "CZK" || variant.Availability != "Skladem" {
 		t.Fatalf("unexpected generated variant: %#v", variant)
@@ -114,6 +117,7 @@ type generatedDrevocalShop struct {
 type generatedDrevocalItem struct {
 	ExternalID            string                              `xml:"EXTERNAL_ID"`
 	Name                  string                              `xml:"NAME"`
+	Description           string                              `xml:"DESCRIPTION"`
 	Categories            generatedDrevocalCategories         `xml:"CATEGORIES"`
 	InformationParameters []generatedDrevocalInformationParam `xml:"INFORMATION_PARAMETERS>INFORMATION_PARAMETER"`
 	Variants              []generatedDrevocalVariant          `xml:"VARIANTS>VARIANT"`
