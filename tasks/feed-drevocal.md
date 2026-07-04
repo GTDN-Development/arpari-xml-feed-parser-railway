@@ -12,8 +12,8 @@
   - `reference/drevocal/drevocal-b2b-feed-dokumentace-2026-05.pdf`
   - `reference/drevocal/drevocal-b2b-feed-dokumentace-v1.1-2026-06.pdf`
 - Priority: druhá fáze
-- Status: MVP implementováno, doplněna podpora dostupnosti a dárku z feedu v1.1
-- Last updated: 2026-06-18
+- Status: MVP implementováno, doplněna podpora dostupnosti, dárku z feedu v1.1 a lamelových roštů
+- Last updated: 2026-07-04
 
 ## Cíl
 
@@ -23,15 +23,18 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 
 - Feed je odložený do druhé fáze.
 - Nový zdroj je B2B variantní feed ve stylu Heureka XML.
-- Jedna zdrojová položka `SHOPITEM` odpovídá jedné variantě matrace.
+- Jedna zdrojová položka `SHOPITEM` odpovídá jedné variantě produktu.
 - Varianty jednoho produktu se sdružují přes `ITEMGROUP_ID`.
 - Stabilní kód varianty je `ITEM_ID`.
-- Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
+- Variantní parametry matrací jsou `Rozměr`, `Výška` a `Potah`.
+- Variantní parametr lamelových roštů je `Rozměr`.
 - Feed obsahuje cenu s DPH, měnu, EAN, URL, hlavní obrázek a dostupnost `AVAILABILITY`.
 - Výstup záměrně neposílá `DESCRIPTION`, aby automatický import Dřevočal nepřepisoval ručně spravované popisy ani při založení nových produktů.
 - Feed v1.1 může obsahovat volitelný element `GIFT`; aktuálně jde o text `polštář Lukáš`.
 - Feed neobsahuje sklad po kusech.
-- Feed aktuálně neobsahuje kategorii; cílová Shoptet kategorie bude nastavena pravidlem na `LOŽNICE > MATRACE` (`ID=1188`).
+- `CATEGORYTEXT=Matrace` se mapuje na `LOŽNICE > MATRACE` (`ID=1188`).
+- `CATEGORYTEXT=Lamelové rošty` se mapuje na `LOŽNICE > ROŠTY` (`ID=1281`).
+- `CATEGORYTEXT=Doplňky` zatím zůstává v dosavadním matracovém mapování, aby přidání roštů neměnilo existující výstup.
 - Testovací endpoint `drevocal-test` má používat stejná pravidla, ale pouze prvních 5 výstupních produktů.
 - Původní veřejný feed `https://www.matrace-drevocal.cz/feed/` byl jednodušší katalog bez variantních skupin a pro Shoptet napojení se dál nepoužívá.
 
@@ -53,10 +56,19 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Aktuální hodnota `GIFT` je `polštář Lukáš`.
 - Dřevočal v `GIFT` neposílá kód existujícího Shoptet produktu, jen text dárku.
 
+## Ověření zdroje 2026-07-04
+
+- Aktuální B2B feed má 4 695 variant.
+- `CATEGORYTEXT=Matrace`: 4 482 variant v 69 produktových skupinách.
+- `CATEGORYTEXT=Lamelové rošty`: 24 variant ve 12 produktových skupinách.
+- `CATEGORYTEXT=Doplňky`: 189 variant ve 3 produktových skupinách.
+- Lamelové rošty mají pouze variantní parametr `Rozměr`, typicky varianty `200 x 80` a `200 x 90`.
+
 ## Implementace
 
 - Stav kódu: implementováno v `internal/drevocal/products.go` a `internal/feed/drevocal_products.go`.
 - Registry: supplier `drevocal` a `drevocal-test` jsou dostupné přes `cmd/rebuild`.
+- Kategorie ze zdrojového `CATEGORYTEXT` se mapují na cílové Shoptet kategorie jen pro podporované hodnoty.
 - Dostupnost z `AVAILABILITY` se posílá na úroveň variant.
 - `GIFT` se posílá jako doplňkový parametr parent produktu `Dárek`.
 - Skutečný Shoptet dárek přes `GIFTS > CODE` zatím neposíláme, protože zdroj obsahuje jen text dárku, ne kód dárkového produktu.
@@ -82,10 +94,10 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
   - `IMAGES`
   - doplňkový parametr `Dárek`, pokud zdroj obsahuje `GIFT`
   - cílová Shoptet kategorie `LOŽNICE > MATRACE` (`ID=1188`)
+  - cílová Shoptet kategorie `LOŽNICE > ROŠTY` (`ID=1281`) pro `CATEGORYTEXT=Lamelové rošty`
 - Variantní parametry:
-  - `Rozměr`
-  - `Výška`
-  - `Potah`
+  - matrace: `Rozměr`, `Výška`, `Potah`
+  - lamelové rošty: `Rozměr`
 
 ## Otevřené otázky
 
@@ -102,7 +114,9 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Testovací výstup je dostupný na `/feeds/drevocal-test.xml`.
 - Varianty jsou seskupené podle `ITEMGROUP_ID`.
 - Každá varianta používá `ITEM_ID` jako Shoptet `CODE`.
-- Každá varianta má parametry `Rozměr`, `Výška` a `Potah`.
+- Každá varianta matrace má parametry `Rozměr`, `Výška` a `Potah`.
+- Každá varianta lamelového roštu má parametr `Rozměr`.
+- Lamelové rošty se mapují do kategorie `LOŽNICE > ROŠTY`.
 - Pokud zdroj obsahuje `AVAILABILITY`, varianta má dostupnost.
 - Pokud zdroj obsahuje `GIFT`, parent produkt má doplňkový parametr `Dárek`.
 - Varianty matrací nepřekročí Shoptet limit 512 variant na produkt.
@@ -114,6 +128,7 @@ Generovat Shoptet XML feed z Dřevočal B2B katalogového feedu.
 - Unit test běžné Dřevočal položky.
 - Unit test seskupení variant podle `ITEMGROUP_ID`.
 - Unit test variantních parametrů `Rozměr`, `Výška`, `Potah`.
+- Unit test lamelových roštů s parametrem `Rozměr` a cílovou kategorií `LOŽNICE > ROŠTY`.
 - Unit test limitu 512 variant.
 - Unit test chybějícího produktu kódu.
 - Unit test chybějícího EAN.

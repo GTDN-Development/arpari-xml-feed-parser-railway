@@ -101,6 +101,53 @@ func TestDrevocalGenerateUsesFixtureBackedDownloader(t *testing.T) {
 	}
 }
 
+func TestDrevocalGenerateMapsSlattedFramesToRostyCategory(t *testing.T) {
+	downloader := &fakeStimaDownloader{
+		body: `<SHOP>
+  <SHOPITEM>
+    <ITEM_ID>60022</ITEM_ID>
+    <ITEMGROUP_ID>N513</ITEMGROUP_ID>
+    <PRODUCTNAME>Systema Fix 200 x 90</PRODUCTNAME>
+    <MANUFACTURER>DŘEVOČAL</MANUFACTURER>
+    <PRICE_VAT>2111.00</PRICE_VAT>
+    <CURRENCY>CZK</CURRENCY>
+    <CATEGORYTEXT>Lamelové rošty</CATEGORYTEXT>
+    <IMGURL>https://www.matrace-drevocal.cz/systema-fix.jpg</IMGURL>
+    <AVAILABILITY>Skladem</AVAILABILITY>
+    <PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>200 x 90</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`,
+	}
+	generator := Drevocal{
+		Downloader: downloader,
+		SourceURL:  "https://example.test/drevocal.xml",
+	}
+
+	var output bytes.Buffer
+	result, err := generator.Generate(context.Background(), &output)
+	if err != nil {
+		t.Fatalf("generate Dřevočal slatted frame: %v", err)
+	}
+	if result.ItemsProcessed != 1 || result.ItemsSkipped != 0 {
+		t.Fatalf("unexpected result: %#v", result)
+	}
+
+	parsed := parseGeneratedDrevocal(t, output.Bytes())
+	if len(parsed.Items) != 1 {
+		t.Fatalf("expected 1 generated item, got %#v", parsed.Items)
+	}
+	item := parsed.Items[0]
+	if item.ExternalID != "DREVOCAL-N513" || item.Name != "Systema Fix" {
+		t.Fatalf("unexpected generated item: %#v", item)
+	}
+	if item.Categories.Default.ID != "1281" || item.Categories.Default.Path != "LOŽNICE > ROŠTY" {
+		t.Fatalf("unexpected slatted frame category: %#v", item.Categories.Default)
+	}
+	if len(item.Variants) != 1 || len(item.Variants[0].Parameters) != 1 || item.Variants[0].Parameters[0].Name != "Rozměr" {
+		t.Fatalf("unexpected generated slatted frame variants: %#v", item.Variants)
+	}
+}
+
 func parseGeneratedDrevocal(t *testing.T, data []byte) generatedDrevocalShop {
 	t.Helper()
 	var parsed generatedDrevocalShop

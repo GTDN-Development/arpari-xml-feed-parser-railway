@@ -21,7 +21,10 @@ const (
 	defaultVAT   = "21"
 )
 
-var mattressCategory = shoptet.Category{ID: "1188", Path: "LOŽNICE > MATRACE"}
+var (
+	mattressCategory     = shoptet.Category{ID: "1188", Path: "LOŽNICE > MATRACE"}
+	slattedFrameCategory = shoptet.Category{ID: "1281", Path: "LOŽNICE > ROŠTY"}
+)
 
 type Downloader interface {
 	Download(ctx context.Context, url string) (io.ReadCloser, error)
@@ -122,11 +125,17 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 type variantEntry struct {
 	GroupID      string
 	SourceName   string
+	Category     shoptet.Category
 	Manufacturer string
 	Gift         string
 	ImageURL     string
 	Parameters   map[string]string
 	Variant      shoptet.Variant
+}
+
+type productMapping struct {
+	Category           shoptet.Category
+	RequiredParameters []string
 }
 
 func transformVariant(source sourceItem) (variantEntry, bool) {
@@ -138,9 +147,14 @@ func transformVariant(source sourceItem) (variantEntry, bool) {
 		return variantEntry{}, false
 	}
 
+	mapping, ok := productMappingForCategory(source.CategoryText)
+	if !ok {
+		return variantEntry{}, false
+	}
+
 	parameters := source.Parameters.Map()
 	var variantParameters []shoptet.Parameter
-	for _, parameterName := range []string{"Rozměr", "Výška", "Potah"} {
+	for _, parameterName := range mapping.RequiredParameters {
 		value := strings.TrimSpace(parameters[parameterName])
 		if value == "" {
 			slog.Warn("skipping Dřevočal variant without required parameter", "code", code, "parameter", parameterName)
@@ -162,6 +176,7 @@ func transformVariant(source sourceItem) (variantEntry, bool) {
 	return variantEntry{
 		GroupID:      groupID,
 		SourceName:   name,
+		Category:     mapping.Category,
 		Manufacturer: transformManufacturer(source.Manufacturer),
 		Gift:         strings.TrimSpace(source.Gift),
 		ImageURL:     strings.TrimSpace(source.ImageURL),
@@ -210,13 +225,14 @@ func emitProducts(groups map[string][]variantEntry, groupOrder []string, maxProd
 		}
 
 		first := entries[0]
+		category := first.Category
 		item := shoptet.Item{
 			Code:                  "DREVOCAL-" + groupID,
 			Name:                  parentName(first),
 			Manufacturer:          first.Manufacturer,
 			Supplier:              supplierName,
-			Categories:            []shoptet.Category{mattressCategory},
-			DefaultCategory:       &mattressCategory,
+			Categories:            []shoptet.Category{category},
+			DefaultCategory:       &category,
 			Images:                groupImages(entries),
 			InformationParameters: giftInformationParameters(entries),
 			Variants:              variants,
@@ -231,6 +247,24 @@ func emitProducts(groups map[string][]variantEntry, groupOrder []string, maxProd
 		}
 	}
 	return result
+}
+
+func productMappingForCategory(categoryText string) (productMapping, bool) {
+	switch strings.TrimSpace(categoryText) {
+	case "Lamelové rošty":
+		return productMapping{
+			Category:           slattedFrameCategory,
+			RequiredParameters: []string{"Rozměr"},
+		}, true
+	case "", "Matrace", "Doplňky":
+		// Keep Doplňky on the legacy mattress-compatible path so adding rošty does not change existing output.
+		return productMapping{
+			Category:           mattressCategory,
+			RequiredParameters: []string{"Rozměr", "Výška", "Potah"},
+		}, true
+	default:
+		return productMapping{}, false
+	}
 }
 
 func transformManufacturer(value string) string {
@@ -331,6 +365,7 @@ type sourceItem struct {
 	PriceVAT     string           `xml:"PRICE_VAT"`
 	Currency     string           `xml:"CURRENCY"`
 	EAN          string           `xml:"EAN"`
+	CategoryText string           `xml:"CATEGORYTEXT"`
 	URL          string           `xml:"URL"`
 	ImageURL     string           `xml:"IMGURL"`
 	Availability string           `xml:"AVAILABILITY"`

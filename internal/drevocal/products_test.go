@@ -101,6 +101,60 @@ func TestParseProductsGroupsVariantsAndMapsFields(t *testing.T) {
 	}
 }
 
+func TestParseProductsMapsSlattedFramesToRostyCategory(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <ITEM_ID>60022</ITEM_ID>
+    <ITEMGROUP_ID>N513</ITEMGROUP_ID>
+    <PRODUCTNAME>Systema Fix 200 x 90</PRODUCTNAME>
+    <MANUFACTURER>DŘEVOČAL</MANUFACTURER>
+    <PRICE_VAT>2111.00</PRICE_VAT>
+    <CURRENCY>CZK</CURRENCY>
+    <CATEGORYTEXT>Lamelové rošty</CATEGORYTEXT>
+    <IMGURL>https://www.matrace-drevocal.cz/systema-fix.jpg</IMGURL>
+    <AVAILABILITY>Skladem</AVAILABILITY>
+    <PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>200 x 90</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ITEM_ID>60023</ITEM_ID>
+    <ITEMGROUP_ID>N513</ITEMGROUP_ID>
+    <PRODUCTNAME>Systema Fix 200 x 80</PRODUCTNAME>
+    <MANUFACTURER>DŘEVOČAL</MANUFACTURER>
+    <PRICE_VAT>2111.00</PRICE_VAT>
+    <CURRENCY>CZK</CURRENCY>
+    <CATEGORYTEXT>Lamelové rošty</CATEGORYTEXT>
+    <IMGURL>https://www.matrace-drevocal.cz/systema-fix.jpg</IMGURL>
+    <AVAILABILITY>Skladem</AVAILABILITY>
+    <PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>200 x 80</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse Dřevočal slatted frames: %v", err)
+	}
+	if stats.ProductsRead != 2 || stats.ProductsEmitted != 1 || stats.ProductsSkipped != 0 || stats.VariantsEmitted != 2 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected 1 grouped item, got %#v", feed.Items)
+	}
+
+	item := feed.Items[0]
+	if item.Code != "DREVOCAL-N513" || item.Name != "Systema Fix" {
+		t.Fatalf("unexpected parent item: %#v", item)
+	}
+	if item.DefaultCategory == nil || *item.DefaultCategory != (shoptet.Category{ID: "1281", Path: "LOŽNICE > ROŠTY"}) {
+		t.Fatalf("unexpected category: %#v", item.DefaultCategory)
+	}
+	if len(item.Variants) != 2 {
+		t.Fatalf("expected 2 variants, got %#v", item.Variants)
+	}
+	if len(item.Variants[0].Parameters) != 1 || item.Variants[0].Parameters[0] != (shoptet.Parameter{Name: "Rozměr", Value: "200 x 90"}) {
+		t.Fatalf("unexpected slatted frame parameters: %#v", item.Variants[0].Parameters)
+	}
+}
+
 func TestParseProductsLimitsOutputProducts(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM><ITEM_ID>1</ITEM_ID><ITEMGROUP_ID>401</ITEMGROUP_ID><PRODUCTNAME>Matrace Milena 195x80x10 Úplet</PRODUCTNAME><PRICE_VAT>2650.00</PRICE_VAT><PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>195x80</VAL></PARAM><PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>10 cm</VAL></PARAM><PARAM><PARAM_NAME>Potah</PARAM_NAME><VAL>Úplet</VAL></PARAM></SHOPITEM>
@@ -143,6 +197,7 @@ func TestParseProductsSkipsMissingIdentityOrRequiredParameter(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM><ITEMGROUP_ID>521</ITEMGROUP_ID><PRODUCTNAME>Matrace bez kódu</PRODUCTNAME><PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>195x80</VAL></PARAM><PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>19 cm</VAL></PARAM><PARAM><PARAM_NAME>Potah</PARAM_NAME><VAL>Úplet</VAL></PARAM></SHOPITEM>
   <SHOPITEM><ITEM_ID>5211112</ITEM_ID><ITEMGROUP_ID>521</ITEMGROUP_ID><PRODUCTNAME>Matrace bez potahu</PRODUCTNAME><PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>195x80</VAL></PARAM><PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>19 cm</VAL></PARAM></SHOPITEM>
+  <SHOPITEM><ITEM_ID>7000</ITEM_ID><ITEMGROUP_ID>X700</ITEMGROUP_ID><PRODUCTNAME>Neznámý produkt</PRODUCTNAME><CATEGORYTEXT>Neznámá kategorie</CATEGORYTEXT><PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>195x80</VAL></PARAM><PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>19 cm</VAL></PARAM><PARAM><PARAM_NAME>Potah</PARAM_NAME><VAL>Úplet</VAL></PARAM></SHOPITEM>
   <SHOPITEM><ITEM_ID>5211113</ITEM_ID><ITEMGROUP_ID>521</ITEMGROUP_ID><PRODUCTNAME>Matrace Eliška 195x80x19 Úplet</PRODUCTNAME><PARAM><PARAM_NAME>Rozměr</PARAM_NAME><VAL>195x80</VAL></PARAM><PARAM><PARAM_NAME>Výška</PARAM_NAME><VAL>19 cm</VAL></PARAM><PARAM><PARAM_NAME>Potah</PARAM_NAME><VAL>Úplet</VAL></PARAM></SHOPITEM>
 </SHOP>`
 
@@ -150,7 +205,7 @@ func TestParseProductsSkipsMissingIdentityOrRequiredParameter(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse Dřevočal products: %v", err)
 	}
-	if stats.ProductsRead != 3 || stats.ProductsSkipped != 2 || stats.VariantsSkipped != 2 || stats.ProductsEmitted != 1 {
+	if stats.ProductsRead != 4 || stats.ProductsSkipped != 3 || stats.VariantsSkipped != 3 || stats.ProductsEmitted != 1 {
 		t.Fatalf("unexpected stats: %#v", stats)
 	}
 	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 1 {

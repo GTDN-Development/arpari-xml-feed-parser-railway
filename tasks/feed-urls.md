@@ -26,9 +26,9 @@ Base URL: `https://arpari-xml-feed-parser-railway-production.up.railway.app`
 
 - Dřevočal katalog: [drevocal.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/drevocal.xml)
   - Katalogový feed z Dřevočal B2B XML.
-  - Skládá varianty matrací podle `ITEMGROUP_ID`.
-  - Variantní parametry jsou `Rozměr`, `Výška` a `Potah`.
-  - Mapuje produkty do kategorie `LOŽNICE > MATRACE`.
+  - Skládá varianty produktů podle `ITEMGROUP_ID`.
+  - Matrace mapuje do `LOŽNICE > MATRACE` s parametry `Rozměr`, `Výška` a `Potah`.
+  - Lamelové rošty mapuje do `LOŽNICE > ROŠTY` s parametrem `Rozměr`.
   - Přenáší dostupnost z `AVAILABILITY`.
   - Volitelný `GIFT` posílá jako doplňkový parametr `Dárek`.
 
