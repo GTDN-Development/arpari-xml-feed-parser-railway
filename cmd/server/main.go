@@ -12,7 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	arpari "github.com/fanda/arpari-xml-feed-parser-railway"
 	"github.com/fanda/arpari-xml-feed-parser-railway/internal/config"
+	"github.com/fanda/arpari-xml-feed-parser-railway/internal/feeddocs"
 	feedrebuild "github.com/fanda/arpari-xml-feed-parser-railway/internal/rebuild"
 	runstatus "github.com/fanda/arpari-xml-feed-parser-railway/internal/status"
 )
@@ -51,6 +53,7 @@ func newMuxWithRebuildRunner(dataDir string, rebuildToken string, runner rebuild
 	mux.HandleFunc("GET /{$}", helloHandler)
 	mux.HandleFunc("GET /healthz", healthHandler)
 	mux.HandleFunc("GET /status", statusHandler(dataDir))
+	mux.HandleFunc("GET /zpracovani-dodavatelskych-feedu", feedDocsHandler)
 	mux.HandleFunc("GET /feeds/{filename}", feedHandler(dataDir))
 	mux.HandleFunc("POST /internal/rebuild/all", rebuildAllHandler(rebuildToken, runner))
 	mux.HandleFunc("POST /internal/rebuild/{supplier}", rebuildSupplierHandler(rebuildToken, runner))
@@ -65,6 +68,11 @@ func helloHandler(w http.ResponseWriter, _ *http.Request) {
 func healthHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	fmt.Fprintln(w, "ok")
+}
+
+func feedDocsHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprint(w, feeddocs.Render(arpari.FeedProcessingMarkdown))
 }
 
 func statusHandler(dataDir string) http.HandlerFunc {

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	feedrebuild "github.com/fanda/arpari-xml-feed-parser-railway/internal/rebuild"
@@ -36,6 +37,37 @@ func TestUnknownRouteReturnsNotFound(t *testing.T) {
 
 	if recorder.Code != http.StatusNotFound {
 		t.Fatalf("expected status %d, got %d", http.StatusNotFound, recorder.Code)
+	}
+}
+
+func TestFeedDocsHandler(t *testing.T) {
+	request := httptest.NewRequest(http.MethodGet, "/zpracovani-dodavatelskych-feedu", nil)
+	recorder := httptest.NewRecorder()
+
+	newMux(t.TempDir()).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
+	}
+	if contentType := recorder.Header().Get("Content-Type"); contentType != "text/html; charset=utf-8" {
+		t.Fatalf("expected HTML content type, got %q", contentType)
+	}
+
+	body := recorder.Body.String()
+	for _, expected := range []string{
+		"<title>Zpracování dodavatelských feedů</title>",
+		"STIMA katalog",
+		"curl -L -o source-stima-products.xml",
+		"ColorVariants",
+		`href="/status"`,
+		`class="copy-code"`,
+		`class="icon-copy"`,
+		`class="icon-check"`,
+		`navigator.clipboard.writeText`,
+	} {
+		if !strings.Contains(body, expected) {
+			t.Fatalf("expected docs response to contain %q", expected)
+		}
 	}
 }
 

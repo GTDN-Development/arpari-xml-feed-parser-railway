@@ -26,6 +26,7 @@ Implementováno:
 - Dřevočal katalogový MVP feed `drevocal` a test feed `drevocal-test`,
 - Sakypaky katalogový MVP feed `sakypaky` a test feed `sakypaky-test`,
 - endpointy `GET /feeds/*.xml` po ručních rebuild bězích,
+- endpoint `GET /zpracovani-dodavatelskych-feedu` se stylovaným klientským přehledem zpracování feedů,
 - chráněné endpointy `POST /internal/rebuild/{supplier}` a `POST /internal/rebuild/all`,
 - cron trigger binárka `cmd/rebuild-trigger` pro Railway Scheduled Job,
 - Shoptet XML writer pro jednoduché produkty, varianty, variantní parametry a sklad po skladech,
@@ -89,6 +90,7 @@ DATA_DIR=/tmp/arpari-data go run ./cmd/server
 curl http://localhost:8080/
 curl http://localhost:8080/healthz
 curl http://localhost:8080/status
+curl http://localhost:8080/zpracovani-dodavatelskych-feedu
 curl http://localhost:8080/feeds/hello.xml
 curl http://localhost:8080/feeds/stima-products.xml
 curl http://localhost:8080/feeds/stima-products-test.xml
