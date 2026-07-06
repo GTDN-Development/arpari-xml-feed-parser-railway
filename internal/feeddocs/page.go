@@ -115,22 +115,28 @@ func Render(markdown string) string {
       justify-content: center;
       width: 32px;
       height: 32px;
-      border: 1px solid rgba(232, 245, 246, .22);
+      border: 1px solid #d9e0e4;
       border-radius: 6px;
-      background: rgba(232, 245, 246, .08);
-      color: var(--code-text);
+      background: #f8fbfc;
+      color: #102126;
       cursor: pointer;
+      box-shadow: 0 2px 8px rgba(16, 33, 38, .24);
     }
     .copy-code:hover {
-      border-color: rgba(232, 245, 246, .42);
-      background: rgba(232, 245, 246, .14);
+      border-color: #b8cbd0;
+      background: var(--accent-soft);
     }
     .copy-code svg {
       width: 16px;
       height: 16px;
       stroke-width: 2;
     }
-    .copy-code .icon-check { display: none; color: #8ee6b0; }
+    .copy-code .icon-check { display: none; }
+    .copy-code.is-copied {
+      border-color: #86d79c;
+      background: #dcf8e3;
+      color: #14532d;
+    }
     .copy-code.is-copied .icon-copy { display: none; }
     .copy-code.is-copied .icon-check { display: block; }
     a { color: var(--accent); }
