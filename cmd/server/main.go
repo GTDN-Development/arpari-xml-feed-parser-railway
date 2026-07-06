@@ -59,7 +59,7 @@ func newMuxWithRebuildRunner(dataDir string, rebuildToken string, runner rebuild
 
 func helloHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	fmt.Fprintln(w, "Hello world!")
+	fmt.Fprintln(w, "Arpari XML feed parser is running.")
 }
 
 func healthHandler(w http.ResponseWriter, _ *http.Request) {

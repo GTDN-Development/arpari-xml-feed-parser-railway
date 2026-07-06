@@ -11,7 +11,7 @@ Podrobné obecné zadání je v souboru [ZADANI.md](ZADANI.md).
 Implementováno:
 
 - Go HTTP server bez externích závislostí,
-- endpoint `GET /` s odpovědí `Hello world!`,
+- endpoint `GET /` s odpovědí `Arpari XML feed parser is running.`,
 - endpoint `GET /healthz` s odpovědí `ok`,
 - lokální dummy feed pipeline přes `cmd/rebuild`,
 - endpoint `GET /feeds/hello.xml` pro vygenerovaný dummy XML feed,
@@ -128,7 +128,7 @@ go run ./cmd/rebuild-trigger
 Očekávané odpovědi:
 
 ```text
-Hello world!
+Arpari XML feed parser is running.
 ok
 ```
 

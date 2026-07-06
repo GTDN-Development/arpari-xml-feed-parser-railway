@@ -23,7 +23,7 @@ func TestHelloHandler(t *testing.T) {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
 	}
 
-	if body := recorder.Body.String(); body != "Hello world!\n" {
+	if body := recorder.Body.String(); body != "Arpari XML feed parser is running.\n" {
 		t.Fatalf("expected hello response, got %q", body)
 	}
 }
