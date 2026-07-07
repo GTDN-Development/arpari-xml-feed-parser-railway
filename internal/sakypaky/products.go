@@ -228,13 +228,14 @@ func transformVariantGroup(entries []variantEntry, maxVariants int, stats *Produ
 		return shoptet.Item{}, false
 	}
 
+	displayColors, parentColors := variantColorPlan(entries)
 	colorCounts := make(map[string]int, len(entries))
-	for _, entry := range entries {
-		colorCounts[normalizeKey(variantColor(entry))]++
+	for _, color := range displayColors {
+		colorCounts[normalizeKey(color)]++
 	}
 
 	var variants []shoptet.Variant
-	for _, entry := range entries {
+	for index, entry := range entries {
 		if len(variants) >= maxVariants {
 			stats.VariantsTrimmed++
 			continue
@@ -251,7 +252,7 @@ func transformVariantGroup(entries []variantEntry, maxVariants int, stats *Produ
 			ImageRef:     firstImageURL(item.Images),
 			Parameters: []shoptet.Parameter{{
 				Name:  variantParameterName,
-				Value: variantValue(variantColor(entry), item.Code, colorCounts),
+				Value: variantValue(displayColors[index], item.Code, colorCounts),
 			}},
 		})
 	}
@@ -272,7 +273,7 @@ func transformVariantGroup(entries []variantEntry, maxVariants int, stats *Produ
 	category := entries[0].Category
 	return shoptet.Item{
 		Code:            "SAKYPAKY-" + entries[0].GroupID,
-		Name:            parentName(entries),
+		Name:            parentName(entries, parentColors),
 		Description:     first.Description,
 		Manufacturer:    first.Manufacturer,
 		Supplier:        supplierName,
@@ -404,10 +405,73 @@ func variantValue(color, code string, colorCounts map[string]int) string {
 	return truncateVariantValue(color + " (" + strings.TrimSpace(code) + ")")
 }
 
-func parentName(entries []variantEntry) string {
-	names := make([][]string, 0, len(entries))
+func variantColorPlan(entries []variantEntry) ([]string, []string) {
+	displayColors := make([]string, len(entries))
+	parentColors := make([]string, len(entries))
+	for index, entry := range entries {
+		displayColors[index] = variantColor(entry)
+		parentColors[index] = strings.TrimSpace(entry.Color)
+	}
+	if !isCoherentDusinkaVariantGroup(entries) {
+		return displayColors, parentColors
+	}
+
+	for index, entry := range entries {
+		suffix, _ := dusinkaVariantSuffix(entry.Color)
+		displayColors[index] = suffix
+		parentColors[index] = suffix
+	}
+	return displayColors, parentColors
+}
+
+func isCoherentDusinkaVariantGroup(entries []variantEntry) bool {
+	if len(entries) < 2 {
+		return false
+	}
+
+	var groupBase string
 	for _, entry := range entries {
-		name := productBaseName(entry.SourceName, entry.Color)
+		suffix, ok := dusinkaVariantSuffix(entry.Color)
+		if !ok {
+			return false
+		}
+
+		base := trimTrailingValue(entry.SourceName, suffix)
+		if base == entry.SourceName || !lastWordEqual(base, "Dušinka") {
+			return false
+		}
+		if groupBase == "" {
+			groupBase = base
+			continue
+		}
+		if normalizeKey(groupBase) != normalizeKey(base) {
+			return false
+		}
+	}
+	return true
+}
+
+func dusinkaVariantSuffix(color string) (string, bool) {
+	parts := strings.Fields(strings.TrimSpace(color))
+	if len(parts) < 2 || !strings.EqualFold(parts[0], "Dušinka") {
+		return "", false
+	}
+	return strings.Join(parts[1:], " "), true
+}
+
+func lastWordEqual(value, word string) bool {
+	parts := strings.Fields(strings.TrimSpace(value))
+	return len(parts) > 0 && strings.EqualFold(parts[len(parts)-1], word)
+}
+
+func parentName(entries []variantEntry, colors []string) string {
+	names := make([][]string, 0, len(entries))
+	for index, entry := range entries {
+		color := strings.TrimSpace(entry.Color)
+		if index < len(colors) {
+			color = colors[index]
+		}
+		name := productBaseName(entry.SourceName, color)
 		parts := strings.Fields(name)
 		if len(parts) > 0 {
 			names = append(names, parts)

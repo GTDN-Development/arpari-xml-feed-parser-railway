@@ -131,6 +131,105 @@ func TestParseProductsTrimsPartialColorFromParentName(t *testing.T) {
 	}
 }
 
+func TestParseProductsNormalizesDusinkaVariantSeries(t *testing.T) {
+	feed, _, err := ParseProducts(context.Background(), strings.NewReader(`<SHOP>
+  <SHOPITEM>
+    <PRODUCTNAME>SakyPaky taburet Dušinka ANTONIE</PRODUCTNAME>
+    <CATEGORYTEXT>Nábytek | Obývací pokoj | Křesla a taburety | Taburety</CATEGORYTEXT>
+    <CODE>8005207902</CODE>
+    <ITEMGROUP_ID>G-DUSINKA-TABURET</ITEMGROUP_ID>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Dušinka ANTONIE</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <PRODUCTNAME>SakyPaky taburet Dušinka EMA</PRODUCTNAME>
+    <CATEGORYTEXT>Nábytek | Obývací pokoj | Křesla a taburety | Taburety</CATEGORYTEXT>
+    <CODE>8005207925</CODE>
+    <ITEMGROUP_ID>G-DUSINKA-TABURET</ITEMGROUP_ID>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Dušinka EMA</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse Sakypaky products: %v", err)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected 1 grouped item, got %#v", feed.Items)
+	}
+
+	item := feed.Items[0]
+	if item.Name != "SakyPaky taburet Dušinka" {
+		t.Fatalf("expected Dušinka to remain in parent name, got %q", item.Name)
+	}
+	if len(item.Variants) != 2 {
+		t.Fatalf("expected 2 variants, got %#v", item.Variants)
+	}
+	if item.Variants[0].Parameters[0].Value != "ANTONIE" || item.Variants[1].Parameters[0].Value != "EMA" {
+		t.Fatalf("expected Dušinka prefix to be removed from variant values, got %#v", item.Variants)
+	}
+}
+
+func TestParseProductsNormalizesZiziDusinkaVariantSeries(t *testing.T) {
+	feed, _, err := ParseProducts(context.Background(), strings.NewReader(`<SHOP>
+  <SHOPITEM>
+    <PRODUCTNAME>SakyPaky sedací vak Žiži Dušinka ANTONIE</PRODUCTNAME>
+    <CATEGORYTEXT>Nábytek | Obývací pokoj | Křesla a taburety | Sedací vaky</CATEGORYTEXT>
+    <CODE>8005212902</CODE>
+    <ITEMGROUP_ID>G-DUSINKA-ZIZI</ITEMGROUP_ID>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Dušinka ANTONIE</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <PRODUCTNAME>SakyPaky sedací vak Žiži Dušinka EMA</PRODUCTNAME>
+    <CATEGORYTEXT>Nábytek | Obývací pokoj | Křesla a taburety | Sedací vaky</CATEGORYTEXT>
+    <CODE>8005212925</CODE>
+    <ITEMGROUP_ID>G-DUSINKA-ZIZI</ITEMGROUP_ID>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Dušinka EMA</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse Sakypaky products: %v", err)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected 1 grouped item, got %#v", feed.Items)
+	}
+
+	item := feed.Items[0]
+	if item.Name != "SakyPaky sedací vak Žiži Dušinka" {
+		t.Fatalf("expected Dušinka to remain in parent name, got %q", item.Name)
+	}
+	if item.Variants[0].Parameters[0].Value != "ANTONIE" || item.Variants[1].Parameters[0].Value != "EMA" {
+		t.Fatalf("expected Dušinka prefix to be removed from variant values, got %#v", item.Variants)
+	}
+}
+
+func TestParseProductsKeepsMixedDusinkaVariantValues(t *testing.T) {
+	feed, _, err := ParseProducts(context.Background(), strings.NewReader(`<SHOP>
+  <SHOPITEM>
+    <PRODUCTNAME>SakyPaky sedací vak Klííídek KYTI, Dušinka PŘÁTELSTVÍ 2</PRODUCTNAME>
+    <CATEGORYTEXT>Nábytek | Obývací pokoj | Křesla a taburety | Sedací vaky</CATEGORYTEXT>
+    <CODE>KYTI-DUSINKA</CODE>
+    <ITEMGROUP_ID>G-MIXED</ITEMGROUP_ID>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Dušinka PŘÁTELSTVÍ 2</VAL></PARAM>
+  </SHOPITEM>
+  <SHOPITEM>
+    <PRODUCTNAME>SakyPaky sedací vak Klííídek KYTI, Camo</PRODUCTNAME>
+    <CATEGORYTEXT>Nábytek | Obývací pokoj | Křesla a taburety | Sedací vaky</CATEGORYTEXT>
+    <CODE>KYTI-CAMO</CODE>
+    <ITEMGROUP_ID>G-MIXED</ITEMGROUP_ID>
+    <PARAM><PARAM_NAME>Barva</PARAM_NAME><VAL>Camo</VAL></PARAM>
+  </SHOPITEM>
+</SHOP>`), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse Sakypaky products: %v", err)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected 1 grouped item, got %#v", feed.Items)
+	}
+
+	variants := feed.Items[0].Variants
+	if variants[0].Parameters[0].Value != "Dušinka PŘÁTELSTVÍ 2" || variants[1].Parameters[0].Value != "Camo" {
+		t.Fatalf("expected mixed group values to stay unchanged, got %#v", variants)
+	}
+}
+
 func TestParseProductsDisambiguatesDuplicateColors(t *testing.T) {
 	feed, _, err := ParseProducts(context.Background(), strings.NewReader(`<SHOP>
   <SHOPITEM>
