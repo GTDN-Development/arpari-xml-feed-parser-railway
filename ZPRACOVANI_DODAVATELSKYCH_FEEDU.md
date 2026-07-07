@@ -344,8 +344,9 @@ Co děláme:
 - Produkt identifikujeme podle `CODE`.
 - Dostupnost odvozujeme z `DELIVERY_DATE`.
 - Obrázky bereme z hlavního obrázku a alternativních obrázků (`IMGURL`, `IMGURL_ALTERNATIVE`).
-- Varianty skládáme podle `ITEMGROUP_ID`.
+- Varianty skládáme podle `ITEMGROUP_ID`; společná část názvů ve skupině zůstává jako název produktu a rozdílná část jde do variantního parametru `Barva`.
 - Variantní parametr `Barva` bereme z `PARAM`, kde `PARAM_NAME` je `Barva` a hodnota je ve `VAL`.
+- U konzistentních řad `Dušinka`, kde zdroj posílá hodnoty typu `Dušinka ANTONIE`, ponecháváme `Dušinka` v názvu produktu a do varianty posíláme jen konkrétní motiv, například `ANTONIE`.
 
 ## Když se objeví problém
 
