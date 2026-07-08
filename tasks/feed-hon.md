@@ -25,6 +25,7 @@ Generovat Shoptet XML feed z HON dodavatelského katalogu.
 - Katalogová data nesmí bez mapování přepisovat citlivá data původního katalogu.
 - Kategorie jsou interně mapované široce podle `MAIN_CATEGORY`, ale pravidelný veřejný výstup je neexportuje, aby další import nepřepsal ruční zařazení produktů v Shoptetu.
 - Každý produkt se označuje `SUPPLIER=HON`; hodnota je určená pro interní filtrování dodavatele v Shoptet administraci.
+- `MANUFACTURER` zůstává `HON`, kromě bezpečně rozpoznaných značkových markerů ve zdrojové `MAIN_CATEGORY`: `OfficePro` se exportuje jako `Office Pro` a `LÖFFLER` jako `LÖFFLER`.
 - Zdrojové `PARAM` hodnoty se exportují jako Shoptet `INFORMATION_PARAMETERS`, tedy jako tabulkové doplňkové parametry, ne jako vybíratelné varianty.
 - Variantní produkty se skládají z položek se stejným `PRODUCT` a `MAIN_CATEGORY`, pokud jde z `DESCRIPTION` bezpečně vytáhnout unikátní hodnotu varianty.
 - Variantní parametr se jmenuje `Provedení`.

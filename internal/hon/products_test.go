@@ -91,6 +91,80 @@ func TestParseProductsLimitsTestOutput(t *testing.T) {
 	}
 }
 
+func TestTransformManufacturerMapsKnownHONCategoryMarkers(t *testing.T) {
+	tests := []struct {
+		name         string
+		mainCategory string
+		expected     string
+	}{
+		{
+			name:         "officepro",
+			mainCategory: "Židle kancelářské OfficePro",
+			expected:     "Office Pro",
+		},
+		{
+			name:         "loffler",
+			mainCategory: "Židle LÖFFLER",
+			expected:     "LÖFFLER",
+		},
+		{
+			name:         "honplus fallback",
+			mainCategory: "Židle kancelářské HonPlus",
+			expected:     "HON",
+		},
+		{
+			name:         "generic fallback",
+			mainCategory: "Doplňky",
+			expected:     "HON",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := transformManufacturer(test.mainCategory); got != test.expected {
+				t.Fatalf("unexpected manufacturer: %q", got)
+			}
+		})
+	}
+}
+
+func TestParseProductsMapsOfficeProManufacturerFromMainCategory(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <ID>812692</ID>
+    <MAIN_CATEGORY>Židle kancelářské OfficePro</MAIN_CATEGORY>
+    <PRODUCT>CALYPSO</PRODUCT>
+    <PART_NUMBER>DY40010001-073028</PART_NUMBER>
+    <DESCRIPTION>antracit 1211,kanc.židle</DESCRIPTION>
+  </SHOPITEM>
+  <SHOPITEM>
+    <ID>812693</ID>
+    <MAIN_CATEGORY>Židle kancelářské OfficePro</MAIN_CATEGORY>
+    <PRODUCT>CALYPSO</PRODUCT>
+    <PART_NUMBER>DY40010002-073027</PART_NUMBER>
+    <DESCRIPTION>sv.šedá12A11,kanc.židle</DESCRIPTION>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{})
+	if err != nil {
+		t.Fatalf("parse HON products: %v", err)
+	}
+	if stats.ProductsRead != 2 || stats.ProductsEmitted != 1 || stats.ItemsWithVariants != 1 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+	if len(feed.Items) != 1 {
+		t.Fatalf("expected grouped Office Pro item, got %#v", feed.Items)
+	}
+	item := feed.Items[0]
+	if item.Supplier != "HON" {
+		t.Fatalf("unexpected supplier: %q", item.Supplier)
+	}
+	if item.Manufacturer != "Office Pro" {
+		t.Fatalf("unexpected manufacturer: %q", item.Manufacturer)
+	}
+}
+
 func TestTransformCategoryMapsMeetingChairsToExistingConferenceCategory(t *testing.T) {
 	categories, defaultCategory := transformCategory("Židle jednací OfficePro")
 	expected := shoptet.Category{ID: "1146", Path: "ŽIDLE > KONFERENČNÍ ŽIDLE"}

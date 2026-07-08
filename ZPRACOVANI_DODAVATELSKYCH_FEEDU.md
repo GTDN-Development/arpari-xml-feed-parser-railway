@@ -269,6 +269,8 @@ Co děláme:
 
 - Jako kód používáme `PART_NUMBER`; pokud chybí, použijeme `ID`.
 - Název skládáme z `PRODUCT` a `DESCRIPTION`.
+- Dodavatele posíláme jako `SUPPLIER=HON`.
+- Výrobce/značku posíláme v `MANUFACTURER`: ze zdrojové `MAIN_CATEGORY` bezpečně mapujeme `OfficePro` na `Office Pro` a `LÖFFLER` na `LÖFFLER`, ostatní položky zůstávají jako `HON`.
 - Dostupnost bereme z `DOSTUPNOST`.
 - Obrázky bereme z vnořeného bloku `IMGURL` -> `IMGURL`.
 - Doplňkové parametry bereme z `PARAM`.

@@ -122,7 +122,7 @@ func transformProduct(source sourceItem) (shoptet.Item, bool) {
 		Code:                  code,
 		Name:                  name,
 		Description:           strings.TrimSpace(source.Description),
-		Manufacturer:          supplierName,
+		Manufacturer:          transformManufacturer(source.MainCategory),
 		Supplier:              supplierName,
 		PriceVAT:              strings.TrimSpace(source.PriceVAT),
 		Stock:                 normalizeNumber(source.Stock),
@@ -565,6 +565,18 @@ func transformParameters(parameters []sourceParameter) []shoptet.Parameter {
 		result = append(result, shoptet.Parameter{Name: name, Value: value})
 	}
 	return result
+}
+
+func transformManufacturer(mainCategory string) string {
+	name := strings.ToLower(strings.TrimSpace(mainCategory))
+	switch {
+	case strings.Contains(name, "officepro") || strings.Contains(name, "office pro"):
+		return "Office Pro"
+	case strings.Contains(name, "löffler"):
+		return "LÖFFLER"
+	default:
+		return supplierName
+	}
 }
 
 func transformCategory(mainCategory string) ([]shoptet.Category, *shoptet.Category) {

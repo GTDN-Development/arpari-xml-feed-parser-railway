@@ -44,7 +44,9 @@ func TestHonGenerateOmitsCategoriesToPreserveManualAssignments(t *testing.T) {
 	if strings.Contains(xml, "<CATEGORIES>") || strings.Contains(xml, "KONFERENČNÍ ŽIDLE") {
 		t.Fatalf("expected generated HON feed to omit categories, got:\n%s", xml)
 	}
-	if !strings.Contains(xml, "<CODE>DY30020001-017043</CODE>") || !strings.Contains(xml, "<SUPPLIER>HON</SUPPLIER>") {
+	if !strings.Contains(xml, "<CODE>DY30020001-017043</CODE>") ||
+		!strings.Contains(xml, "<MANUFACTURER>Office Pro</MANUFACTURER>") ||
+		!strings.Contains(xml, "<SUPPLIER>HON</SUPPLIER>") {
 		t.Fatalf("expected product identity fields, got:\n%s", xml)
 	}
 }
