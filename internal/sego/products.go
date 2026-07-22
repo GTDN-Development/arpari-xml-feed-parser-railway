@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -231,6 +232,9 @@ func transformDeliveryDate(value string) string {
 	}
 	if value == "" {
 		return ""
+	}
+	if days, err := strconv.Atoi(value); err == nil && days < 0 {
+		return "Momentálně nedostupné"
 	}
 	return "Dodání " + value + " dnů"
 }

@@ -233,7 +233,7 @@ curl -L -o parser-sego.xml https://arpari-xml-feed-parser-railway-production.up.
 Co děláme:
 
 - Jako hlavní kód používáme `EAN`; pokud chybí, použijeme `ITEM_ID`.
-- Dostupnost odvozujeme z `DELIVERY_DATE`.
+- Dostupnost odvozujeme z `DELIVERY_DATE`: `0` převádíme na `Skladem`, zápornou hodnotu na `Momentálně nedostupné` a ostatní hodnoty na počet dnů dodání.
 - Obrázky bereme z hlavního obrázku a alternativních obrázků (`IMGURL`, `IMGURL_ALTERNATIVE`).
 - Doplňkové parametry bereme z `PARAM`, včetně případné jednotky `UNIT`.
 - Produkty ve tvaru `PRODUCTNAME` jako `Název | Hodnota` skládáme do variant, pokud hodnotu najdeme i mezi parametry (`PARAM`).

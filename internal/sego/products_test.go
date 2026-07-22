@@ -63,6 +63,14 @@ func TestParseProductsUsesStableEANCodeForHeurekaItems(t *testing.T) {
 	}
 }
 
+func TestTransformDeliveryDateMapsNegativeValuesToUnavailable(t *testing.T) {
+	for _, value := range []string{"-1", "-42", "  -2  "} {
+		if availability := transformDeliveryDate(value); availability != "Momentálně nedostupné" {
+			t.Errorf("transformDeliveryDate(%q) = %q, expected Momentálně nedostupné", value, availability)
+		}
+	}
+}
+
 func TestParseProductsSkipsDefaultExcludedEANCodes(t *testing.T) {
 	input := `<?xml version="1.0" encoding="utf-8"?>
 <SHOP xmlns="http://www.zbozi.cz/ns/offer/1.0">
