@@ -7,6 +7,6 @@
   "deploy": {
     "startCommand": "/app/rebuild-trigger",
     "restartPolicyType": "NEVER",
-    "cronSchedule": "0 2 * * *"
+    "cronSchedule": "30 2,6,10,15 * * *"
   }
 }
