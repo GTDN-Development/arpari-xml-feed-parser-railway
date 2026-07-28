@@ -56,6 +56,9 @@ func (downloader HTTPDownloader) Download(ctx context.Context, url string) (io.R
 type ProductsOptions struct {
 	MaxVariantsPerProduct int
 	MaxProducts           int
+	VariantWhitelist      FabricWhitelist
+	MissingVariantsOnly   bool
+	MinimalVariantCatalog bool
 }
 
 type ProductsStats struct {
@@ -103,7 +106,7 @@ func ParseProducts(ctx context.Context, r io.Reader, options ProductsOptions) (s
 		}
 
 		stats.ProductsRead++
-		item, itemStats, ok := transformProduct(source, maxVariants)
+		item, itemStats, ok := transformProductWithOptions(source, maxVariants, options)
 		stats.ProductsSkipped += itemStats.ProductsSkipped
 		stats.ProductsTrimmed += itemStats.ProductsTrimmed
 		stats.VariantsEmitted += itemStats.VariantsEmitted
@@ -133,6 +136,10 @@ type productTransformStats struct {
 }
 
 func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, productTransformStats, bool) {
+	return transformProductWithOptions(source, maxVariants, ProductsOptions{})
+}
+
+func transformProductWithOptions(source sourceShopItem, maxVariants int, options ProductsOptions) (shoptet.Item, productTransformStats, bool) {
 	var stats productTransformStats
 	name := strings.TrimSpace(source.Name)
 
@@ -176,6 +183,8 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 
 	variants := make([]shoptet.Variant, 0, min(len(source.Variants), maxVariants))
 	var firstValidVariantCode string
+	eligibleVariantIndex := 0
+	allowedFabrics := options.VariantWhitelist.ProductFabrics(source)
 	for variantIndex, sourceVariant := range source.Variants {
 		code := strings.TrimSpace(sourceVariant.Code)
 		if code == "" {
@@ -190,6 +199,20 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 		}
 		if firstValidVariantCode == "" {
 			firstValidVariantCode = code
+		}
+		wasPreviouslyTrimmed := eligibleVariantIndex >= maxVariants
+		eligibleVariantIndex++
+		if options.MissingVariantsOnly && !wasPreviouslyTrimmed {
+			stats.VariantsSkipped++
+			continue
+		}
+		if options.MissingVariantsOnly && len(allowedFabrics) == 0 {
+			stats.VariantsSkipped++
+			continue
+		}
+		if !AllowsFabric(allowedFabrics, sourceVariant.Parameters) {
+			stats.VariantsSkipped++
+			continue
 		}
 		if len(variants) >= maxVariants {
 			stats.VariantsTrimmed++
@@ -209,7 +232,11 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 
 	if len(variants) == 0 {
 		stats.ProductsSkipped = 1
-		slog.Warn("skipping STIMA variant product without usable variants", "name", name)
+		if options.MissingVariantsOnly {
+			slog.Debug("skipping STIMA variant product without missing variants", "name", name)
+		} else {
+			slog.Warn("skipping STIMA variant product without usable variants", "name", name)
+		}
 		return shoptet.Item{}, stats, false
 	}
 	if stats.VariantsTrimmed > 0 {
@@ -226,6 +253,13 @@ func transformProduct(source sourceShopItem, maxVariants int) (shoptet.Item, pro
 
 	categories, defaultCategory := transformCategories(source.Categories, name)
 	code := parentCode(source.Code, firstValidVariantCode)
+	if options.MinimalVariantCatalog {
+		stats.VariantsEmitted = len(variants)
+		return shoptet.Item{
+			Code:     code,
+			Variants: variants,
+		}, stats, true
+	}
 	if shouldSkipUnavailableWithoutImages(source) {
 		stats.ProductsSkipped = 1
 		slog.Warn("skipping STIMA unavailable variant product without image", "name", name, "code", code)

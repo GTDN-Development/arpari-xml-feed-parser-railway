@@ -19,6 +19,9 @@ func TestStimaStockGenerateUsesFixtureBackedDownloader(t *testing.T) {
             <WAREHOUSE><NAME>HLAVNÍ SKLAD</NAME><VALUE>7.00</VALUE></WAREHOUSE>
           </WAREHOUSES>
         </STOCK>
+        <PARAMETERS>
+          <PARAMETER><NAME>Sedák</NAME><VALUE>raven 15 šedá</VALUE></PARAMETER>
+        </PARAMETERS>
       </VARIANT>
     </VARIANTS>
   </SHOPITEM>

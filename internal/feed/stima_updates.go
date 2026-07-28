@@ -62,6 +62,7 @@ func generateStimaUpdate(ctx context.Context, w io.Writer, downloader stima.Down
 
 	feed, stats, err := parser(ctx, body, stima.UpdateOptions{
 		MaxVariantsPerProduct: shoptet.DefaultMaxVariantsPerItem,
+		VariantWhitelist:      stima.DefaultFabricWhitelist(),
 	})
 	if err != nil {
 		return Result{}, err

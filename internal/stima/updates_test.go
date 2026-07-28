@@ -116,6 +116,50 @@ func TestParseStockPriceKeepsPriceAndStock(t *testing.T) {
 	}
 }
 
+func TestParseStockPriceFiltersWhitelistedFabricPrefixes(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <VARIANTS>
+      <VARIANT>
+        <CODE>ART13445-k001-l177</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <STOCK>77</STOCK>
+        <PARAMETERS>
+          <PARAMETER><NAME>Sedák</NAME><VALUE>lux 15 bordo</VALUE></PARAMETER>
+        </PARAMETERS>
+      </VARIANT>
+      <VARIANT>
+        <CODE>ART13445-k001-l200</CODE>
+        <PRICE_VAT>120</PRICE_VAT>
+        <STOCK>2</STOCK>
+        <PARAMETERS>
+          <PARAMETER><NAME>Sedák</NAME><VALUE>boss 20 šedá</VALUE></PARAMETER>
+        </PARAMETERS>
+      </VARIANT>
+    </VARIANTS>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseStockPrice(context.Background(), strings.NewReader(input), UpdateOptions{
+		VariantWhitelist: FabricWhitelist{
+			"ART13445-K001-L177": {"lux"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("parse stock-price: %v", err)
+	}
+	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 1 {
+		t.Fatalf("expected one whitelisted variant, got %#v", feed.Items)
+	}
+	variant := feed.Items[0].Variants[0]
+	if variant.Code != "ART13445-k001-l177" || variant.PriceVAT != "100" || variant.Stock != "77" {
+		t.Fatalf("unexpected variant: %#v", variant)
+	}
+	if stats.VariantsSkipped != 1 || stats.VariantsEmitted != 1 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+}
+
 func TestParseStockSkipsItemsWithoutCodeOrPayload(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>

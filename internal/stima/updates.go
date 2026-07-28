@@ -14,6 +14,7 @@ import (
 
 type UpdateOptions struct {
 	MaxVariantsPerProduct int
+	VariantWhitelist      FabricWhitelist
 }
 
 type UpdateStats struct {
@@ -74,7 +75,7 @@ func parseUpdate(ctx context.Context, r io.Reader, options UpdateOptions, mode u
 		}
 
 		stats.ProductsRead++
-		item, itemStats, ok := transformUpdate(source, maxVariants, mode)
+		item, itemStats, ok := transformUpdate(source, maxVariants, mode, options)
 		stats.ProductsSkipped += itemStats.ProductsSkipped
 		stats.ProductsTrimmed += itemStats.ProductsTrimmed
 		stats.VariantsEmitted += itemStats.VariantsEmitted
@@ -92,7 +93,7 @@ func parseUpdate(ctx context.Context, r io.Reader, options UpdateOptions, mode u
 	}
 }
 
-func transformUpdate(source sourceShopItem, maxVariants int, mode updateMode) (shoptet.Item, productTransformStats, bool) {
+func transformUpdate(source sourceShopItem, maxVariants int, mode updateMode, options UpdateOptions) (shoptet.Item, productTransformStats, bool) {
 	var stats productTransformStats
 
 	if len(source.Variants) == 0 {
@@ -127,6 +128,7 @@ func transformUpdate(source sourceShopItem, maxVariants int, mode updateMode) (s
 
 	variants := make([]shoptet.Variant, 0, min(len(source.Variants), maxVariants))
 	var firstValidVariantCode string
+	allowedFabrics := options.VariantWhitelist.ProductFabrics(source)
 	for variantIndex, sourceVariant := range source.Variants {
 		code := strings.TrimSpace(sourceVariant.Code)
 		if code == "" {
@@ -141,6 +143,10 @@ func transformUpdate(source sourceShopItem, maxVariants int, mode updateMode) (s
 		}
 		if firstValidVariantCode == "" {
 			firstValidVariantCode = code
+		}
+		if !AllowsFabric(allowedFabrics, sourceVariant.Parameters) {
+			stats.VariantsSkipped++
+			continue
 		}
 		if len(variants) >= maxVariants {
 			stats.VariantsTrimmed++

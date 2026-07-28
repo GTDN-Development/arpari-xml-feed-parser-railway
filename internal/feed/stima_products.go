@@ -21,6 +21,11 @@ type StimaProductsTest struct {
 	MaxProducts int
 }
 
+type StimaMissingVariants struct {
+	Downloader stima.Downloader
+	SourceURL  string
+}
+
 func (StimaProducts) Name() string {
 	return "stima-products"
 }
@@ -49,6 +54,18 @@ func (generator StimaProductsTest) Generate(ctx context.Context, w io.Writer) (R
 	return generateStimaProducts(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL, maxProducts)
 }
 
+func (StimaMissingVariants) Name() string {
+	return "stima-missing-variants"
+}
+
+func (StimaMissingVariants) Filename() string {
+	return "stima-missing-variants.xml"
+}
+
+func (generator StimaMissingVariants) Generate(ctx context.Context, w io.Writer) (Result, error) {
+	return generateStimaMissingVariants(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL)
+}
+
 func generateStimaProducts(ctx context.Context, w io.Writer, supplier string, configuredDownloader stima.Downloader, configuredSourceURL string, maxProducts int) (Result, error) {
 	downloader := configuredDownloader
 	if downloader == nil {
@@ -69,6 +86,7 @@ func generateStimaProducts(ctx context.Context, w io.Writer, supplier string, co
 	feed, stats, err := stima.ParseProducts(ctx, body, stima.ProductsOptions{
 		MaxVariantsPerProduct: shoptet.DefaultMaxVariantsPerItem,
 		MaxProducts:           maxProducts,
+		VariantWhitelist:      stima.DefaultFabricWhitelist(),
 	})
 	if err != nil {
 		return Result{}, err
@@ -79,6 +97,64 @@ func generateStimaProducts(ctx context.Context, w io.Writer, supplier string, co
 
 	slog.Info(
 		"STIMA products transformed",
+		"supplier", supplier,
+		"productsRead", stats.ProductsRead,
+		"productsEmitted", stats.ProductsEmitted,
+		"productsSkipped", stats.ProductsSkipped,
+		"productsTrimmed", stats.ProductsTrimmed,
+		"itemsWithVariants", stats.ItemsWithVariants,
+		"variantsEmitted", stats.VariantsEmitted,
+		"variantsSkipped", stats.VariantsSkipped,
+		"variantsTrimmed", stats.VariantsTrimmed,
+	)
+
+	if err := shoptet.WriteWithLimits(w, feed, shoptet.Limits{
+		MaxVariantsPerItem: shoptet.DefaultMaxVariantsPerItem,
+	}); err != nil {
+		return Result{
+			ItemsProcessed: stats.ProductsEmitted,
+			ItemsSkipped:   stats.ProductsSkipped,
+		}, err
+	}
+
+	return Result{
+		ItemsProcessed: stats.ProductsEmitted,
+		ItemsSkipped:   stats.ProductsSkipped,
+	}, nil
+}
+
+func generateStimaMissingVariants(ctx context.Context, w io.Writer, supplier string, configuredDownloader stima.Downloader, configuredSourceURL string) (Result, error) {
+	downloader := configuredDownloader
+	if downloader == nil {
+		downloader = stima.HTTPDownloader{}
+	}
+
+	sourceURL := configuredSourceURL
+	if sourceURL == "" {
+		sourceURL = stima.ProductsURL
+	}
+
+	body, err := downloader.Download(ctx, sourceURL)
+	if err != nil {
+		return Result{}, err
+	}
+	defer body.Close()
+
+	feed, stats, err := stima.ParseProducts(ctx, body, stima.ProductsOptions{
+		MaxVariantsPerProduct: shoptet.DefaultMaxVariantsPerItem,
+		VariantWhitelist:      stima.DefaultFabricWhitelist(),
+		MissingVariantsOnly:   true,
+		MinimalVariantCatalog: true,
+	})
+	if err != nil {
+		return Result{}, err
+	}
+	if len(feed.Items) == 0 {
+		return Result{ItemsSkipped: stats.ProductsSkipped}, fmt.Errorf("STIMA missing variants output is empty after transformation")
+	}
+
+	slog.Info(
+		"STIMA missing variants transformed",
 		"supplier", supplier,
 		"productsRead", stats.ProductsRead,
 		"productsEmitted", stats.ProductsEmitted,

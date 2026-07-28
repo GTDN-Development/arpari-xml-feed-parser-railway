@@ -326,6 +326,111 @@ func TestParseProductsTrimsProductsAboveShoptetVariantLimit(t *testing.T) {
 	}
 }
 
+func TestParseProductsFiltersWhitelistedFabricPrefixesBeforeVariantLimit(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <NAME>Židle CLAYTON látka</NAME>
+    <CATEGORIES><CATEGORY>Katalog &gt; Židle</CATEGORY></CATEGORIES>
+    <VARIANTS>
+      <VARIANT>
+        <CODE>ART06011-k001-l010</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS>
+          <PARAMETER><NAME>KOSTRA</NAME><VALUE>buk</VALUE></PARAMETER>
+          <PARAMETER><NAME>Sedák</NAME><VALUE>lux 1 bílá</VALUE></PARAMETER>
+        </PARAMETERS>
+      </VARIANT>
+      <VARIANT>
+        <CODE>ART06011-k001-l020</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS>
+          <PARAMETER><NAME>KOSTRA</NAME><VALUE>buk</VALUE></PARAMETER>
+          <PARAMETER><NAME>Sedák</NAME><VALUE>tristan 2 šedá</VALUE></PARAMETER>
+        </PARAMETERS>
+      </VARIANT>
+      <VARIANT>
+        <CODE>ART06011-k001-l030</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS>
+          <PARAMETER><NAME>KOSTRA</NAME><VALUE>buk</VALUE></PARAMETER>
+          <PARAMETER><NAME>Sedák</NAME><VALUE>boss 3 modrá</VALUE></PARAMETER>
+        </PARAMETERS>
+      </VARIANT>
+    </VARIANTS>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{
+		MaxVariantsPerProduct: 2,
+		VariantWhitelist: FabricWhitelist{
+			"ART06011-K001-L010": {"lux", "tristan"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("parse products: %v", err)
+	}
+	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 2 {
+		t.Fatalf("expected two whitelisted variants, got %#v", feed.Items)
+	}
+	if feed.Items[0].Variants[0].Code != "ART06011-k001-l010" || feed.Items[0].Variants[1].Code != "ART06011-k001-l020" {
+		t.Fatalf("unexpected whitelisted variants: %#v", feed.Items[0].Variants)
+	}
+	if stats.VariantsSkipped != 1 || stats.VariantsTrimmed != 0 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+}
+
+func TestParseProductsMissingVariantsOnlyKeepsWhitelistedVariantsAfterPreviousLimit(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <NAME>Židle FURLA</NAME>
+    <CATEGORIES><CATEGORY>Katalog &gt; Židle</CATEGORY></CATEGORIES>
+    <VARIANTS>
+      <VARIANT>
+        <CODE>ART13445-k001-l001</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS><PARAMETER><NAME>Sedák</NAME><VALUE>lux 1 bílá</VALUE></PARAMETER></PARAMETERS>
+      </VARIANT>
+      <VARIANT>
+        <CODE>ART13445-k001-l002</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS><PARAMETER><NAME>Sedák</NAME><VALUE>boss 2 šedá</VALUE></PARAMETER></PARAMETERS>
+      </VARIANT>
+      <VARIANT>
+        <CODE>ART13445-k001-l003</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS><PARAMETER><NAME>Sedák</NAME><VALUE>lux 3 černá</VALUE></PARAMETER></PARAMETERS>
+      </VARIANT>
+    </VARIANTS>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{
+		MaxVariantsPerProduct: 2,
+		VariantWhitelist: FabricWhitelist{
+			"ART13445-K001-L001": {"lux"},
+		},
+		MissingVariantsOnly:   true,
+		MinimalVariantCatalog: true,
+	})
+	if err != nil {
+		t.Fatalf("parse products: %v", err)
+	}
+	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 1 {
+		t.Fatalf("expected one missing whitelisted variant, got %#v", feed.Items)
+	}
+	item := feed.Items[0]
+	if item.Code != "ART13445" || item.Name != "" || len(item.Categories) != 0 || len(item.Images) != 0 {
+		t.Fatalf("expected minimal item, got %#v", item)
+	}
+	if item.Variants[0].Code != "ART13445-k001-l003" {
+		t.Fatalf("unexpected missing variant: %#v", item.Variants[0])
+	}
+	if stats.VariantsSkipped != 2 || stats.VariantsEmitted != 1 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+}
+
 func TestParseProductsSkipsVariantWithoutCode(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>

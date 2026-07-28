@@ -73,6 +73,7 @@ func TestStimaProductsGenerateUsesFixtureBackedDownloader(t *testing.T) {
         <PRICE_VAT>1000.00</PRICE_VAT>
         <PARAMETERS>
           <PARAMETER><NAME>KOSTRA</NAME><VALUE>dub</VALUE></PARAMETER>
+          <PARAMETER><NAME>Sedák</NAME><VALUE>raven 15 šedá</VALUE></PARAMETER>
         </PARAMETERS>
       </VARIANT>
     </VARIANTS>
@@ -118,7 +119,7 @@ func TestStimaProductsGenerateUsesFixtureBackedDownloader(t *testing.T) {
 	if len(parsed.Items[0].Variants) != 1 || parsed.Items[0].Variants[0].Code != "ART13627-k001" {
 		t.Fatalf("unexpected generated variants: %#v", parsed.Items[0].Variants)
 	}
-	if len(parsed.Items[0].Variants[0].Parameters) != 1 || parsed.Items[0].Variants[0].Parameters[0].Name != "KOSTRA" {
+	if len(parsed.Items[0].Variants[0].Parameters) != 2 || parsed.Items[0].Variants[0].Parameters[0].Name != "KOSTRA" {
 		t.Fatalf("unexpected generated parameters: %#v", parsed.Items[0].Variants[0].Parameters)
 	}
 }
