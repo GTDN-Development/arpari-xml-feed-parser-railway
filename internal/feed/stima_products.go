@@ -26,6 +26,11 @@ type StimaMissingVariants struct {
 	SourceURL  string
 }
 
+type StimaWhitelistedVariants struct {
+	Downloader stima.Downloader
+	SourceURL  string
+}
+
 func (StimaProducts) Name() string {
 	return "stima-products"
 }
@@ -64,6 +69,18 @@ func (StimaMissingVariants) Filename() string {
 
 func (generator StimaMissingVariants) Generate(ctx context.Context, w io.Writer) (Result, error) {
 	return generateStimaMissingVariants(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL)
+}
+
+func (StimaWhitelistedVariants) Name() string {
+	return "stima-whitelisted-variants"
+}
+
+func (StimaWhitelistedVariants) Filename() string {
+	return "stima-whitelisted-variants.xml"
+}
+
+func (generator StimaWhitelistedVariants) Generate(ctx context.Context, w io.Writer) (Result, error) {
+	return generateStimaWhitelistedVariants(ctx, w, generator.Name(), generator.Downloader, generator.SourceURL)
 }
 
 func generateStimaProducts(ctx context.Context, w io.Writer, supplier string, configuredDownloader stima.Downloader, configuredSourceURL string, maxProducts int) (Result, error) {
@@ -124,6 +141,25 @@ func generateStimaProducts(ctx context.Context, w io.Writer, supplier string, co
 }
 
 func generateStimaMissingVariants(ctx context.Context, w io.Writer, supplier string, configuredDownloader stima.Downloader, configuredSourceURL string) (Result, error) {
+	return generateStimaMinimalVariants(ctx, w, supplier, configuredDownloader, configuredSourceURL, stima.ProductsOptions{
+		MaxVariantsPerProduct: shoptet.DefaultMaxVariantsPerItem,
+		VariantWhitelist:      stima.DefaultFabricWhitelist(),
+		WhitelistedOnly:       true,
+		MissingVariantsOnly:   true,
+		MinimalVariantCatalog: true,
+	}, "STIMA missing variants")
+}
+
+func generateStimaWhitelistedVariants(ctx context.Context, w io.Writer, supplier string, configuredDownloader stima.Downloader, configuredSourceURL string) (Result, error) {
+	return generateStimaMinimalVariants(ctx, w, supplier, configuredDownloader, configuredSourceURL, stima.ProductsOptions{
+		MaxVariantsPerProduct: shoptet.DefaultMaxVariantsPerItem,
+		VariantWhitelist:      stima.DefaultFabricWhitelist(),
+		WhitelistedOnly:       true,
+		MinimalVariantCatalog: true,
+	}, "STIMA whitelisted variants")
+}
+
+func generateStimaMinimalVariants(ctx context.Context, w io.Writer, supplier string, configuredDownloader stima.Downloader, configuredSourceURL string, options stima.ProductsOptions, logName string) (Result, error) {
 	downloader := configuredDownloader
 	if downloader == nil {
 		downloader = stima.HTTPDownloader{}
@@ -140,21 +176,16 @@ func generateStimaMissingVariants(ctx context.Context, w io.Writer, supplier str
 	}
 	defer body.Close()
 
-	feed, stats, err := stima.ParseProducts(ctx, body, stima.ProductsOptions{
-		MaxVariantsPerProduct: shoptet.DefaultMaxVariantsPerItem,
-		VariantWhitelist:      stima.DefaultFabricWhitelist(),
-		MissingVariantsOnly:   true,
-		MinimalVariantCatalog: true,
-	})
+	feed, stats, err := stima.ParseProducts(ctx, body, options)
 	if err != nil {
 		return Result{}, err
 	}
 	if len(feed.Items) == 0 {
-		return Result{ItemsSkipped: stats.ProductsSkipped}, fmt.Errorf("STIMA missing variants output is empty after transformation")
+		return Result{ItemsSkipped: stats.ProductsSkipped}, fmt.Errorf("%s output is empty after transformation", logName)
 	}
 
 	slog.Info(
-		"STIMA missing variants transformed",
+		logName+" transformed",
 		"supplier", supplier,
 		"productsRead", stats.ProductsRead,
 		"productsEmitted", stats.ProductsEmitted,

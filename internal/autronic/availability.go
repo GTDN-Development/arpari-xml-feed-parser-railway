@@ -130,6 +130,7 @@ func transformAvailabilityUpdate(catalog shoptet.Feed, availabilityByCode map[st
 				usedCodes[code] = struct{}{}
 				variants = append(variants, shoptet.Variant{
 					Code:       code,
+					PriceVAT:   catalogVariant.PriceVAT,
 					Stock:      availability.Stock,
 					Warehouses: availability.Warehouses,
 					Parameters: catalogVariant.Parameters,
@@ -154,6 +155,7 @@ func transformAvailabilityUpdate(catalog shoptet.Feed, availabilityByCode map[st
 		usedCodes[code] = struct{}{}
 		result.Items = append(result.Items, shoptet.Item{
 			Code:       code,
+			PriceVAT:   catalogItem.PriceVAT,
 			Stock:      availability.Stock,
 			Warehouses: availability.Warehouses,
 		})

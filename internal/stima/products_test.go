@@ -431,6 +431,58 @@ func TestParseProductsMissingVariantsOnlyKeepsWhitelistedVariantsAfterPreviousLi
 	}
 }
 
+func TestParseProductsWhitelistedOnlyKeepsAllWhitelistedVariantsAndSkipsOtherProducts(t *testing.T) {
+	input := `<SHOP>
+  <SHOPITEM>
+    <NAME>Židle BISTRO</NAME>
+    <CATEGORIES><CATEGORY>Katalog &gt; Židle</CATEGORY></CATEGORIES>
+    <VARIANTS>
+      <VARIANT>
+        <CODE>ART00961-k010-l183</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS><PARAMETER><NAME>Sedák</NAME><VALUE>lux 33 jeans</VALUE></PARAMETER></PARAMETERS>
+      </VARIANT>
+      <VARIANT>
+        <CODE>ART00961-k010-l155</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS><PARAMETER><NAME>Sedák</NAME><VALUE>boss 1 černá</VALUE></PARAMETER></PARAMETERS>
+      </VARIANT>
+    </VARIANTS>
+  </SHOPITEM>
+  <SHOPITEM>
+    <NAME>Židle mimo whitelist</NAME>
+    <CATEGORIES><CATEGORY>Katalog &gt; Židle</CATEGORY></CATEGORIES>
+    <VARIANTS>
+      <VARIANT>
+        <CODE>ART99999-k001-l001</CODE>
+        <PRICE_VAT>100</PRICE_VAT>
+        <PARAMETERS><PARAMETER><NAME>Sedák</NAME><VALUE>lux 1 bílá</VALUE></PARAMETER></PARAMETERS>
+      </VARIANT>
+    </VARIANTS>
+  </SHOPITEM>
+</SHOP>`
+
+	feed, stats, err := ParseProducts(context.Background(), strings.NewReader(input), ProductsOptions{
+		VariantWhitelist: FabricWhitelist{
+			"ART00961-K010-L183": {"lux"},
+		},
+		WhitelistedOnly:       true,
+		MinimalVariantCatalog: true,
+	})
+	if err != nil {
+		t.Fatalf("parse products: %v", err)
+	}
+	if len(feed.Items) != 1 || len(feed.Items[0].Variants) != 1 {
+		t.Fatalf("expected one whitelisted product and variant, got %#v", feed.Items)
+	}
+	if feed.Items[0].Code != "ART00961" || feed.Items[0].Variants[0].Code != "ART00961-k010-l183" {
+		t.Fatalf("unexpected whitelisted output: %#v", feed.Items[0])
+	}
+	if stats.ProductsSkipped != 1 || stats.VariantsSkipped != 1 || stats.VariantsEmitted != 1 {
+		t.Fatalf("unexpected stats: %#v", stats)
+	}
+}
+
 func TestParseProductsSkipsVariantWithoutCode(t *testing.T) {
 	input := `<SHOP>
   <SHOPITEM>

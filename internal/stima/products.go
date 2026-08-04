@@ -57,6 +57,7 @@ type ProductsOptions struct {
 	MaxVariantsPerProduct int
 	MaxProducts           int
 	VariantWhitelist      FabricWhitelist
+	WhitelistedOnly       bool
 	MissingVariantsOnly   bool
 	MinimalVariantCatalog bool
 }
@@ -144,6 +145,10 @@ func transformProductWithOptions(source sourceShopItem, maxVariants int, options
 	name := strings.TrimSpace(source.Name)
 
 	if len(source.Variants) == 0 {
+		if options.WhitelistedOnly || options.MissingVariantsOnly {
+			stats.ProductsSkipped = 1
+			return shoptet.Item{}, stats, false
+		}
 		code := strings.TrimSpace(source.Code)
 		if code == "" {
 			stats.ProductsSkipped = 1
@@ -185,6 +190,10 @@ func transformProductWithOptions(source sourceShopItem, maxVariants int, options
 	var firstValidVariantCode string
 	eligibleVariantIndex := 0
 	allowedFabrics := options.VariantWhitelist.ProductFabrics(source)
+	if options.WhitelistedOnly && len(allowedFabrics) == 0 {
+		stats.ProductsSkipped = 1
+		return shoptet.Item{}, stats, false
+	}
 	for variantIndex, sourceVariant := range source.Variants {
 		code := strings.TrimSpace(sourceVariant.Code)
 		if code == "" {

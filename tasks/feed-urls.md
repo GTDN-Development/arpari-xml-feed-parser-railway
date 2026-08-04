@@ -40,10 +40,10 @@ Base URL: `https://arpari-xml-feed-parser-railway-production.up.railway.app`
 
 ## Autronic aktualizační feedy
 
-- Autronic sklad: [autronic-availability.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/autronic-availability.xml)
-  - Aktualizační skladový feed z Autronic availability feedu.
-  - Katalogový product feed používá jen pro filtr a variantní tvar.
-  - Nepřepisuje názvy, popisy, obrázky, ceny ani kategorie.
+- Autronic sklad + ceny: [autronic-availability.xml](https://arpari-xml-feed-parser-railway-production.up.railway.app/feeds/autronic-availability.xml)
+  - Aktualizační skladový a cenový feed z Autronic availability a katalogového feedu.
+  - Katalogový product feed používá pro filtr, cenu a variantní tvar.
+  - Nepřepisuje názvy, popisy, obrázky ani kategorie.
 
 ## STIMA aktualizační feedy
 
