@@ -198,12 +198,11 @@ curl -L -o parser-autronic-availability.xml https://arpari-xml-feed-parser-railw
 
 Co děláme:
 
-- Slouží pro aktualizaci skladu a ceny.
+- Slouží jen pro aktualizaci skladu.
 - Skladový feed identifikuje produkty přes `ProductCode`.
 - Sklad bereme z `Availability` -> `StockAvailabilityTotal`; sklady po skladech z `Availability` -> `StockAvailability` -> `Stock`.
-- Cenu bereme z katalogového feedu primárně z `Prices` -> `RetailPromotionalPriceIncludingVat`, jinak z `RetailPriceIncludingVat`.
 - Skladový feed filtrujeme podle Autronic katalogu, aby se neposílaly produkty mimo náš sortiment.
-- Neposíláme názvy, popisy, obrázky ani kategorie.
+- Neposíláme názvy, popisy, ceny, obrázky ani kategorie.
 
 ### SEGO katalog
 

@@ -19,7 +19,6 @@ func TestAutronicAvailabilityGenerateUsesCatalogAndAvailabilitySources(t *testin
     <ProductCode>NA-CHAIR-1</ProductCode>
     <ProductName>Kancelářská židle</ProductName>
     <ProductCategory><CategoryName>Síťované kancelářské židle</CategoryName><CategoryShortName>NA-ZKA-SIT</CategoryShortName></ProductCategory>
-	<Prices><RetailPromotionalPriceIncludingVat value="1790.00" /></Prices>
   </Product>
 </Products></ProductFeed>`,
 			availabilityURL: `<ProductFeed><Products>
@@ -54,9 +53,6 @@ func TestAutronicAvailabilityGenerateUsesCatalogAndAvailabilitySources(t *testin
 	parsed := parseGeneratedUpdate(t, output.Bytes())
 	if len(parsed.Items) != 1 || parsed.Items[0].Code != "NA-CHAIR-1" {
 		t.Fatalf("unexpected generated items: %#v", parsed.Items)
-	}
-	if parsed.Items[0].PriceVAT != "1790" {
-		t.Fatalf("unexpected generated price: %#v", parsed.Items[0])
 	}
 	if len(parsed.Items[0].Stock.Warehouses) != 1 || parsed.Items[0].Stock.Warehouses[0].Name != "Semčice" || parsed.Items[0].Stock.Warehouses[0].Value != "7" {
 		t.Fatalf("unexpected generated stock: %#v", parsed.Items[0].Stock)

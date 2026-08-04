@@ -12,7 +12,7 @@
 
 ## Cíl
 
-Generovat Shoptet XML feed pro aktualizaci dostupnosti, skladu a ceny Autronic produktů.
+Generovat Shoptet XML feed pro aktualizaci dostupnosti / skladu Autronic produktů.
 
 ## Aktuální pravidla
 
@@ -21,8 +21,7 @@ Generovat Shoptet XML feed pro aktualizaci dostupnosti, skladu a ceny Autronic p
 - Dostupnostní feed neobsahuje kategorii, proto se sám o sobě nepoužívá jako filtr.
 - Parser stahuje také katalogový `product-feed.xml`, používá existující katalogovou transformaci jako filtr a zachovává stejný jednoduchý/variantní tvar jako `autronic-products`.
 - Do výstupu se dostanou pouze kódy, které jsou součástí filtrovaného Autronic katalogu.
-- Feed nepřepisuje katalogová pole kromě ceny.
-- Cenu bere z katalogového feedu stejně jako `autronic-products`: přednostně `RetailPromotionalPriceIncludingVat`, jinak `RetailPriceIncludingVat`.
+- Feed nepřepisuje katalogová pole.
 - U variant se posílá původní variantní `PARAMETERS`, protože Shoptet supplier XML schéma ho u `VARIANTS/VARIANT` vyžaduje.
 
 ## MVP rozsah
@@ -31,11 +30,10 @@ Generovat Shoptet XML feed pro aktualizaci dostupnosti, skladu a ceny Autronic p
   - `CODE`
 - Dostupnost / sklad:
   - `STOCK`
-- Cena:
-  - `PRICE_VAT`
 - Neposílat:
   - názvy
   - popisy
+  - ceny
   - obrázky
   - kategorie
   - produktové parametry kromě povinného variantního parametru u variant
